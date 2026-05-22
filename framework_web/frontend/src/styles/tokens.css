@@ -1,0 +1,92 @@
+:root {
+  /* Workspace surfaces */
+  --bg-base: #f3f5f7;
+  --bg-surface: #fafbfc;
+  --bg-subtle: #e9edf2;
+  --bg-hover: #eef1f5;
+
+  /* Institutional dark sidebar band */
+  --sidebar-bg: #1e2b4a;
+  --sidebar-hover: #27365a;
+  --sidebar-active: #2f4170;
+  --sidebar-text: #d6def0;
+  --sidebar-text-muted: #8b97b3;
+
+  /* Text */
+  --text-primary: #1f2937;
+  --text-secondary: #667085;
+  --text-tertiary: #98a2b3;
+  --text-inverse: #f8fafc;
+
+  /* Borders — soft, transparent for layered surfaces */
+  --border-default: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.10);
+
+  /* Brand + risk */
+  --brand-500: #2563eb;
+  --brand-700: #1d4ed8;
+  --risk-low: #16a34a;
+  --risk-medium: #d97706;
+  --risk-high: #dc2626;
+
+  /* Typography */
+  --font-sans: 'Geist', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Geist Mono', Menlo, monospace;
+
+  /* Layered shadows that sit on the workspace */
+  --shadow-sm: 0 1px 1px rgba(15, 23, 42, 0.04),
+    0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-default: 0 1px 2px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(15, 23, 42, 0.05);
+
+  /* ──────────────────────────────────────────────────────────
+   * shadcn/ui tokens — mapped to OUR existing palette so any
+   * shadcn component (Button, Card, Dialog, etc.) reads as part
+   * of the same design system rather than a default zinc theme.
+   *
+   * Format: H S% L% (no `hsl()` wrapper — shadcn expects raw
+   * triplets so it can compose with `hsl(var(--xxx) / <alpha>)`).
+   * HSL values rounded from the hex pairs above.
+   *
+   * Mapping rationale:
+   *   background  ← bg-base #F3F5F7
+   *   foreground  ← text-primary #1F2937
+   *   card        ← bg-surface #FAFBFC
+   *   primary     ← brand-500 #2563EB
+   *   secondary   ← bg-subtle #E9EDF2 (chip / inactive surfaces)
+   *   muted       ← bg-subtle  + muted-fg ← text-secondary #667085
+   *   accent      ← bg-hover  + accent-fg ← text-primary
+   *   destructive ← risk-high #DC2626
+   *   border      ← #ECEEF1 (solid equivalent of border-default α06)
+   *   ring        ← brand-500 (focus ring)
+   *   radius      ← 0.25rem (4 px, matches our `rounded` token)
+   */
+  --background: 210 14% 96%;
+  --foreground: 215 28% 17%;
+  --card: 210 17% 98%;
+  --card-foreground: 215 28% 17%;
+  --popover: 210 17% 98%;
+  --popover-foreground: 215 28% 17%;
+  --primary: 217 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 213 19% 93%;
+  --secondary-foreground: 215 28% 17%;
+  --muted: 213 19% 93%;
+  --muted-foreground: 220 13% 46%;
+  --accent: 213 22% 95%;
+  --accent-foreground: 215 28% 17%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 216 12% 94%;
+  --input: 216 12% 94%;
+  --ring: 217 83% 53%;
+  --radius: 0.25rem;
+
+  /* Optional chart palette tokens (some shadcn charts/recipes
+   * read these); points to our existing data-viz colours. */
+  --chart-1: 217 83% 53%;
+  --chart-2: 175 84% 32%;
+  --chart-3: 30 89% 44%;
+  --chart-4: 261 75% 56%;
+  --chart-5: 330 84% 50%;
+}

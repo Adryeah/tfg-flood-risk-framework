@@ -1,0 +1,31 @@
+## Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+## Datos pesados pre-procesados (regenerables con tools/)
+backend/data_processed/*
+!backend/data_processed/.gitkeep
+
+## Variables de entorno
+.env
+*.env.local
+
+## IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+## Docker
+*.pid
+
+## Logs
+*.log
+logs/

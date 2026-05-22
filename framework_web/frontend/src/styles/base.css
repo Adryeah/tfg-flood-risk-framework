@@ -1,0 +1,16 @@
+/* Reset overrides + base typography refinements */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Use tabular numerals for monospace contexts */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,258 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  .font-mono {
+    font-feature-settings: 'tnum';
+  }
+
+  .section-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+}
+
+@layer components {
+  /* ─── Tactile feedback (emil-design-eng "Buttons must feel responsive")
+   * Every <button> + element with role="switch" / data-tactile gets
+   * scale(0.97) on :active with a strong ease-out (cubic-bezier(0.23,1,0.32,1)).
+   * Disabled buttons are exempt — pressing them shouldn't pretend they work.
+   *
+   * Custom curve is intentional: built-in CSS easings lack the "punch" that
+   * makes the press feel deliberate. See animations.dev / Emil Kowalski.
+   *
+   * Excluding native-controls-host elements (svg, input range thumb) so we
+   * don't break Leaflet/MapLibre internal controls or the threshold slider.
+   */
+  button:not(:disabled),
+  [role="switch"],
+  [data-tactile] {
+    transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+                background-color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+                color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+                border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    will-change: transform;
+  }
+  button:not(:disabled):active,
+  [role="switch"]:active,
+  [data-tactile]:active {
+    transform: scale(0.97);
+  }
+  /* MapLibre internal controls already have their own transitions —
+   * exempt them so we don't double-animate. */
+  .maplibregl-ctrl-group button {
+    transition: background-color 160ms ease-out, color 160ms ease-out !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  .maplibregl-ctrl-group button:active {
+    transform: none !important;
+  }
+
+  [data-route] {
+    color: var(--sidebar-text-muted);
+  }
+  [data-route] svg {
+    color: var(--sidebar-text-muted);
+  }
+  [data-route]:hover {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important;
+  }
+  [data-route]:hover svg {
+    color: var(--sidebar-text) !important;
+  }
+  [data-route].is-active {
+    background-color: var(--sidebar-active) !important;
+    color: #ffffff !important;
+    /* 3 px bright accent rail via inset shadow — pops over the dark
+     * sidebar-active background better than a 2 px border-l (the border
+     * was getting visually flattened against the #2F4170 fill). The
+     * layout-reserving border-l-2 border-transparent stays on the
+     * element for stable indentation.
+     *
+     * Rail colour picks up the section's `--section-accent` CSS var (set
+     * inline by Sidebar.jsx). Falls back to brand-500 for any element
+     * using [data-route].is-active outside the sectioned sidebar. */
+    border-left-color: transparent !important;
+    box-shadow: inset 3px 0 0 0 var(--section-accent, #2563eb);
+    font-weight: 500;
+  }
+  [data-route].is-active svg {
+    color: #ffffff !important;
+  }
+
+  .leaflet-container, .maplibregl-map {
+    font-family: var(--font-sans);
+    background: #dde4ec;
+  }
+
+  /* MapLibre controls override moved OUTSIDE @layer components below — see
+   * end of file. With CSS Cascade Layers, !important declarations have
+   * reversed priority (earlier layers + named layers win over unlayered).
+   * MapLibre ships unlayered CSS, so to be unambiguously above it we put
+   * our overrides as unlayered too with a tight specificity chain. */
+
+  .pattern-dots {
+    background-color: var(--bg-base);
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(30, 41, 59, 0.06) 1px,
+      transparent 0
+    );
+    background-size: 18px 18px;
+  }
+
+  .pattern-animated {
+    background-color: var(--bg-base);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(30, 41, 59, 0.08) 1px, transparent 0),
+      linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, transparent 50%, rgba(220, 38, 38, 0.03) 100%);
+    background-size: 18px 18px, 100% 100%;
+    animation: bgShift 20s ease-in-out infinite;
+  }
+
+  /* Soft pulse used by inline "Inspecting model…" indicators in the
+   * pixel-inspection popup + sidebar card. Subtler than Tailwind's
+   * animate-pulse (which collapses opacity to 0.5 — too jumpy here). */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.55; transform: scale(0.85); }
+  }
+
+  @keyframes bgShift {
+    0%, 100% {
+      background-position: 0 0, 0 0;
+    }
+    25% {
+      background-position: 0 0, 50% 50%;
+    }
+    50% {
+      background-position: 0 0, 100% 0;
+    }
+    75% {
+      background-position: 0 0, 50% 100%;
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(30, 41, 59, 0.18);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(30, 41, 59, 0.28);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* AG Grid quartz theme — pulls our token values into the grid so it
+   * doesn't read as a 3rd-party widget glued on top. */
+  .ag-theme-quartz,
+  .ag-theme-quartz-tight {
+    --ag-font-family: 'Geist', system-ui, sans-serif;
+    --ag-font-size: 12px;
+    --ag-foreground-color: #1f2937;
+    --ag-background-color: #fafbfc;
+    --ag-header-foreground-color: #475467;
+    --ag-header-background-color: #e9edf2;
+    --ag-odd-row-background-color: #fafbfc;
+    --ag-even-row-background-color: #f7f8fa;
+    --ag-row-hover-color: #eef1f5;
+    --ag-selected-row-background-color: #dde6f5;
+    --ag-border-color: rgba(15, 23, 42, 0.06);
+    --ag-row-border-color: rgba(15, 23, 42, 0.04);
+    --ag-cell-horizontal-padding: 12px;
+    --ag-row-height: 32px;
+    --ag-header-height: 32px;
+    --ag-grid-size: 4px;
+    --ag-border-radius: 0px;
+  }
+  .ag-theme-quartz .ag-header-cell-label,
+  .ag-theme-quartz-tight .ag-header-cell-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+/* ─────────────────────────────────────────────────────────────────────
+ * MapLibre control overrides — UNLAYERED on purpose.
+ *
+ * Why outside @layer components? CSS Cascade Layers reverse `!important`
+ * priority: in a named layer, !important beats unlayered !important.
+ * BUT — when both layered and unlayered rules target the same selector
+ * with !important, the LAYERED one wins, except the chrome cascade
+ * implementation in some browsers has been inconsistent and pre-2024
+ * versions could let vendor (unlayered) win on default backgrounds.
+ *
+ * Putting these unlayered with `body` ancestor specificity gives us
+ * 0,1,1 specificity vs maplibre's 0,1,1 — but ours is declared AFTER
+ * the vendor's, so we win the tiebreak deterministically regardless of
+ * layer treatment.
+ * ───────────────────────────────────────────────────────────────────── */
+body .maplibregl-ctrl,
+body .maplibregl-ctrl-group {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10) !important;
+  overflow: hidden !important;
+  opacity: 1 !important;
+}
+body .maplibregl-ctrl-group > button,
+body .maplibregl-ctrl-group button {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #1F2937 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  width: 30px !important;
+  height: 30px !important;
+  opacity: 1 !important;
+}
+body .maplibregl-ctrl-group > button:hover,
+body .maplibregl-ctrl-group button:hover {
+  background-color: #EEF1F5 !important;
+  background: #EEF1F5 !important;
+  color: #1F2937 !important;
+}
+body .maplibregl-ctrl-group > button:last-child,
+body .maplibregl-ctrl-group button:last-child {
+  border-bottom: 0 !important;
+}
+body .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+body .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,
+body .maplibregl-ctrl-compass .maplibregl-ctrl-icon,
+body .maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
+  opacity: 0.78;
+}
+body .maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon {
+  opacity: 1;
+}
+
+/* The attribution control sometimes ends up with no background too.
+ * Force opaque-white pill so it doesn't blend into a dark basemap. */
+body .maplibregl-ctrl-attrib {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: #1F2937;
+}

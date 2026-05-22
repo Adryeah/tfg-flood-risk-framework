@@ -1,0 +1,80 @@
+# =============================================================================
+# paths.yaml — Rutas del proyecto TFG Earth Intelligence
+# Todas las rutas son relativas a la raíz del repositorio.
+# Cargar con scripts/utils/config.py
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Datos de entrada
+# ---------------------------------------------------------------------------
+data:
+  root: data/
+
+  sentinel1:
+    raw:         data/sentinel1/raw/
+    processed:   data/sentinel1/processed/
+    water_masks: data/sentinel1/water_masks/
+
+  sentinel2:
+    raw:         data/sentinel2/raw/
+    processed:   data/sentinel2/processed/
+    indices:     data/sentinel2/indices/
+
+  dem:           data/dem/
+  ems:           data/ems/
+
+  auxiliary:
+    hidrografia: data/auxiliary/hidrografia/
+    catastro:    data/auxiliary/catastro/
+
+  extrapolation:
+    sentinel1:   data/extrapolation/sentinel1/
+    dem:         data/extrapolation/dem/
+
+  catalog:       data/catalogo_escenas.csv
+
+# ---------------------------------------------------------------------------
+# Configuración
+# ---------------------------------------------------------------------------
+config:
+  params:      config/params.yaml
+  paths:       config/paths.yaml
+  credentials: config/copernicus_credentials.yaml   # NO en git
+
+# ---------------------------------------------------------------------------
+# Modelos entrenados
+# ---------------------------------------------------------------------------
+models:
+  trained:    models/trained/
+  evaluation: models/evaluation/
+  # Ficheros concretos
+  rf_model:   models/trained/random_forest.joblib
+  rf_scaler:  models/trained/scaler.joblib
+
+# ---------------------------------------------------------------------------
+# Resultados
+# ---------------------------------------------------------------------------
+results:
+  maps:
+    pre_dana:        results/maps/01_pre_dana/
+    during_dana:     results/maps/02_during_dana/
+    post_dana:       results/maps/03_post_dana/
+    risk_prediction: results/maps/04_risk_prediction/
+    extrapolation:   results/maps/05_extrapolation/
+  metrics:   results/metrics/
+  figures:   results/figures/
+  tables:    results/tables/
+
+# ---------------------------------------------------------------------------
+# Notebooks y documentación
+# ---------------------------------------------------------------------------
+notebooks:
+  exploration: notebooks/exploration/
+  analysis:    notebooks/analysis/
+  figures:     notebooks/figures/
+
+docs:
+  memoria:     docs/memoria_latex/
+  figures:     docs/memoria_latex/figures/
+  reuniones:   docs/reuniones/
+  literatura:  docs/literatura/

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "// installCommand": "Force pnpm even if Vercel auto-detects npm. The frontend was built with pnpm — using npm would re-resolve lockfile differently and may break.",
+  "installCommand": "pnpm install --frozen-lockfile",
+
+  "// buildCommand": "Run the same build Vite uses locally. Output goes to dist/.",
+  "buildCommand": "pnpm run build",
+
+  "// outputDirectory": "Vite default — keep explicit so Vercel doesn't guess.",
+  "outputDirectory": "dist",
+
+  "// framework": "Vercel auto-detects but explicit removes the guess.",
+  "framework": "vite",
+
+  "// rewrites": "SPA fallback — any path that's not a static asset falls back to index.html so client-side hash routing keeps working on direct loads / shares.",
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+
+  "// headers": "Long-cache the immutable hashed assets (Vite outputs *.[hash].js), no-store the entry HTML so deploys take effect immediately.",
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ]
+}

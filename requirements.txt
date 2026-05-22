@@ -1,0 +1,34 @@
+# =============================================================================
+# requirements.txt — TFG Earth Intelligence
+# Instalar con: pip install -r requirements.txt
+# Nota: snappy (ESA SNAP) requiere instalación manual desde SNAP desktop.
+# =============================================================================
+
+# Cómputo numérico
+numpy
+scipy
+pandas
+
+# Geoespacial
+rasterio
+geopandas
+fiona
+shapely
+pyproj
+pysheds        # flow accumulation D8 para features DEM
+scikit-image   # multi-Otsu thresholding (water_detection.py)
+
+# Machine Learning
+scikit-learn
+joblib
+
+# Visualización
+matplotlib
+folium
+seaborn
+
+# Utilidades
+jupyter
+pyyaml
+tqdm
+requests

@@ -1,0 +1,81 @@
+# =============================================================================
+# params.yaml — Parámetros del proyecto TFG Earth Intelligence
+# DANA Valencia 2024 — Framework Predictivo de Riesgo de Inundación
+# NO modificar sin consultar al autor.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Áreas de estudio
+# ---------------------------------------------------------------------------
+study_area:
+  name: "Valencia - L'Horta Sud"
+  bbox: [-0.55, 39.30, -0.25, 39.55]   # [lon_min, lat_min, lon_max, lat_max] WGS84
+  epsg: 32630                             # UTM zona 30N
+
+extrapolation_area:
+  name: "Algemesi - Ribera Alta/Baixa"
+  bbox: [-0.698, 39.007, -0.166, 39.365]  # union de 12 municipios DANA con buffer 0.05 deg
+  epsg: 32630
+
+# Bbox combinado Valencia + Algemesi (Semana 4, extrapolacion AOI04 EMSR773).
+# Se usa para reprocesar las 26 escenas S1 del baseline+evento de manera que un
+# unico GeoTIFF cubra ambas zonas. El recorte por zona se hace mas adelante con
+# rasterio (windowed read) sobre el GeoTIFF combinado.
+processing_bbox:
+  name: "Valencia + Algemesi (combinado)"
+  bbox: [-0.698, 39.007, -0.166, 39.555]
+  epsg: 32630
+
+# ---------------------------------------------------------------------------
+# Fechas del estudio
+# ---------------------------------------------------------------------------
+dates:
+  baseline_start: "2022-01-01"     # Inicio del periodo base (entrenamiento)
+  baseline_end:   "2024-09-30"     # Fin del periodo base (pre-DANA)
+  event_start:    "2024-10-29"     # Inicio del evento DANA
+  event_end:      "2024-11-05"     # Fin del evento DANA
+  recovery_start: "2024-11-06"     # Inicio recuperación
+  recovery_end:   "2025-03-31"     # Fin recuperación
+
+# ---------------------------------------------------------------------------
+# Sentinel-1
+# ---------------------------------------------------------------------------
+sentinel1:
+  product_type: GRD
+  mode: IW
+  polarization: [VV, VH]
+  orbit: ASCENDING                 # Órbita preferida para Valencia
+
+# ---------------------------------------------------------------------------
+# Sentinel-2
+# ---------------------------------------------------------------------------
+sentinel2:
+  product_type: L2A
+  max_cloud_cover: 20              # % máximo de cobertura nubosa
+
+# ---------------------------------------------------------------------------
+# Preprocesado
+# ---------------------------------------------------------------------------
+preprocessing:
+  speckle_filter: Lee
+  speckle_window: 7                # Tamaño ventana filtro Lee (píxeles)
+  dem: SRTM 1Sec HGT               # DEM NASA SRTM 30m (alineado con CLAUDE.md)
+  target_resolution: 20            # Resolución objetivo en metros (m)
+
+# ---------------------------------------------------------------------------
+# Detección de agua
+# ---------------------------------------------------------------------------
+water_detection:
+  method: otsu                     # Umbralización automática de Otsu
+  polarization: VV                 # Polarización usada
+
+# ---------------------------------------------------------------------------
+# Modelo de aprendizaje automático
+# ---------------------------------------------------------------------------
+model:
+  type: RandomForest
+  n_estimators: 500
+  max_depth: 15
+  cv_folds: 5
+  sample_size: 100000              # Píxeles muestreados para entrenamiento
+  random_state: 42

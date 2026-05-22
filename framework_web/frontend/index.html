@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flood Risk Framework</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Type pairing:
+      · Geist          → body sans, all general chrome
+      · JetBrains Mono → tabular numbers, KPIs, ECharts axes, code
+      · Newsreader     → editorial serif for Methodology section titles,
+                         pull-quotes and hero typographic anchors. Adds
+                         "academic paper" register that distinguishes
+                         /validation /transferability /leakage from the
+                         operational dashboard register of the rest.
+      frontend-design skill bans Inter for "AI default" feel — none of
+      these three are Inter. Newsreader (Production Type, GFonts) is
+      designed for digital reading at small + medium sizes.
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-bg-base text-text-primary font-sans antialiased">
+    <div id="app"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
