@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../lib/api';
 
 // ─── Section accent palette ───────────────────────────────────
 // Each top-level section carries its own colour so the sidebar reads
@@ -64,8 +65,12 @@ export function Sidebar() {
   useEffect(() => {
     const pingHealth = async () => {
       try {
-        const r = await fetch('/api/health', { cache: 'no-store' });
-        const data = r.ok ? await r.json() : null;
+        // Pasa por api.health() → respeta VITE_API_BASE_URL. Antes era
+        // un fetch hardcoded a '/api/health' que en producción (Vercel)
+        // resolvía contra el propio dominio del frontend, devolvía 404 y
+        // dejaba el indicador en "Backend offline" aunque Render estuviera
+        // perfecto.
+        const data = await api.health();
         const ok = data?.status === 'ok' && data?.model_loaded === true;
         setStatusDot(ok ? '#16A34A' : '#D97706');
         setStatusLabel(ok ? 'Backend online · model loaded' : 'Backend degraded');

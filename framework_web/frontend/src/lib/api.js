@@ -65,8 +65,12 @@ async function request(endpoint, options = {}) {
       );
     }
 
+    // Cubre application/json y application/geo+json (lo que devuelve
+    // el backend para los .geojson) — `includes('json')` matchea ambos
+    // sin engancharse a tipos non-JSON que tengan "json" en otro sitio
+    // (no hay riesgo realista en este API).
     const contentType = response.headers.get('content-type');
-    if (contentType?.includes('application/json')) {
+    if (contentType?.includes('json')) {
       return await response.json();
     }
     return await response.text();
