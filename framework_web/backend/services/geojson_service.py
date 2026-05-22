@@ -10,6 +10,12 @@ Ahora solo cacheamos la ruta. El router los sirve con `FileResponse`,
 que hace stream desde disco — cero pico de RAM, además FastAPI puede
 añadir cabeceras de caché por archivo. Si el client necesita parsear,
 ya lo hace en el navegador (que tiene RAM de sobra).
+
+Cambio v3 (gzip pre-compresión): junto a cada .geojson existe un .gz
+generado por tools/06_compress_geojsons.py. `stream_geojson()` prefiere
+servir el .gz con `Content-Encoding: gzip` (Algemesí: 15 MB → 1.2 MB en
+el cable, ~92% menos), el navegador descomprime de forma transparente.
+Si el .gz no existe se cae al .geojson sin cambiar el contrato HTTP.
 """
 from __future__ import annotations
 
@@ -18,7 +24,32 @@ import threading
 from pathlib import Path
 from typing import Dict, Optional
 
+from fastapi.responses import FileResponse
+
 log = logging.getLogger(__name__)
+
+
+_GEOJSON_CACHE_HEADERS = {
+    "Cache-Control": "public, max-age=86400, immutable",
+}
+
+
+def stream_geojson(path: Path) -> FileResponse:
+    """Sirve el .gz si existe (Content-Encoding: gzip), si no el .geojson
+    crudo. El navegador descomprime automáticamente — el contrato visto
+    por el cliente es el mismo GeoJSON."""
+    gz = path.with_suffix(path.suffix + ".gz")
+    if gz.exists():
+        return FileResponse(
+            gz,
+            media_type="application/geo+json",
+            headers={**_GEOJSON_CACHE_HEADERS, "Content-Encoding": "gzip"},
+        )
+    return FileResponse(
+        path,
+        media_type="application/geo+json",
+        headers=_GEOJSON_CACHE_HEADERS,
+    )
 
 
 class GeoJSONService:
