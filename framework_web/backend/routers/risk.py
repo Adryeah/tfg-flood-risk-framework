@@ -5,6 +5,7 @@ import logging
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse
 
 from ..config import settings
 from ..schemas.risk import RiskPredictionResponse
@@ -20,18 +21,38 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/risk", tags=["risk"])
 
 
+# Streamed responses bypass Pydantic / FastAPI's in-memory JSON
+# serialiser → the worker only holds an open file handle. Cabecera
+# `Cache-Control: public, max-age=86400, immutable` para que el
+# navegador cachee el geojson un día (los geojson son fijos para una
+# versión del modelo).
+_GEOJSON_HEADERS = {
+    "Cache-Control": "public, max-age=86400, immutable",
+}
+
+
 @router.get("/{zone}.geojson", summary="GeoJSON de probabilidad de riesgo")
 def get_risk_geojson(zone: Literal["valencia", "algemesi"]):
     """Devuelve el GeoJSON pre-calculado del modelo Random Forest v2
-    vectorizado por bins de probabilidad [0-0.25, 0.25-0.5, 0.5-0.75, 0.75-1]."""
+    vectorizado por bins de probabilidad [0-0.25, 0.25-0.5, 0.5-0.75, 0.75-1].
+
+    Streamed from disk via FileResponse — no in-memory dict cache, which
+    was OOM-ing the Render free tier (512 MB RAM) when serving the 14 MB
+    Algemesí geojson under load. See services/geojson_service.py for the
+    rationale of the v2 refactor.
+    """
     svc = get_geojson_service()
-    data = svc.get_risk_geojson(zone)
-    if data is None:
+    path = svc.get_risk_geojson_path(zone)
+    if path is None:
         raise HTTPException(
             status_code=404,
             detail=f"GeoJSON de riesgo no disponible para zona '{zone}'.",
         )
-    return data
+    return FileResponse(
+        path,
+        media_type="application/geo+json",
+        headers=_GEOJSON_HEADERS,
+    )
 
 
 @router.get(
@@ -41,10 +62,10 @@ def get_risk_geojson(zone: Literal["valencia", "algemesi"]):
 def get_risk_tail_geojson(zone: Literal["valencia", "algemesi"]):
     """Capa opt-in con los píxeles que en el mapa principal son transparentes
     (p < 0.25). Útil para auditoría visual del modelo cuando se quiere ver
-    toda la predicción incluido el background."""
+    toda la predicción incluido el background. Streamed from disk."""
     svc = get_geojson_service()
-    data = svc.get_risk_tail_geojson(zone)
-    if data is None:
+    path = svc.get_risk_tail_geojson_path(zone)
+    if path is None:
         raise HTTPException(
             status_code=404,
             detail=(
@@ -53,7 +74,11 @@ def get_risk_tail_geojson(zone: Literal["valencia", "algemesi"]):
                 "generar valencia_risk_tail.geojson / algemesi_risk_tail.geojson."
             ),
         )
-    return data
+    return FileResponse(
+        path,
+        media_type="application/geo+json",
+        headers=_GEOJSON_HEADERS,
+    )
 
 
 @router.get("/predict", response_model=RiskPredictionResponse,
