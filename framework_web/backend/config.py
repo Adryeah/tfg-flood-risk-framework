@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List
+from typing import Annotated, List
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 # Repo root: 3 niveles arriba de este archivo
@@ -37,18 +37,26 @@ class Settings(BaseSettings):
     DATA_PROCESSED_DIR: Path = REPO_ROOT / "framework_web" / "backend" / "data_processed"
     MODEL_PATH: Path = REPO_ROOT / "models" / "random_forest_v2.joblib"
 
-    CORS_ORIGINS: List[str] = Field(default_factory=lambda: [
-        "http://localhost",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-    ])
-
     # Accept CORS_ORIGINS as a comma-separated env var so Render's UI
     # (single-line input) works without JSON escaping:
     #   CORS_ORIGINS=https://tfg.vercel.app,https://*.vercel.app
-    # JSON arrays still work too (pydantic-settings v2 default).
+    # JSON arrays still work too (parsed manually below in the validator).
+    #
+    # `NoDecode` is required so pydantic-settings doesn't try to JSON-decode
+    # the raw env string before our validator runs — that's the failure
+    # mode that crashed the first Render deploy with
+    #   "error parsing value for field CORS_ORIGINS from EnvSettingsSource"
+    # because `https://*.vercel.app` isn't valid JSON.
+    CORS_ORIGINS: Annotated[List[str], NoDecode] = Field(
+        default_factory=lambda: [
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+        ]
+    )
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def _split_cors_origins(cls, v):
@@ -57,7 +65,8 @@ class Settings(BaseSettings):
             if not stripped:
                 return []
             if stripped.startswith("["):
-                return v  # let pydantic parse as JSON
+                import json
+                return json.loads(stripped)
             return [s.strip() for s in stripped.split(",") if s.strip()]
         return v
 
