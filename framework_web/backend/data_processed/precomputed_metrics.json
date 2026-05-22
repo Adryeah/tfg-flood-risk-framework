@@ -1,0 +1,517 @@
+{
+  "valencia": {
+    "model_metrics": {
+      "auc_mean": 0.9222257932007419,
+      "auc_std": 0.019,
+      "auc_pr": 0.530272822383715,
+      "f1": 0.48533928286587624,
+      "precision": 0.3527996984527575,
+      "recall": 0.7773879233148134,
+      "accuracy": 0.8686241742034487,
+      "brier": 0.118,
+      "ece": 0.181
+    },
+    "buffer_metrics": [
+      {
+        "buffer_m": 0,
+        "tp": 467050,
+        "fp": 856789,
+        "fn": 133744,
+        "tn": 6082107,
+        "precision": 0.3528,
+        "recall": 0.777388,
+        "f1": 0.485339,
+        "accuracy": 0.868624
+      },
+      {
+        "buffer_m": 30,
+        "tp": 485963,
+        "fp": 837876,
+        "fn": 73086,
+        "tn": 6142765,
+        "precision": 0.367086,
+        "recall": 0.869267,
+        "f1": 0.516189,
+        "accuracy": 0.879178
+      },
+      {
+        "buffer_m": 50,
+        "tp": 498180,
+        "fp": 825659,
+        "fn": 50533,
+        "tn": 6165318,
+        "precision": 0.376315,
+        "recall": 0.907906,
+        "f1": 0.532087,
+        "accuracy": 0.883789
+      },
+      {
+        "buffer_m": 100,
+        "tp": 525374,
+        "fp": 798465,
+        "fn": 22888,
+        "tn": 6192963,
+        "precision": 0.396856,
+        "recall": 0.958254,
+        "f1": 0.561267,
+        "accuracy": 0.891063
+      }
+    ],
+    "feature_importance": [
+      {
+        "feature": "distance_to_coast",
+        "importance": 0.1616252977711136
+      },
+      {
+        "feature": "elevation",
+        "importance": 0.11061171520837983
+      },
+      {
+        "feature": "hand",
+        "importance": 0.07635551244334293
+      },
+      {
+        "feature": "mean_sigma0_vv",
+        "importance": 0.047009803420514105
+      },
+      {
+        "feature": "distance_to_stream",
+        "importance": 0.03795794988190251
+      },
+      {
+        "feature": "water_count",
+        "importance": 0.02744957855305079
+      },
+      {
+        "feature": "slope",
+        "importance": 0.018125337321014356
+      },
+      {
+        "feature": "ndvi_mean",
+        "importance": 0.015028251623149247
+      },
+      {
+        "feature": "min_sigma0_vv",
+        "importance": 0.01142940300404649
+      },
+      {
+        "feature": "mean_vv_vh_ratio",
+        "importance": 0.00462819212905301
+      },
+      {
+        "feature": "flow_accumulation",
+        "importance": 0.004188784325127193
+      },
+      {
+        "feature": "twi",
+        "importance": 0.0029672410465794385
+      },
+      {
+        "feature": "std_sigma0_vv",
+        "importance": 0.001643704508706434
+      },
+      {
+        "feature": "cv_sigma0_vv",
+        "importance": 0.0013576731016313737
+      }
+    ],
+    "confusion_matrix": {
+      "tn": 6082107,
+      "fp": 856789,
+      "fn": 133744,
+      "tp": 467050
+    },
+    "threshold_operational": 0.614,
+    "n_pixels": 7539690,
+    "n_positive": 600794
+  },
+  "algemesi": {
+    "model_metrics": {
+      "auc_mean": 0.816796315523156,
+      "auc_pr": 0.007413048367443275,
+      "f1": 0.018002461032915043,
+      "precision": 0.009090271723773581,
+      "recall": 0.9189411701537415,
+      "accuracy": 0.6983250083181932,
+      "brier": 0.1114354339172173
+    },
+    "buffer_metrics": [
+      {
+        "buffer_m": 0,
+        "tp": 9859,
+        "fp": 1841375,
+        "fn": 46014,
+        "precision": 0.005325636845477125,
+        "recall": 0.17645374331072253,
+        "f1": 0.010339220610065402
+      },
+      {
+        "buffer_m": 30,
+        "tp": 17613,
+        "fp": 1833621,
+        "fn": 41718,
+        "precision": 0.009514194315791522,
+        "recall": 0.29685998887596704,
+        "f1": 0.018437477918835526
+      },
+      {
+        "buffer_m": 50,
+        "tp": 21820,
+        "fp": 1829414,
+        "fn": 39555,
+        "precision": 0.011786732525439788,
+        "recall": 0.35551934826883913,
+        "f1": 0.02281700023371217
+      },
+      {
+        "buffer_m": 100,
+        "tp": 32174,
+        "fp": 1819060,
+        "fn": 35733,
+        "precision": 0.017379758582653518,
+        "recall": 0.4737950432208756,
+        "f1": 0.033529584329655825
+      }
+    ],
+    "confusion_matrix": {
+      "tn": 12914969,
+      "fp": 5596892,
+      "fn": 4529,
+      "tp": 51344
+    },
+    "threshold_operational": 0.389,
+    "extrapolation_comparison": [
+      {
+        "metric": "AUC_ROC",
+        "valencia_v2": 0.9222257932007419,
+        "algemesi_extrapolated": 0.816796315523156,
+        "delta": -0.10542947767758593
+      },
+      {
+        "metric": "AUC_PR",
+        "valencia_v2": 0.530272822383715,
+        "algemesi_extrapolated": 0.007413048367443275,
+        "delta": -0.5228597740162717
+      },
+      {
+        "metric": "F1",
+        "valencia_v2": 0.48533928286587624,
+        "algemesi_extrapolated": 0.010339220610065402,
+        "delta": -0.4750000622558108
+      },
+      {
+        "metric": "Precision",
+        "valencia_v2": 0.3527996984527575,
+        "algemesi_extrapolated": 0.005325636845477125,
+        "delta": -0.3474740616072804
+      },
+      {
+        "metric": "Recall",
+        "valencia_v2": 0.7773879233148134,
+        "algemesi_extrapolated": 0.17645374331072253,
+        "delta": -0.6009341800040909
+      },
+      {
+        "metric": "Accuracy",
+        "valencia_v2": 0.8686241742034487,
+        "algemesi_extrapolated": 0.8983511396705705,
+        "delta": 0.029726965467121724
+      },
+      {
+        "metric": "Brier",
+        "valencia_v2": null,
+        "algemesi_extrapolated": 0.1114354339172173,
+        "delta": null
+      },
+      {
+        "metric": "ECE",
+        "valencia_v2": null,
+        "algemesi_extrapolated": 0.20330653219647984,
+        "delta": null
+      }
+    ],
+    "n_pixels": 18567734,
+    "n_positive": 55873
+  },
+  "transferability": {
+    "feature_drift": [
+      {
+        "feature": "distance_to_coast",
+        "valencia_median": 6769.4755859375,
+        "algemesi_median": 14550.7158203125,
+        "delta": 7781.240234375,
+        "delta_normalized_std": 1.2967871520912062,
+        "importance_valencia": 0.1616252977711136,
+        "importance_algemesi": -0.020672291757706664
+      },
+      {
+        "feature": "elevation",
+        "valencia_median": 18.236127853393555,
+        "algemesi_median": 39.40362548828125,
+        "delta": 21.167497634887695,
+        "delta_normalized_std": 0.39814619756069525,
+        "importance_valencia": 0.11061171520837983,
+        "importance_algemesi": 0.04143243817408704
+      },
+      {
+        "feature": "hand",
+        "valencia_median": 0.7809486389160156,
+        "algemesi_median": 2.3465404510498047,
+        "delta": 1.565591812133789,
+        "delta_normalized_std": 0.12913205515062542,
+        "importance_valencia": 0.07635551244334293,
+        "importance_algemesi": 0.026259599815488487
+      },
+      {
+        "feature": "mean_sigma0_vv",
+        "valencia_median": -11.282722473144531,
+        "algemesi_median": -10.852472305297852,
+        "delta": 0.4302501678466797,
+        "delta_normalized_std": 0.07463716230882034,
+        "importance_valencia": 0.047009803420514105,
+        "importance_algemesi": -0.0010255681209223378
+      },
+      {
+        "feature": "distance_to_stream",
+        "valencia_median": 353.9689636230469,
+        "algemesi_median": 355.14312744140625,
+        "delta": 1.174163818359375,
+        "delta_normalized_std": 0.002033477460507727,
+        "importance_valencia": 0.03795794988190251,
+        "importance_algemesi": 0.0035527095581004975
+      },
+      {
+        "feature": "water_count",
+        "valencia_median": 0.0,
+        "algemesi_median": 0.0,
+        "delta": 0.0,
+        "delta_normalized_std": 0.0,
+        "importance_valencia": 0.02744957855305079,
+        "importance_algemesi": -0.0023683522763161546
+      },
+      {
+        "feature": "slope",
+        "valencia_median": 0.9475760459899902,
+        "algemesi_median": 1.4339553117752075,
+        "delta": 0.4863792657852173,
+        "delta_normalized_std": 0.16406099398795468,
+        "importance_valencia": 0.018125337321014356,
+        "importance_algemesi": 0.005364689250289855
+      },
+      {
+        "feature": "ndvi_mean",
+        "valencia_median": 0.17314739525318146,
+        "algemesi_median": 0.32507285475730896,
+        "delta": 0.1519254595041275,
+        "delta_normalized_std": 0.5456753778098238,
+        "importance_valencia": 0.015028251623149247,
+        "importance_algemesi": 0.015250683154672618
+      },
+      {
+        "feature": "min_sigma0_vv",
+        "valencia_median": -13.197345733642578,
+        "algemesi_median": -12.699606895446777,
+        "delta": 0.4977388381958008,
+        "delta_normalized_std": 0.06332786750382757,
+        "importance_valencia": 0.01142940300404649,
+        "importance_algemesi": 0.0048836724146335
+      },
+      {
+        "feature": "mean_vv_vh_ratio",
+        "valencia_median": 7.17625617980957,
+        "algemesi_median": 6.761042594909668,
+        "delta": -0.41521358489990234,
+        "delta_normalized_std": -0.16897088000726518,
+        "importance_valencia": 0.00462819212905301,
+        "importance_algemesi": 0.003047171242684543
+      },
+      {
+        "feature": "flow_accumulation",
+        "valencia_median": 4.888888835906982,
+        "algemesi_median": 4.983097076416016,
+        "delta": 0.0942082405090332,
+        "delta_normalized_std": 1.758081521559859e-05,
+        "importance_valencia": 0.004188784325127193,
+        "importance_algemesi": 0.0008267998908710661
+      },
+      {
+        "feature": "twi",
+        "valencia_median": 8.247854232788086,
+        "algemesi_median": 8.402790069580078,
+        "delta": 0.1549358367919922,
+        "delta_normalized_std": 0.051128738129260706,
+        "importance_valencia": 0.0029672410465794385,
+        "importance_algemesi": 0.0006320973288728605
+      },
+      {
+        "feature": "std_sigma0_vv",
+        "valencia_median": 1.0882482528686523,
+        "algemesi_median": 0.9264002442359924,
+        "delta": -0.1618480086326599,
+        "delta_normalized_std": -0.13871180284951468,
+        "importance_valencia": 0.001643704508706434,
+        "importance_algemesi": 0.00039627516374298735
+      },
+      {
+        "feature": "cv_sigma0_vv",
+        "valencia_median": 0.1147080510854721,
+        "algemesi_median": 0.09472879767417908,
+        "delta": -0.01997925341129303,
+        "delta_normalized_std": -0.07799210204794381,
+        "importance_valencia": 0.0013576731016313737,
+        "importance_algemesi": -0.0002815777032859179
+      }
+    ],
+    "permutation_importance_comparison": [
+      {
+        "feature": "distance_to_coast",
+        "importance_valencia": 0.1616252977711136,
+        "importance_algemesi": -0.020672291757706664
+      },
+      {
+        "feature": "elevation",
+        "importance_valencia": 0.11061171520837983,
+        "importance_algemesi": 0.04143243817408704
+      },
+      {
+        "feature": "hand",
+        "importance_valencia": 0.07635551244334293,
+        "importance_algemesi": 0.026259599815488487
+      },
+      {
+        "feature": "mean_sigma0_vv",
+        "importance_valencia": 0.047009803420514105,
+        "importance_algemesi": -0.0010255681209223378
+      },
+      {
+        "feature": "distance_to_stream",
+        "importance_valencia": 0.03795794988190251,
+        "importance_algemesi": 0.0035527095581004975
+      },
+      {
+        "feature": "water_count",
+        "importance_valencia": 0.02744957855305079,
+        "importance_algemesi": -0.0023683522763161546
+      },
+      {
+        "feature": "slope",
+        "importance_valencia": 0.018125337321014356,
+        "importance_algemesi": 0.005364689250289855
+      },
+      {
+        "feature": "ndvi_mean",
+        "importance_valencia": 0.015028251623149247,
+        "importance_algemesi": 0.015250683154672618
+      },
+      {
+        "feature": "min_sigma0_vv",
+        "importance_valencia": 0.01142940300404649,
+        "importance_algemesi": 0.0048836724146335
+      },
+      {
+        "feature": "mean_vv_vh_ratio",
+        "importance_valencia": 0.00462819212905301,
+        "importance_algemesi": 0.003047171242684543
+      },
+      {
+        "feature": "flow_accumulation",
+        "importance_valencia": 0.004188784325127193,
+        "importance_algemesi": 0.0008267998908710661
+      },
+      {
+        "feature": "twi",
+        "importance_valencia": 0.0029672410465794385,
+        "importance_algemesi": 0.0006320973288728605
+      },
+      {
+        "feature": "std_sigma0_vv",
+        "importance_valencia": 0.001643704508706434,
+        "importance_algemesi": 0.00039627516374298735
+      },
+      {
+        "feature": "cv_sigma0_vv",
+        "importance_valencia": 0.0013576731016313737,
+        "importance_algemesi": -0.0002815777032859179
+      }
+    ]
+  },
+  "leakage_audit": {
+    "test1_urban_mask": {
+      "spearman_rho": -0.10493399556118194,
+      "auc_with_urban_mask": 0.9703496142551318,
+      "auc_without_urban_mask": 0.9707478903252884,
+      "delta_auc": -0.00039827607015663347,
+      "verdict": "OK",
+      "config": {
+        "n_estimators": 200,
+        "max_depth": 10,
+        "block_px": 100,
+        "scale_pos_weight": 11.51882351374476,
+        "n_samples": 7520533,
+        "n_blocks": 783
+      }
+    },
+    "test2_temporal_leakage": {
+      "bug_location": "scripts/features/extract_advanced_features_v3.py:162",
+      "leakage_scenes_included": [
+        "20241019",
+        "20241031"
+      ],
+      "winter_baseline_clean": [
+        "20221006",
+        "20221111",
+        "20221217",
+        "20230110",
+        "20230215",
+        "20230311",
+        "20231013",
+        "20231118",
+        "20231212",
+        "20240117",
+        "20240210",
+        "20240317"
+      ],
+      "diff_summary": {
+        "winter_mean_sigma0_vv": {
+          "median_diff_flooded": 0.05953788757324219,
+          "median_diff_notflooded": 0.058022499084472656,
+          "max_abs_diff": 3.578584671020508
+        },
+        "winter_min_sigma0_vv": {
+          "median_diff_flooded": 0.0,
+          "median_diff_notflooded": 0.0,
+          "max_abs_diff": 16.334611892700195
+        },
+        "winter_std_sigma0_vv": {
+          "median_diff_flooded": 0.05269104242324829,
+          "median_diff_notflooded": -0.0231626033782959,
+          "max_abs_diff": 7.141662120819092
+        },
+        "winter_minus_summer_vv": {
+          "median_diff_flooded": 0.05953788757324219,
+          "median_diff_notflooded": 0.058022499084472656,
+          "max_abs_diff": 3.578584671020508
+        }
+      },
+      "verdict": "LEAKAGE_DIRECTO_CONFIRMADO",
+      "clean_features_dir": "C:\\Users\\Usuario\\tfg-earth-intelligence\\data\\features\\advanced_clean"
+    },
+    "stop_rule": "Si algun test falla, NO continuar con los siguientes",
+    "tests_executed": [
+      "test1",
+      "test2"
+    ],
+    "tests_skipped": [
+      "test3",
+      "test4"
+    ],
+    "final_verdict": "OPCION B: XGBoost v3 NO PUEDE usarse como modelo final. Modelo final del TFG: Random Forest v2 (AUC 0.922 Valencia, AUC 0.817 Algemesi)."
+  },
+  "_meta": {
+    "model": "Random Forest v2",
+    "n_features": 14,
+    "training_zone": "Valencia (L'Horta Sud)",
+    "extrapolation_zone": "Algemesi (Ribera Alta del Jucar)",
+    "validation_method": "GroupKFold 5-fold spatial CV, 1x1 km blocks"
+  }
+}

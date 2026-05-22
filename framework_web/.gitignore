@@ -9,9 +9,12 @@ venv/
 .mypy_cache/
 *.egg-info/
 
-## Datos pesados pre-procesados (regenerables con tools/)
-backend/data_processed/*
-!backend/data_processed/.gitkeep
+## Datos pre-procesados que SÍ van al repo (~50 MB total)
+## Necesarios para que el backend arranque en Render / cualquier deploy
+## sin re-correr los pipelines locales que dependen de SNAP + raw Sentinel.
+## Si algún archivo individual supera 100 MB habría que pasarlo a Git LFS.
+backend/data_processed/*.tmp
+backend/data_processed/.scratch/
 
 ## Variables de entorno
 .env
