@@ -182,7 +182,7 @@ export function LeakageAudit() {
   ];
 
   return (
-    <div className="max-w-[1120px] mx-auto px-6 pt-6 pb-12 space-y-8">
+    <div className="max-w-[1120px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-10 sm:pb-12 space-y-6 sm:space-y-8">
       {/* ─── CASE FILE HEADER ─────────────────────────────────────
        *  Forensic framing: case id + title + status of the page itself
        *  as an audit artefact. No icon-heavy chrome here; that work is

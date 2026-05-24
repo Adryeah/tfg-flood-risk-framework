@@ -58,7 +58,7 @@ function Icon({ name, size = 16, className = '', style }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ isOpen = false, onClose = () => {} }) {
   const [statusDot, setStatusDot] = useState('#475569');
   const [statusLabel, setStatusLabel] = useState('Checking backend…');
 
@@ -87,7 +87,18 @@ export function Sidebar() {
   const currentPath = window.location.hash.slice(1) || '/';
 
   return (
-    <aside className="w-80 min-h-[100dvh] h-[100dvh] flex flex-col fixed left-0 top-0 z-[1200] shrink-0" style={{ backgroundColor: 'var(--sidebar-bg)', borderRight: '1px solid rgba(0,0,0,0.18)' }}>
+    <aside
+      className={
+        'w-80 min-h-[100dvh] h-[100dvh] flex flex-col fixed left-0 top-0 z-[1200] shrink-0 ' +
+        'transition-transform duration-300 ease-out will-change-transform ' +
+        // Off-canvas en mobile: si isOpen → translate-x-0, si no → -translate-x-full.
+        // En md+ siempre visible (md:translate-x-0 anula el state).
+        (isOpen ? 'translate-x-0' : '-translate-x-full') +
+        ' md:translate-x-0 md:transition-none'
+      }
+      style={{ backgroundColor: 'var(--sidebar-bg)', borderRight: '1px solid rgba(0,0,0,0.18)' }}
+      aria-hidden={!isOpen && typeof window !== 'undefined' && window.innerWidth < 768}
+    >
       {/* ─── Editorial wordmark ───
        *  Serif italic "Flood Risk" paired with tracked-out small caps
        *  "FRAMEWORK" — typographic juxtaposition (serif × mono caps)
@@ -95,7 +106,7 @@ export function Sidebar() {
        *  dashboard chrome (per `frontend-design` skill: "Avoid generic
        *  fonts ... opt instead for distinctive choices"). */}
       <div
-        className="h-16 px-5 flex items-center border-b"
+        className="h-16 px-5 flex items-center justify-between border-b"
         style={{ borderBottomColor: 'rgba(255,255,255,0.06)' }}
       >
         <a
@@ -118,6 +129,27 @@ export function Sidebar() {
             </span>
           </div>
         </a>
+        {/* Botón de cierre del drawer (solo mobile) */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar menú"
+          className="md:hidden -mr-1 w-9 h-9 inline-flex items-center justify-center rounded text-[#F8FAFC] hover:bg-white/5 active:bg-white/10 transition-colors"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4">

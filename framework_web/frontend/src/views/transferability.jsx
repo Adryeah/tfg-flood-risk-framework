@@ -90,7 +90,7 @@ export function Transferability() {
   }
 
   return (
-    <div className="p-6 max-w-[1440px] mx-auto">
+    <div className="p-3 sm:p-6 max-w-[1440px] mx-auto">
       {/* ─── HEADER · serif title + eyebrow ─── */}
       <div className="mb-6">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">

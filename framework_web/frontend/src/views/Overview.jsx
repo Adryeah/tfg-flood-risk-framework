@@ -118,8 +118,10 @@ export function Overview() {
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 pb-1">
+      {/* Header — en mobile stack vertical (título arriba, pill LIVE debajo
+       *  alineada a la izquierda como un meta-chip). En sm+ vuelve a la
+       *  pose horizontal con la pill empujada a la derecha. */}
+      <div className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 pb-1">
         <div className="min-w-0">
           <div className="text-10 font-mono font-semibold uppercase tracking-wider text-text-tertiary mb-1">
             Operations · Valencia ·{' '}
@@ -139,7 +141,7 @@ export function Overview() {
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex flex-row items-start sm:flex-col sm:items-end gap-2 shrink-0">
           <div
             className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded border backdrop-blur-sm"
             style={{

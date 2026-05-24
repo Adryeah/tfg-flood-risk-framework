@@ -85,9 +85,11 @@ export function ExposureDashboard() {
   }, [selectedId]);
 
   return (
-    <div className="p-5 space-y-3">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+    <div className="p-3 sm:p-5 space-y-3">
+      {/* Header — stack vertical en mobile para que el selector de cartera
+       *  no compita por ancho con el título cuando los nombres son largos
+       *  ("Premium Residential Valencia", "Wide Distribution Mix"). */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-20 font-semibold text-text-primary tracking-tight">
@@ -118,7 +120,7 @@ export function ExposureDashboard() {
           value={selectedId || ''}
           onValueChange={(v) => v && setSelectedId(v)}
         >
-          <SelectTrigger className="w-[260px] h-8 text-12">
+          <SelectTrigger className="w-full sm:w-[260px] h-8 text-12">
             <SelectValue placeholder="Select portfolio" />
           </SelectTrigger>
           <SelectContent>

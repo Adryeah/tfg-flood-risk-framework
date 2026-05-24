@@ -110,7 +110,7 @@ export function ModelValidation() {
     buf.find((b) => b.buffer_m === 100)?.recall ?? m.recall;
 
   return (
-    <div className="p-6 max-w-[1440px] mx-auto">
+    <div className="p-3 sm:p-6 max-w-[1440px] mx-auto">
       {/* ─── HEADER · eyebrow + serif title (editorial register) ─── */}
       <div className="mb-6">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">

@@ -529,9 +529,22 @@ export function PortfolioExplorer() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] gap-3 p-5 pb-3">
+    <div className="flex flex-col min-h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3.5rem)] gap-3 p-3 sm:p-5 pb-3">
+      {/* Aviso mobile — la tabla AG Grid con 9 columnas no es manejable
+       *  con touch sin scroll horizontal incomprensible. Mostramos un
+       *  banner explícito en sm- y mantenemos la tabla disponible para
+       *  los que insistan. */}
+      <div className="md:hidden border border-amber-200 bg-amber-50 rounded p-3 text-12 text-amber-900 leading-relaxed shrink-0">
+        <div className="font-semibold mb-1">Vista pensada para desktop</div>
+        <p>
+          El Portfolio Explorer usa una tabla de 9 columnas pensada para
+          pantallas anchas. Funciona en móvil pero la lectura es más
+          cómoda en un portátil o tablet en horizontal.
+        </p>
+      </div>
+
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-20 font-semibold text-text-primary tracking-tight">
@@ -580,8 +593,12 @@ export function PortfolioExplorer() {
       {/* Main grid: filters rail · AG Grid clients table. Map removed —
        *  geographic browsing lives in Policy Map. Here the focus is the
        *  data table at full height, so the underwriter can scan, sort
-       *  and export the entire portfolio without scrolling. */}
-      <div className="grid grid-cols-[260px_1fr] gap-3 flex-1 min-h-0">
+       *  and export the entire portfolio without scrolling.
+       *
+       *  En mobile el rail se apila ARRIBA de la tabla (1 columna) para
+       *  que el filtro siga siendo accesible; en md+ vuelve a la
+       *  composición lateral 260px + 1fr clásica. */}
+      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-3 flex-1 min-h-0">
         {/* Left rail: portfolio + filters */}
         <Card className="overflow-hidden flex flex-col">
           <CardHeader className="py-2.5 px-4 border-b border-border-default shrink-0">

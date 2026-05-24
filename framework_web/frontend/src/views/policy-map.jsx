@@ -317,7 +317,7 @@ export function PolicyMap() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] gap-2 p-4 pb-3">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] gap-2 p-3 sm:p-4 pb-3">
       {/* Header — slim single line so the map gets maximum vertical room. */}
       <div className="flex items-center justify-between gap-4 shrink-0 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
@@ -337,7 +337,7 @@ export function PolicyMap() {
             value={selectedPortfolioId || ''}
             onValueChange={(v) => v && setSelectedPortfolioId(v)}
           >
-            <SelectTrigger className="w-[240px] h-8 text-12">
+            <SelectTrigger className="w-full sm:w-[240px] h-8 text-12">
               <SelectValue placeholder="Select portfolio" />
             </SelectTrigger>
             <SelectContent>
