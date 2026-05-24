@@ -352,6 +352,15 @@ export function PortfolioExplorer() {
       .map((c) => ({ ...c, estimated_loss_flood: c.estimated_loss_dana }));
   }, [portfolioData, filters]);
 
+  // 3b) Recompute exposure metrics over the FILTERED subset so the KPI bar
+  // and risk donut reaccionan al filtro (producto / risk / value range). El
+  // backend solo manda la exposición pre-calculada para la cartera entera;
+  // los mismos sums hechos client-side son lineales en clientes y baratos.
+  const filteredExposure = useMemo(
+    () => computeLocalExposure({ clients: filteredClients }),
+    [filteredClients]
+  );
+
   // Max-value lookups for AG Grid heat-bar normalization. The bar in each
   // monetary/probability cell fills proportionally to (value / dataset max)
   // so the user instantly sees which rows are the outliers — borrowed from
@@ -552,12 +561,15 @@ export function PortfolioExplorer() {
       </div>
 
       {/* KPI bar — horizontal, full-width, True Flood Risk-style.
-       *  5 portfolio-level metrics + a compact risk-distribution donut. */}
+       *  5 portfolio-level metrics + a compact risk-distribution donut.
+       *  Recibe la exposición YA RECALCULADA sobre el subset filtrado, así
+       *  que TIV/EAL/PML/distribución refleja el filtro de producto y de
+       *  rango de valor que el usuario tenga activo. */}
       {exposure && portfolioData ? (
         <KpiBar
-          exposure={exposure}
-          portfolio={portfolioData}
-          filteredCount={filteredClients.length}
+          exposure={filteredExposure}
+          filteredClients={filteredClients}
+          totalCount={portfolioData.n_clients || portfolioData.clients?.length || 0}
         />
       ) : (
         <div className="shrink-0 h-[88px] flex items-center justify-center bg-bg-surface border border-border-default rounded">
@@ -671,27 +683,31 @@ export function PortfolioExplorer() {
 // Inspired by True Flood Risk's Map Intelligence Dashboard: total
 // insured value, EAL, PML scenario, high-risk exposure (€), and
 // # of affected (high+very_high) policies, all visible above the map.
+//
+// Recibe la exposición YA recalculada sobre `filteredClients`, así que
+// cada filtro de PortfolioFilters (producto · risk · value range) se
+// refleja directamente en los 5 KPIs + el donut. `totalCount` se
+// preserva sólo para el sub-label "X of Y shown" del primer KPI.
 // ────────────────────────────────────────────────────────────────
-function KpiBar({ exposure, portfolio, filteredCount }) {
-  const tiv = portfolio.total_insured_value || 0;
+function KpiBar({ exposure, filteredClients, totalCount }) {
+  const tiv = exposure.total_insured_value || 0;
   const vaR = exposure.value_at_risk || 0;
   const pml = exposure.estimated_total_loss_dana || 0;
   const eal = exposure.expected_total_loss || 0;
+  const filteredCount = filteredClients.length;
   const highCount =
     (exposure.distribution_by_category?.high || 0) +
     (exposure.distribution_by_category?.very_high || 0);
-  const totalCount =
-    portfolio.n_clients || portfolio.clients?.length || 0;
 
   const highValue = useMemo(() => {
-    return (portfolio.clients || []).reduce(
+    return filteredClients.reduce(
       (sum, c) =>
         c.risk_category === 'high' || c.risk_category === 'very_high'
           ? sum + (c.insured_value || 0)
           : sum,
       0
     );
-  }, [portfolio]);
+  }, [filteredClients]);
 
   return (
     <div className="shrink-0 grid grid-cols-[repeat(5,minmax(0,1fr))_220px] gap-2">

@@ -220,68 +220,165 @@ function RiskLayers({
 
     (async () => {
       try {
-        // Risk surface(s)
-        const riskGeos = await Promise.all(
-          targets.map((z) => api.risk.getGeoJSON(z))
-        );
-        if (cancelled) return;
+        // ─── Risk surface ────────────────────────────────────────────
+        // 2D: raster tiles pre-renderizados desde /api/tiles. Fidelidad
+        //     píxel-perfect del Random Forest, colormap continuo YlOrRd.
+        //     No requiere fetch del geojson → first paint más rápido.
+        // 3D: GeoJSON con fill-extrusion (lo de siempre). Necesita
+        //     `probability_max` por feature para extrudir.
+        let riskGeos = null;
+        if (mode3d) {
+          riskGeos = await Promise.all(
+            targets.map((z) => api.risk.getGeoJSON(z))
+          );
+          if (cancelled) return;
+        }
 
         targets.forEach((z, i) => {
           const id = `risk-${z}`;
-          if (!map.getSource(id)) {
+          if (map.getSource(id)) return;
+
+          if (mode3d) {
             map.addSource(id, { type: 'geojson', data: riskGeos[i] });
-            if (mode3d) {
-              // 3D mode: extrude the risk surface by P(flood) so the
-              // map reads as a "risk relief" landscape. Height in metres
-              // = probability_max × 500 → low-prob bins sit at ~30 m,
-              // very_high bins peak ~500 m. Cat-model dashboards
-              // (Swiss Re, Munich Re) use this exact metaphor — risk
-              // becomes terrain you can fly over.
-              map.addLayer({
-                id,
-                type: 'fill-extrusion',
-                source: id,
-                paint: {
-                  'fill-extrusion-color': ['get', 'color'],
-                  'fill-extrusion-height': [
-                    '*',
-                    ['coalesce', ['get', 'probability_max'], 0.1],
-                    500,
-                  ],
-                  'fill-extrusion-base': 0,
-                  'fill-extrusion-opacity': 0.78,
-                  'fill-extrusion-vertical-gradient': true,
-                  'fill-extrusion-opacity-transition': {
-                    duration: 220,
-                    delay: 0,
-                  },
+            // 3D mode: extrude the risk surface by P(flood) so the
+            // map reads as a "risk relief" landscape. Height in metres
+            // = probability_max × 500 → low-prob bins sit at ~30 m,
+            // very_high bins peak ~500 m. Cat-model dashboards
+            // (Swiss Re, Munich Re) use this exact metaphor — risk
+            // becomes terrain you can fly over.
+            map.addLayer({
+              id,
+              type: 'fill-extrusion',
+              source: id,
+              paint: {
+                'fill-extrusion-color': ['get', 'color'],
+                'fill-extrusion-height': [
+                  '*',
+                  ['coalesce', ['get', 'probability_max'], 0.1],
+                  500,
+                ],
+                'fill-extrusion-base': 0,
+                'fill-extrusion-opacity': 0.78,
+                'fill-extrusion-vertical-gradient': true,
+                'fill-extrusion-opacity-transition': {
+                  duration: 220,
+                  delay: 0,
                 },
-              });
-            } else {
-              map.addLayer({
-                id,
-                type: 'fill',
-                source: id,
-                paint: {
-                  'fill-color': ['get', 'color'],
-                  'fill-opacity': 0.65,
-                  // 220 ms ease-out feel on opacity changes (toggle on/off,
-                  // recolour). Matches the rest of the UI's motion budget.
-                  'fill-opacity-transition': { duration: 220, delay: 0 },
-                  'fill-color-transition': { duration: 220, delay: 0 },
-                },
-              });
-            }
+              },
+            });
+          } else {
+            // 2D — raster tile pyramid del RF. tileSize 256, zoom 10–15
+            // (lo que pre-generó tools/07_export_risk_tiles.py). Para
+            // zooms fuera de rango MapLibre upscalea el más cercano,
+            // que se ve aceptable sin recargas adicionales.
+            map.addSource(id, {
+              type: 'raster',
+              tiles: [api.risk.tilesUrl(z)],
+              tileSize: 256,
+              minzoom: 10,
+              maxzoom: 15,
+              attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+            });
+            map.addLayer({
+              id,
+              type: 'raster',
+              source: id,
+              paint: {
+                'raster-opacity': 0.7,
+                'raster-opacity-transition': { duration: 220, delay: 0 },
+                // Resampling lineal para que el zoom intermedio no
+                // se vea pixelado feo; en zooms nativos (z=14) los
+                // píxeles SAR se ven con sus bordes rectos, que es lo
+                // que queremos visualmente.
+                'raster-resampling': 'linear',
+              },
+            });
           }
         });
 
-        // 3D BUILDINGS — OpenFreeMap vector tiles (free, no token, no
-        // limit; OpenMapTiles schema). Buildings come from the OSM
-        // `building` features extruded by `render_height` (metres,
-        // already cleaned by the tile producer). We layer them ABOVE
-        // the risk surface so a building sitting on a high-risk bin
-        // is visually grounded on the red "terrain".
         if (mode3d) {
+          // ─── REAL TERRAIN ──────────────────────────────────────────
+          // AWS Open Data Terrarium tiles (gratis, sin token, fusión
+          // SRTM/ALOS a 30 m). Cada píxel codifica altitud como
+          // RGB: elev = R*256 + G + B/256 − 32768. MapLibre decodifica
+          // con encoding:'terrarium'. exaggeration 1.3 — Valencia es
+          // plana (cotas 0-200 m en el bbox) y sin amplificación las
+          // diferencias no se perciben. 1.3x mantiene la geomorfología
+          // honesta y a la vez hace visible la depresión donde el
+          // modelo predice riesgo. La superficie de riesgo extrudida
+          // sigue cuadrando porque MapLibre eleva fill-extrusion sobre
+          // la cota del terreno, no sobre nivel del mar.
+          if (!map.getSource('terrain-dem')) {
+            map.addSource('terrain-dem', {
+              type: 'raster-dem',
+              tiles: [
+                'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
+              ],
+              tileSize: 256,
+              encoding: 'terrarium',
+              maxzoom: 14,
+              attribution:
+                'Terrain · AWS Open Data Registry (SRTM/ALOS)',
+            });
+          }
+          // setTerrain es idempotente; comprobamos para evitar logs
+          // duplicados en hot-reload del dev server.
+          if (!map.getTerrain || !map.getTerrain()) {
+            map.setTerrain({ source: 'terrain-dem', exaggeration: 1.3 });
+          }
+
+          // ─── HILLSHADE ─────────────────────────────────────────────
+          // Sombras subsumidas del DEM. Visualmente refuerza los valles
+          // del Turia y del Júcar incluso cuando la cámara está casi
+          // cenital. Insertado BAJO la primera capa de riesgo para que
+          // los amarillos/rojos del RF queden por encima.
+          if (!map.getLayer('hillshade')) {
+            const beforeId = `risk-${targets[0]}`;
+            const beforeExists = map.getLayer(beforeId) ? beforeId : undefined;
+            map.addLayer(
+              {
+                id: 'hillshade',
+                type: 'hillshade',
+                source: 'terrain-dem',
+                paint: {
+                  'hillshade-exaggeration': 0.45,
+                  'hillshade-shadow-color': '#0F172A',
+                  'hillshade-highlight-color': '#F8FAFC',
+                  'hillshade-accent-color': '#1E293B',
+                },
+              },
+              beforeExists
+            );
+          }
+
+          // ─── SKY ATMOSPHERE ────────────────────────────────────────
+          // MapLibre GL JS 5.x ya no expone `sky` como layer type;
+          // pasa a ser una propiedad raíz del style vía `setSky()`.
+          // Gradiente atmosférico horizonte → cenit con los colores
+          // del cielo mediterráneo a media mañana, que es cuando
+          // pasa el Sentinel-1 ascendente sobre Valencia.
+          if (map.setSky) {
+            map.setSky({
+              'sky-color': '#88B5DA',
+              'horizon-color': '#E8EEF5',
+              'fog-color': '#B8C9D8',
+              'fog-ground-blend': 0.05,
+              'horizon-fog-blend': 0.5,
+              'sky-horizon-blend': 0.6,
+              'atmosphere-blend': 0.85,
+            });
+          }
+
+          // ─── 3D BUILDINGS ──────────────────────────────────────────
+          // OpenFreeMap vector tiles (free, no token, no limit;
+          // OpenMapTiles schema). Buildings come from the OSM
+          // `building` features extruded by `render_height` (metres,
+          // already cleaned by the tile producer). We layer them ABOVE
+          // the risk surface so a building sitting on a high-risk bin
+          // is visually grounded on the red "terrain". Con setTerrain
+          // activo, los edificios extruden desde la cota REAL del
+          // suelo — un bloque de Catarroja (cota ~5 m) queda más bajo
+          // que uno de Torrent (cota ~50 m), igual que en la realidad.
           if (!map.getSource('openfreemap')) {
             map.addSource('openfreemap', {
               type: 'vector',
@@ -498,8 +595,14 @@ function RiskLayers({
   // layer types so the swap works in Overview's 3D mode too.
   useEffect(() => {
     if (!map || !isLoaded) return;
-    const colorProp = mode3d ? 'fill-extrusion-color' : 'fill-color';
-    const opacityProp = mode3d ? 'fill-extrusion-opacity' : 'fill-opacity';
+    // En 2D la capa es raster — la binaria con `case` sobre
+    // `probability_max` no aplica porque el colormap está cocinado
+    // en los PNG. La vista binaria sigue funcionando en 3D (geojson).
+    // Cuando esté pedida en 2D simplemente no se hace nada.
+    if (!mode3d) return;
+
+    const colorProp = 'fill-extrusion-color';
+    const opacityProp = 'fill-extrusion-opacity';
 
     for (const z of targets) {
       const id = `risk-${z}`;
@@ -511,10 +614,10 @@ function RiskLayers({
           '#DC2626', // above threshold → flood-positive red
           '#94A3B8', // below threshold → neutral slate-grey
         ]);
-        map.setPaintProperty(id, opacityProp, mode3d ? 0.85 : 0.7);
+        map.setPaintProperty(id, opacityProp, 0.85);
       } else {
         map.setPaintProperty(id, colorProp, ['get', 'color']);
-        map.setPaintProperty(id, opacityProp, mode3d ? 0.78 : 0.65);
+        map.setPaintProperty(id, opacityProp, 0.78);
       }
     }
   }, [map, isLoaded, threshold, binaryView, mode3d, targets]);

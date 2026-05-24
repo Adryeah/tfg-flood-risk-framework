@@ -92,6 +92,11 @@ export const api = {
     // if the export script hasn't been re-run with the tail step.
     getTailGeoJSON: (zone) => request(`/api/risk/${zone}/tail.geojson`),
     predict: (lat, lon) => request(`/api/risk/predict?lat=${lat}&lon=${lon}`),
+    // Plantilla XYZ para MapLibre raster source — `{z}/{x}/{y}` quedan
+    // como literales para que MapLibre los sustituya por tile. Devuelve
+    // la URL ABSOLUTA al backend (no relativa) para evitar que el
+    // navegador resuelva contra el dominio del frontend en producción.
+    tilesUrl: (zone) => `${API_BASE}/api/tiles/${zone}/{z}/{x}/{y}.png`,
   },
 
   geo: {

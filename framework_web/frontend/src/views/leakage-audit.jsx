@@ -4,6 +4,14 @@ import {
   AlertTriangle,
   Code2,
   BookOpen,
+  Scale,
+  Landmark,
+  Ban,
+  ShieldCheck,
+  ArrowRight,
+  Quote,
+  FileSearch,
+  CircleAlert,
 } from 'lucide-react';
 
 import {
@@ -18,7 +26,6 @@ import { Badge } from '@/components/ui/badge';
 import CodeBlock from '@/components/code-block';
 import Timeline from '@/components/timeline';
 import { MethodologySources } from '@/components/methodology-sources';
-import { Scale, Landmark } from 'lucide-react';
 import { api } from '@/lib/api.js';
 
 // Regulatory + governance references that legitimise this audit page
@@ -57,6 +64,13 @@ const SOURCES = [
 // these specific scalars.
 const AUC_SUSPECTED = 0.966;
 const AUC_VERIFIED = 0.922;
+const AUC_DELTA = AUC_SUSPECTED - AUC_VERIFIED;
+
+// Case identifier: makes the page legible at a glance as an audit
+// artefact (Solvency II / EU AI Act vocabulary) rather than a chart
+// among charts. Stable string, no live state.
+const CASE_ID = 'LK-2024-001';
+const CASE_FRAMEWORK = 'Solvency II · EU AI Act';
 
 export function LeakageAudit() {
   const [data, setData] = useState(null);
@@ -114,6 +128,10 @@ export function LeakageAudit() {
     ...r,
     critical: r.max_abs_diff > 10,
   }));
+  const maxDiff = augmentedRows.reduce(
+    (m, r) => Math.max(m, Math.abs(Number(r.max_abs_diff) || 0)),
+    0
+  ) || 1;
 
   // Timeline phases — each `content` is wrapped in a single <p> with a
   // plain text body so the i18n DOM walker can match it as one text
@@ -133,7 +151,7 @@ export function LeakageAudit() {
     },
     {
       label: 'Phase 2',
-      title: 'Audit design — 4 tests, stop-on-fail',
+      title: 'Audit design · 4 tests, stop-on-fail',
       status: null,
       content: (
         <p>
@@ -153,7 +171,7 @@ export function LeakageAudit() {
     },
     {
       label: 'Phase 4',
-      title: 'Decision — XGBoost v3 rejected',
+      title: 'Decision · XGBoost v3 rejected',
       status: 'fail',
       content: (
         <p>
@@ -164,224 +182,371 @@ export function LeakageAudit() {
   ];
 
   return (
-    <div className="p-6 space-y-4 max-w-[1024px] mx-auto">
-      {/* HEADER */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <h1 className="text-24 font-semibold text-text-primary tracking-tight">
-              Leakage Audit
-            </h1>
-            <Badge className="bg-risk-high-bg text-risk-high hover:bg-risk-high-bg text-10 font-mono uppercase tracking-wider">
-              Case study
-            </Badge>
-            <Badge
-              variant="outline"
-              className="text-10 font-mono uppercase tracking-wider"
-            >
-              Solvency II · model validation
-            </Badge>
-            <Badge
-              variant="outline"
-              className="text-10 font-mono uppercase tracking-wider"
-            >
-              EU AI Act · audit log
-            </Badge>
+    <div className="max-w-[1120px] mx-auto px-6 pt-6 pb-12 space-y-8">
+      {/* ─── CASE FILE HEADER ─────────────────────────────────────
+       *  Forensic framing: case id + title + status of the page itself
+       *  as an audit artefact. No icon-heavy chrome here; that work is
+       *  carried by the verdict block immediately below.
+       * ─────────────────────────────────────────────────────────── */}
+      <header className="border-b border-border-default pb-6">
+        <div className="flex items-center gap-3 text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-3">
+          <FileSearch className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <span>Case file</span>
+          <span className="text-border-strong">·</span>
+          <span className="text-text-secondary tabular-nums">{CASE_ID}</span>
+          <span className="text-border-strong">·</span>
+          <span>{CASE_FRAMEWORK}</span>
+        </div>
+        <h1 className="text-24 font-semibold text-text-primary tracking-tight">
+          Leakage Audit
+        </h1>
+        <p className="text-13 text-text-secondary mt-1.5 max-w-[68ch]">
+          Temporal leakage detection in XGBoost v3 exploratory iteration ·
+          Methodological contribution
+        </p>
+      </header>
+
+      {/* ─── VERDICT ──────────────────────────────────────────────
+       *  Tinted background (risk-high-bg) with strong red text. NOT
+       *  a side-stripe card. Big Ban icon as the dominant visual.
+       *  Right rail: case meta (closed date, audit type, decision).
+       *  Asymmetric grid (icon | prose | meta) so it does not read
+       *  as a generic alert.
+       * ─────────────────────────────────────────────────────────── */}
+      <section
+        aria-label="Audit verdict"
+        className="grid grid-cols-[auto_1fr_auto] gap-6 items-start bg-risk-high-bg border border-risk-high/25 rounded-md px-6 py-5"
+      >
+        <Ban
+          className="w-9 h-9 text-risk-high mt-1"
+          strokeWidth={1.5}
+        />
+        <div className="min-w-0">
+          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-risk-high/80 mb-1">
+            Verdict
           </div>
-          <p className="text-13 text-text-secondary">
-            Temporal leakage detection in XGBoost v3 exploratory iteration ·
-            Methodological contribution
+          <div className="text-20 font-semibold text-risk-high tracking-tight">
+            Rejected
+          </div>
+          <p className="text-13 text-text-secondary leading-relaxed mt-2 max-w-[60ch]">
+            {`An exploratory XGBoost iteration reported AUC ${AUC_SUSPECTED.toFixed(3)}, a +${AUC_DELTA.toFixed(3)} jump over the Random Forest v2 baseline. The 4-test audit halted at Test 2: temporal leakage confirmed. Per the stop-on-fail rule, the model was removed from the pipeline.`}
           </p>
         </div>
-      </div>
+        <dl className="hidden md:grid grid-cols-[auto_auto] gap-x-4 gap-y-1.5 text-11 font-mono">
+          <dt className="text-text-tertiary uppercase tracking-wider">
+            Decided by
+          </dt>
+          <dd className="text-text-primary text-right">Test 2 fail</dd>
+          <dt className="text-text-tertiary uppercase tracking-wider">
+            Stopping rule
+          </dt>
+          <dd className="text-text-primary text-right">Stop-on-fail</dd>
+          <dt className="text-text-tertiary uppercase tracking-wider">
+            Artefact
+          </dt>
+          <dd className="text-text-primary text-right">
+            xgboost_v3_DEPRECATED
+          </dd>
+        </dl>
+      </section>
 
-      {/* HYPOTHESIS BANNER */}
-      <Card className="border-l-4 border-l-risk-medium bg-risk-medium-bg/30">
-        <CardContent className="pt-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-risk-medium flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <div className="text-13 font-semibold text-text-primary mb-1">
-                Too good to be true?
-              </div>
-              <p className="text-12 text-text-secondary leading-relaxed">
-                {`An exploratory XGBoost iteration reported AUC ${AUC_SUSPECTED.toFixed(3)} vs Random Forest v2's ${AUC_VERIFIED.toFixed(3)}. Before accepting it as the final model, we ran a formal 4-test audit. Test 2 failed and the model was discarded. This audit is documented as a methodological case study.`}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPI TILES: SUSPECTED vs VERIFIED */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-risk-high-bg border border-risk-high/30 rounded-md p-4">
-          <div className="text-10 font-mono font-semibold text-risk-high uppercase tracking-wider mb-1">
-            Suspected (XGBoost v3)
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-24 font-mono font-semibold text-risk-high tabular-nums">
-              {AUC_SUSPECTED.toFixed(3)}
-            </span>
-            <span className="text-11 text-risk-high/70 font-mono">
-              discarded
-            </span>
-          </div>
-          <div className="text-11 text-text-secondary mt-1.5">
-            contaminated by event scenes
-          </div>
-        </div>
-
-        <div className="bg-risk-low-bg border border-risk-low/30 rounded-md p-4">
-          <div className="text-10 font-mono font-semibold text-risk-low uppercase tracking-wider mb-1">
-            Verified (Random Forest v2)
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-24 font-mono font-semibold text-risk-low tabular-nums">
-              {AUC_VERIFIED.toFixed(3)}
-            </span>
-            <span className="text-11 text-risk-low/70 font-mono">
-              final model
-            </span>
-          </div>
-          <div className="text-11 text-text-secondary mt-1.5">
-            no leakage by construction
-          </div>
-        </div>
-      </div>
-
-      {/* TIMELINE */}
+      {/* ─── EVIDENCE A · MODEL COMPARISON ────────────────────────
+       *  Side-by-side AUC confrontation. Big tabular-num numbers,
+       *  asymmetric treatment: suspected struck through + red, final
+       *  in green with check. Centre column carries the delta and the
+       *  REJECTED/FINAL state, with a directional arrow that reads
+       *  left-to-right as "this number was the lie; this one is what
+       *  the model can actually defend".
+       *
+       *  Wrapped in a single Card so it reads as one piece of evidence
+       *  rather than two competing tiles. Visually, the grid is the
+       *  star, not the chrome.
+       * ─────────────────────────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-14">Audit Timeline</CardTitle>
-          <CardDescription className="text-12">
-            Four-phase systematic methodology with stop-on-fail rule
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Timeline phases={phases} />
-        </CardContent>
-      </Card>
-
-      {/* CODE: THE BUG */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-14 flex items-center gap-2">
-            <Code2 className="w-4 h-4 text-text-secondary" strokeWidth={1.75} />
-            The bug
+          <div className="flex items-center gap-2 text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.14em] mb-1">
+            <span>Evidence A</span>
+            <span className="text-border-strong">·</span>
+            <span>Reported vs verifiable AUC</span>
+          </div>
+          <CardTitle className="text-14">
+            The +0.044 jump that prompted the audit
           </CardTitle>
-          <CardDescription className="text-12">
-            Path-based filter failed to exclude event date scenes
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <CodeBlock
-            code={bugCode}
-            caption={bugLocation}
-            badge="critical"
-          />
-          <div className="text-12 text-text-secondary mt-3 leading-relaxed">
-            {`October 2024 event scenes (S1_sigma0_20241019.tif and S1_sigma0_20241031.tif) were located directly in data/sentinel1/processed/, not in processed/event/. The path filter missed them. Since October counts as a winter month in the seasonal logic, both scenes leaked into the winter feature stack alongside the 12 baseline winter scenes.`}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center py-2">
+            {/* Suspected */}
+            <div className="text-center md:text-right">
+              <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
+                Suspected
+              </div>
+              <div className="text-11 text-text-secondary mb-3">
+                XGBoost v3 · 24 features
+              </div>
+              <div
+                className="font-mono font-semibold tabular-nums text-risk-high inline-flex items-baseline"
+                style={{ fontSize: '40px', lineHeight: 1 }}
+              >
+                <span className="line-through decoration-2 decoration-risk-high/60">
+                  {AUC_SUSPECTED.toFixed(3)}
+                </span>
+              </div>
+              <div className="mt-3 text-11 text-text-secondary max-w-[28ch] mx-auto md:ml-auto md:mr-0 leading-relaxed">
+                Inflated by event-date scenes leaking into winter aggregates
+              </div>
+            </div>
+
+            {/* Delta + verdict pivot */}
+            <div className="flex md:flex-col items-center gap-2 md:gap-3 py-2">
+              <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+                Δ AUC
+              </div>
+              <div className="font-mono font-semibold tabular-nums text-risk-high text-16">
+                +{AUC_DELTA.toFixed(3)}
+              </div>
+              <ArrowRight
+                className="w-5 h-5 text-text-tertiary hidden md:block"
+                strokeWidth={1.75}
+              />
+              <div className="md:hidden flex items-center text-text-tertiary">
+                <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
+              </div>
+            </div>
+
+            {/* Verified */}
+            <div className="text-center md:text-left">
+              <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
+                Verified
+              </div>
+              <div className="text-11 text-text-secondary mb-3">
+                Random Forest v2 · 14 features
+              </div>
+              <div
+                className="font-mono font-semibold tabular-nums text-risk-low inline-flex items-baseline gap-2"
+                style={{ fontSize: '40px', lineHeight: 1 }}
+              >
+                {AUC_VERIFIED.toFixed(3)}
+                <ShieldCheck
+                  className="w-5 h-5 text-risk-low self-center"
+                  strokeWidth={1.75}
+                />
+              </div>
+              <div className="mt-3 text-11 text-text-secondary max-w-[28ch] mx-auto md:mr-auto md:ml-0 leading-relaxed">
+                Static DEM + baseline-period aggregates only; no temporal
+                leakage by construction
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-border-default text-12 text-text-secondary leading-relaxed">
+            <span className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mr-2">
+              Auditor's note:
+            </span>
+            A +0.044 AUC step between two correctly cross-validated models, with
+            no qualitatively new feature family added, is the canonical signal
+            of leakage in remote-sensing classification. Audit was triggered on
+            that prior alone.
           </div>
         </CardContent>
       </Card>
 
-      {/* WINTER FEATURES DIFF TABLE */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-14">Winter Features Diff</CardTitle>
-          <CardDescription className="text-12">
-            Magnitude of leakage measured by regenerating clean features
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <WinterDiffTable rows={augmentedRows} />
-        </CardContent>
-      </Card>
+      {/* ─── METHODOLOGY · TIMELINE ───────────────────────────────
+       *  Strong section header (numbered prefix), then the Timeline
+       *  component verbatim. The Timeline owns the visual narrative
+       *  of the audit's four phases; we just give it institutional
+       *  framing so it reads as procedure rather than a status feed.
+       * ─────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionLabel index="01" eyebrow="Methodology">
+          Four-phase audit · stop-on-fail rule
+        </SectionLabel>
+        <Card>
+          <CardContent className="pt-5">
+            <Timeline phases={phases} />
+          </CardContent>
+        </Card>
+      </section>
 
-      {/* REGULATORY FRAMING — why this audit matters beyond the thesis.
-       *  Two-column grid: Solvency II (model validation requirement) and
-       *  EU AI Act (audit log + traceability requirement). Frames the
-       *  audit as a production-grade governance control, not academic
-       *  curiosity. */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-14">Regulatory framing</CardTitle>
-          <CardDescription className="text-12">
-            Why a leakage audit is a production-grade control, not just a
-            thesis exercise
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="border border-border-default rounded p-3 bg-bg-subtle/30">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Landmark
-                  className="w-4 h-4 text-brand-700"
-                  strokeWidth={1.75}
-                />
-                <span className="text-12 font-semibold text-text-primary">
-                  Solvency II
-                </span>
-                <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
-                  Directive 2009/138/EC
-                </span>
-              </div>
-              <p className="text-11 text-text-secondary leading-relaxed">
-                {`Insurers using internal models for capital adequacy must demonstrate that those models pass rigorous validation and backtesting. A model that reports a +0.044 AUC jump without methodological explanation would fail validation. This audit is the documented backtesting that justifies the Random Forest v2 choice.`}
+      {/* ─── EVIDENCE B · THE BUG ─────────────────────────────────
+       *  The code block IS the evidence. We give it forensic chrome:
+       *  a file:line breadcrumb in the card header (monospace, like a
+       *  stack-trace line), an "Exhibit" eyebrow, and a forensic
+       *  annotation below. CodeBlock signature is preserved.
+       * ─────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionLabel index="02" eyebrow="Exhibit A">
+          The bug · path-based filter
+        </SectionLabel>
+        <Card>
+          <CardHeader className="pb-3 border-b border-border-default">
+            <div className="flex items-center gap-2 min-w-0">
+              <Code2
+                className="w-4 h-4 text-text-tertiary shrink-0"
+                strokeWidth={1.75}
+              />
+              <code className="text-11 font-mono text-text-secondary truncate">
+                {bugLocation}
+              </code>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            <CodeBlock
+              code={bugCode}
+              caption={bugLocation}
+              badge="critical"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-3 items-start text-12 text-text-secondary leading-relaxed pt-1">
+              <CircleAlert
+                className="w-4 h-4 text-risk-high mt-0.5 shrink-0"
+                strokeWidth={1.75}
+              />
+              <p>
+                {`October 2024 event scenes (S1_sigma0_20241019.tif and S1_sigma0_20241031.tif) were located directly in data/sentinel1/processed/, not in processed/event/. The path filter missed them. October falls inside the winter aggregation window in the seasonal logic, so both scenes leaked into the winter feature stack alongside the 12 baseline winter scenes.`}
               </p>
             </div>
-            <div className="border border-border-default rounded p-3 bg-bg-subtle/30">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Scale
-                  className="w-4 h-4 text-brand-700"
-                  strokeWidth={1.75}
-                />
-                <span className="text-12 font-semibold text-text-primary">
-                  EU AI Act
-                </span>
-                <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ─── EVIDENCE C · CONTAMINATION MAGNITUDE ─────────────────
+       *  Custom-styled diff table with a magnitude bar in the rightmost
+       *  column. The critical row carries a leading SMOKING GUN marker
+       *  AND a deeper tinted background AND a bold colored bar — three
+       *  reinforcing cues so the row reads at a glance even on quick
+       *  scrolls. No side-stripe border (banned).
+       * ─────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionLabel index="03" eyebrow="Exhibit B">
+          Contamination magnitude · winter feature stack
+        </SectionLabel>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-12">
+              Differences between leaked and re-derived clean features. Values in
+              dB unless stated otherwise.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WinterDiffTable rows={augmentedRows} maxDiff={maxDiff} />
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ─── REGULATORY FRAMING ───────────────────────────────────
+       *  One bloc, two pillars. NOT a 2-card grid (banned shape:
+       *  identical card grids). The pillars share chrome but differ
+       *  internally: Solvency II leads with Landmark + directive id,
+       *  EU AI Act leads with Scale + article id. A 1px vertical
+       *  divider separates them on md+.
+       * ─────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionLabel index="04" eyebrow="Regulatory anchor">
+          Why this is a production control, not a thesis exercise
+        </SectionLabel>
+        <Card>
+          <CardContent className="pt-5 pb-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-border-default">
+              <div className="md:pr-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <Landmark
+                    className="w-4 h-4 text-corporate-navy"
+                    strokeWidth={1.75}
+                  />
+                  <span className="text-12 font-semibold text-text-primary">
+                    Solvency II
+                  </span>
+                </div>
+                <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
+                  Directive 2009/138/EC · Internal Model Validation
+                </div>
+                <p className="text-12 text-text-secondary leading-relaxed">
+                  {`Insurers using internal models for capital adequacy must demonstrate that those models pass rigorous validation and backtesting. A model that reports a +0.044 AUC jump without methodological explanation would fail validation. This audit is the documented backtesting that justifies the Random Forest v2 choice.`}
+                </p>
+              </div>
+              <div className="md:pl-6 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-border-default">
+                <div className="flex items-center gap-2 mb-2">
+                  <Scale
+                    className="w-4 h-4 text-corporate-navy"
+                    strokeWidth={1.75}
+                  />
+                  <span className="text-12 font-semibold text-text-primary">
+                    EU AI Act
+                  </span>
+                </div>
+                <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
                   Regulation 2024/1689 · Annex III §5
-                </span>
+                </div>
+                <p className="text-12 text-text-secondary leading-relaxed">
+                  {`AI systems used for insurance risk scoring are classified high-risk. Providers must keep technical documentation, an audit trail of model decisions, and evidence of human oversight. This page is the audit log: hypothesis, tests run, outcome, and why the suspect model was rejected.`}
+                </p>
               </div>
-              <p className="text-11 text-text-secondary leading-relaxed">
-                {`AI systems used for insurance risk scoring are classified high-risk. Providers must keep technical documentation, an audit trail of model decisions, and evidence of human oversight. This page is the audit log: hypothesis, tests run, outcome, and why the suspect model was rejected.`}
-              </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
-      {/* LESSON LEARNED */}
-      <Card className="border-l-4 border-l-brand-500">
-        <CardContent className="pt-4">
-          <div className="flex items-start gap-3">
-            <BookOpen className="w-5 h-5 text-brand-700 flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <div className="text-13 font-semibold text-text-primary mb-1">
-                Lesson learned
-              </div>
-              <p className="text-12 text-text-secondary leading-relaxed">
-                {`Always filter time series by date, not by path. Path-based filters depend on directory organisation, which is fragile. Date-based filters are explicit about temporal intent. This audit demonstrates that rigorous validation is not optional — significant metric improvements without an underlying methodological change deserve scrutiny. The final TFG model (Random Forest v2) is robust by construction: features are static DEM, baseline-period SAR aggregates, and baseline NDVI. No temporal leakage is possible.`}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ─── LESSON LEARNED · PULL QUOTE ──────────────────────────
+       *  Not a banner with a side stripe (banned). A narrow centered
+       *  pull-quote, prose-width, with a quote mark glyph as the only
+       *  decoration. Closes the case file.
+       * ─────────────────────────────────────────────────────────── */}
+      <section className="max-w-[68ch] mx-auto pt-2">
+        <Quote
+          className="w-6 h-6 text-text-tertiary mb-3"
+          strokeWidth={1.5}
+        />
+        <p className="text-14 text-text-primary leading-relaxed">
+          Always filter time series by date, not by path. Path-based filters
+          depend on directory organisation, which is fragile; date-based filters
+          are explicit about temporal intent.
+        </p>
+        <p className="text-12 text-text-secondary leading-relaxed mt-3">
+          Significant metric improvements without an underlying methodological
+          change deserve scrutiny. The final TFG model (Random Forest v2) is
+          robust by construction: features are static DEM, baseline-period SAR
+          aggregates, and baseline NDVI. No temporal leakage is possible.
+        </p>
+        <div className="mt-3 flex items-center gap-2 text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary">
+          <BookOpen className="w-3.5 h-3.5" strokeWidth={1.75} />
+          <span>Methodological appendix · TFG memoria, Ch. 7</span>
+        </div>
+      </section>
 
-      {/* SOURCES — Evidently AI (audit pattern) + the two regulatory
-       *  references (Solvency II + EU AI Act). Makes the legitimacy
-       *  chain explicit at the bottom of the page. */}
       <MethodologySources items={SOURCES} />
     </div>
   );
 }
 
+// ─── Section label — numbered eyebrow used between major blocks.
+// Pattern: "01 · METHODOLOGY" (mono, tracked) above an h2 with the
+// section title. Reads as a case-file table of contents without
+// adding chrome (no card, no rule, no icon).
+function SectionLabel({ index, eyebrow, children }) {
+  return (
+    <div className="mb-3">
+      <div className="flex items-center gap-2 text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-1">
+        <span className="tabular-nums text-text-secondary">{index}</span>
+        <span className="text-border-strong">·</span>
+        <span>{eyebrow}</span>
+      </div>
+      <h2 className="text-14 font-semibold text-text-primary tracking-tight">
+        {children}
+      </h2>
+    </div>
+  );
+}
+
 // ────────────────────────────────────────────────────────────────
-// Winter diff table — critical row is row-tinted + badge-tagged so
-// the reader's eye lands on `winter_min_sigma0_vv` (16.34 dB) without
-// having to scan all the numbers.
+// Winter diff table — three reinforcing cues on the critical row:
+//   (1) leading SMOKING-GUN icon + chip in the Feature cell
+//   (2) deeper tinted row background (risk-high-bg, not muted)
+//   (3) magnitude bar in the rightmost cell, filled to (val / max)
+//
+// No side-stripe border — that pattern is banned by the design
+// system. The triple cue does the same job better, and the table
+// stays scannable for tribunals reading it cold.
 // ────────────────────────────────────────────────────────────────
-function WinterDiffTable({ rows }) {
+function WinterDiffTable({ rows, maxDiff }) {
   if (!rows || rows.length === 0) {
     return (
       <div className="text-12 text-text-tertiary italic">
@@ -390,51 +555,94 @@ function WinterDiffTable({ rows }) {
     );
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto -mx-3">
       <table className="w-full text-12">
         <thead>
-          <tr className="border-b border-border-default text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">
-            <th className="text-left py-2 px-2">Feature</th>
-            <th className="text-right py-2 px-2">Median diff · flooded</th>
-            <th className="text-right py-2 px-2">Median diff · not-flooded</th>
-            <th className="text-right py-2 px-2">Max abs diff</th>
+          <tr className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.12em]">
+            <th className="text-left py-2 px-3 font-medium">Feature</th>
+            <th className="text-right py-2 px-3 font-medium">
+              Median diff · flooded
+            </th>
+            <th className="text-right py-2 px-3 font-medium">
+              Median diff · not-flooded
+            </th>
+            <th className="text-right py-2 px-3 font-medium">Max abs diff</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, idx) => (
-            <tr
-              key={idx}
-              className={
-                'border-b border-border-default ' +
-                (row.critical ? 'bg-risk-high-bg/50' : '')
-              }
-            >
-              <td className="py-2 px-2 font-mono text-text-primary">
-                {row.feature}
-                {row.critical && (
-                  <Badge className="ml-2 text-10 font-mono bg-risk-high-bg text-risk-high hover:bg-risk-high-bg">
-                    critical
-                  </Badge>
-                )}
-              </td>
-              <td className="py-2 px-2 text-right font-mono text-text-primary tabular-nums">
-                {fmtDiff(row.median_diff_flooded)} {row.unit || 'dB'}
-              </td>
-              <td className="py-2 px-2 text-right font-mono text-text-primary tabular-nums">
-                {fmtDiff(row.median_diff_notflooded)} {row.unit || 'dB'}
-              </td>
-              <td
+          {rows.map((row, idx) => {
+            const isCritical = !!row.critical;
+            const pct = Math.min(
+              100,
+              (Math.abs(Number(row.max_abs_diff) || 0) / maxDiff) * 100
+            );
+            return (
+              <tr
+                key={idx}
                 className={
-                  'py-2 px-2 text-right font-mono tabular-nums ' +
-                  (row.critical
-                    ? 'text-risk-high font-bold'
-                    : 'text-text-primary font-medium')
+                  'border-t border-border-default ' +
+                  (isCritical ? 'bg-risk-high-bg' : '')
                 }
               >
-                {Number(row.max_abs_diff).toFixed(2)} {row.unit || 'dB'}
-              </td>
-            </tr>
-          ))}
+                <td className="py-2.5 px-3 font-mono text-text-primary align-middle">
+                  <div className="flex items-center gap-2">
+                    {isCritical && (
+                      <CircleAlert
+                        className="w-3.5 h-3.5 text-risk-high shrink-0"
+                        strokeWidth={2}
+                      />
+                    )}
+                    <span
+                      className={
+                        isCritical
+                          ? 'font-semibold text-risk-high'
+                          : 'text-text-primary'
+                      }
+                    >
+                      {row.feature}
+                    </span>
+                    {isCritical && (
+                      <Badge className="ml-1 text-10 font-mono bg-risk-high text-white hover:bg-risk-high">
+                        smoking gun
+                      </Badge>
+                    )}
+                  </div>
+                </td>
+                <td className="py-2.5 px-3 text-right font-mono text-text-primary tabular-nums">
+                  {fmtDiff(row.median_diff_flooded)} {row.unit || 'dB'}
+                </td>
+                <td className="py-2.5 px-3 text-right font-mono text-text-primary tabular-nums">
+                  {fmtDiff(row.median_diff_notflooded)} {row.unit || 'dB'}
+                </td>
+                <td className="py-2.5 px-3 text-right font-mono tabular-nums">
+                  <div className="inline-flex items-center gap-2 justify-end w-full">
+                    <div
+                      className="hidden md:block h-1.5 rounded-full bg-bg-subtle relative overflow-hidden"
+                      style={{ width: 90 }}
+                      aria-hidden
+                    >
+                      <div
+                        className={
+                          'absolute inset-y-0 left-0 rounded-full ' +
+                          (isCritical ? 'bg-risk-high' : 'bg-border-strong')
+                        }
+                        style={{ width: pct + '%' }}
+                      />
+                    </div>
+                    <span
+                      className={
+                        isCritical
+                          ? 'text-risk-high font-semibold'
+                          : 'text-text-primary font-medium'
+                      }
+                    >
+                      {Number(row.max_abs_diff).toFixed(2)} {row.unit || 'dB'}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

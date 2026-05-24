@@ -669,6 +669,75 @@ const EN_ES = {
   'Solvency II · model validation': 'Solvencia II · validación de modelo',
   'EU AI Act · audit log': 'Ley de IA UE · registro de auditoría',
 
+  // ── Leakage Audit · forensic redesign (case-file UI) ──────
+  // Strings introducidos cuando la vista se rediseñó como expediente
+  // forense. Las cadenas viejas del banner "Too good to be true?" y
+  // del "Lesson learned" se conservan arriba por si alguien revierte;
+  // las nuevas (Verdict, Evidence A, Exhibit A/B, pull-quote, etc.)
+  // viven aquí.
+  'Case file': 'Expediente',
+  'Solvency II · EU AI Act': 'Solvencia II · Ley de IA UE',
+  Verdict: 'Veredicto',
+  Rejected: 'Rechazado',
+  'An exploratory XGBoost iteration reported AUC 0.966, a +0.044 jump over the Random Forest v2 baseline. The 4-test audit halted at Test 2: temporal leakage confirmed. Per the stop-on-fail rule, the model was removed from the pipeline.':
+    'Una iteración exploratoria de XGBoost reportó AUC 0.966, un salto de +0.044 sobre el baseline de Random Forest v2. La auditoría de 4 tests se detuvo en el Test 2: fuga temporal confirmada. Por la regla de parada al fallar, el modelo fue retirado del pipeline.',
+  'Decided by': 'Decidido por',
+  'Test 2 fail': 'Test 2 fallido',
+  'Stopping rule': 'Regla de parada',
+  'Stop-on-fail': 'Parar al fallar',
+  Artefact: 'Artefacto',
+
+  'Evidence A': 'Prueba A',
+  'Reported vs verifiable AUC': 'AUC reportado vs verificable',
+  'The +0.044 jump that prompted the audit':
+    'El salto de +0.044 que disparó la auditoría',
+  Suspected: 'Sospechoso',
+  'XGBoost v3 · 24 features': 'XGBoost v3 · 24 features',
+  'Inflated by event-date scenes leaking into winter aggregates':
+    'Inflado por escenas con fecha de evento filtradas en los agregados de invierno',
+  Verified: 'Verificado',
+  'Random Forest v2 · 14 features': 'Random Forest v2 · 14 features',
+  'Static DEM + baseline-period aggregates only; no temporal leakage by construction':
+    'Sólo DEM estático + agregados del periodo baseline; sin fuga temporal por construcción',
+  "Auditor's note:": 'Nota del auditor:',
+  'A +0.044 AUC step between two correctly cross-validated models, with no qualitatively new feature family added, is the canonical signal of leakage in remote-sensing classification. Audit was triggered on that prior alone.':
+    'Un salto de +0.044 en AUC entre dos modelos correctamente validados de forma cruzada, sin añadir ninguna familia de features cualitativamente nueva, es la señal canónica de fuga en clasificación con teledetección. La auditoría se disparó sólo por ese indicio.',
+
+  Methodology: 'Metodología',
+  'Four-phase audit · stop-on-fail rule':
+    'Auditoría en 4 fases · regla de parada al fallar',
+
+  'Exhibit A': 'Prueba A',
+  'The bug · path-based filter': 'El bug · filtro por ruta',
+  'Exhibit B': 'Prueba B',
+  'Contamination magnitude · winter feature stack':
+    'Magnitud de contaminación · stack de features de invierno',
+  'Differences between leaked and re-derived clean features. Values in dB unless stated otherwise.':
+    'Diferencias entre las features filtradas y las re-derivadas limpias. Valores en dB salvo indicación.',
+
+  'Regulatory anchor': 'Anclaje regulatorio',
+  'Why this is a production control, not a thesis exercise':
+    'Por qué esto es un control de producción, no un ejercicio académico',
+  'Directive 2009/138/EC · Internal Model Validation':
+    'Directiva 2009/138/CE · Validación de Modelo Interno',
+
+  'Always filter time series by date, not by path. Path-based filters depend on directory organisation, which is fragile; date-based filters are explicit about temporal intent.':
+    'Filtra siempre las series temporales por fecha, no por ruta. Los filtros por ruta dependen de la organización de directorios, lo cual es frágil; los filtros por fecha son explícitos sobre la intención temporal.',
+  'Significant metric improvements without an underlying methodological change deserve scrutiny. The final TFG model (Random Forest v2) is robust by construction: features are static DEM, baseline-period SAR aggregates, and baseline NDVI. No temporal leakage is possible.':
+    'Las mejoras significativas en métricas sin un cambio metodológico subyacente merecen escrutinio. El modelo final del TFG (Random Forest v2) es robusto por construcción: features de DEM estático, agregados SAR del periodo baseline y NDVI baseline. No es posible fuga temporal.',
+  'Methodological appendix · TFG memoria, Ch. 7':
+    'Apéndice metodológico · Memoria TFG, Cap. 7',
+
+  // Winter diff table chrome
+  Feature: 'Feature',
+  'smoking gun': 'prueba decisiva',
+  'No diff data available.': 'Sin datos de diff disponibles.',
+
+  // Timeline phase titles — versión nueva con · en vez de em-dash
+  'Audit design · 4 tests, stop-on-fail':
+    'Diseño de la auditoría · 4 tests, parada al fallar',
+  'Decision · XGBoost v3 rejected': 'Decisión · XGBoost v3 rechazado',
+
   // ── Continuous / Binary view toggle on the risk maps ──
   Continuo: 'Continuo',
   Binario: 'Binario',

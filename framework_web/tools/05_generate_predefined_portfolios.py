@@ -500,7 +500,7 @@ def _build_portfolio(name: str, pid: str, description: str,
 
 def main() -> int:
     log.info("=" * 60)
-    log.info("Generando 3 carteras predefinidas (productos: particulares|pymes|autos)")
+    log.info("Generando 4 carteras predefinidas (productos: particulares|pymes|autos)")
     log.info("=" * 60)
 
     val_lookup_path = DATA_DIR / "valencia_features_lookup.parquet"
@@ -654,8 +654,35 @@ def main() -> int:
         is_land=is_land,
     )
 
+    # ---- PORTFOLIO 4: Autos Fleet -------------------------------
+    # 100 % autos (coche / moto / furgoneta) distribuido uniformemente
+    # sobre las dos zonas de estudio. Útil para tener una cartera "pura
+    # de auto" que evidencia el riesgo del parking en planta baja: el
+    # damage ratio es alto (0.50-0.65) pero el valor asegurado es
+    # ~10x menor que el de una vivienda, así que el PML por póliza es
+    # menor — pero la frecuencia esperada de daño es altísima.
+    p4 = _build_portfolio(
+        name="Autos Fleet",
+        pid="autos_fleet",
+        description=(
+            "300 pólizas autos (coche · moto · furgoneta) distribuidas en "
+            "las dos zonas de estudio (Valencia metropolitana + Ribera Alta "
+            "del Júcar). Cartera mono-producto para evidenciar el riesgo de "
+            "parking en planta baja: damage ratio alto, valor asegurado bajo."
+        ),
+        client_specs=[
+            {"count": 300, "product": "autos",
+             "value_mean": 22_000, "value_min": 15_000, "value_max": 60_000,
+             "ground_floor_prob": 1.0, "year_min": 2015, "year_max": 2024,
+             "location_mode": "lookup"},
+        ],
+        rng_seed=45, lookup_df=df, lookup_tree=tree, model=model, prefix="AUT",
+        is_land=is_land,
+        lookup_indices=lookup_indices, zone_weights=zone_weights,
+    )
+
     payload = {
-        "portfolios": [p1, p2, p3],
+        "portfolios": [p1, p2, p3, p4],
         "_meta": {
             "damage_ratios": {
                 "_".join(map(str, k)): v for k, v in DAMAGE_RATIOS.items()

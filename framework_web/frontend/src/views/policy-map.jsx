@@ -499,44 +499,40 @@ export function PolicyMap() {
 // ────────────────────────────────────────────────────────────
 
 /** Risk-surface fill underneath the policy points. Loads BOTH study
- *  areas (Valencia + Algemesí) so the backdrop matches the actual extent
- *  of the wide_distribution portfolio, which spans both zones. */
+ *  areas (Valencia + Algemesí) so the backdrop matches el extent real
+ *  del wide_distribution portfolio (que cruza ambas zonas).
+ *
+ *  Usa los raster tiles pre-renderizados (/api/tiles/…) en vez del
+ *  geojson — fidelidad píxel-perfect al RF, opacidad bajada para que
+ *  los cluster markers de pólizas destaquen encima. */
 function RiskBackdrop() {
   const { map, isLoaded } = useMap();
   useEffect(() => {
     if (!map || !isLoaded) return;
-    let cancelled = false;
-    (async () => {
-      const zones = ['valencia', 'algemesi'];
-      await Promise.all(
-        zones.map(async (zone) => {
-          try {
-            const geo = await api.risk.getGeoJSON(zone);
-            if (cancelled) return;
-            const sourceId = `risk-backdrop-${zone}`;
-            const layerId = `risk-backdrop-${zone}`;
-            if (!map.getSource(sourceId)) {
-              map.addSource(sourceId, { type: 'geojson', data: geo });
-              map.addLayer({
-                id: layerId,
-                type: 'fill',
-                source: sourceId,
-                paint: {
-                  'fill-color': ['get', 'color'],
-                  // Damped opacity so the points pop on top.
-                  'fill-opacity': 0.32,
-                },
-              });
-            }
-          } catch {
-            // Non-fatal — one missing zone shouldn't blank the map.
-          }
-        })
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const zones = ['valencia', 'algemesi'];
+    for (const zone of zones) {
+      const sourceId = `risk-backdrop-${zone}`;
+      const layerId = `risk-backdrop-${zone}`;
+      if (map.getSource(sourceId)) continue;
+      map.addSource(sourceId, {
+        type: 'raster',
+        tiles: [api.risk.tilesUrl(zone)],
+        tileSize: 256,
+        minzoom: 10,
+        maxzoom: 15,
+        attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+      });
+      map.addLayer({
+        id: layerId,
+        type: 'raster',
+        source: sourceId,
+        paint: {
+          // Opacidad baja para que los cluster markers destaquen encima.
+          'raster-opacity': 0.45,
+          'raster-resampling': 'linear',
+        },
+      });
+    }
   }, [map, isLoaded]);
   return null;
 }

@@ -24,6 +24,7 @@ from .routers import metrics as metrics_router
 from .routers import methodology as methodology_router
 from .routers import portfolio as portfolio_router
 from .routers import risk as risk_router
+from .routers import tiles as tiles_router
 from .services.feature_extractor import get_feature_extractor
 from .services.geojson_service import get_geojson_service
 from .services.model_service import get_model_service
@@ -109,6 +110,7 @@ app.add_middleware(
 # Routers
 app.include_router(risk_router.router)
 app.include_router(geo_router.router)
+app.include_router(tiles_router.router)
 app.include_router(portfolio_router.router)
 app.include_router(metrics_router.router)
 app.include_router(methodology_router.router)

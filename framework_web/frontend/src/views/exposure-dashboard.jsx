@@ -18,6 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Map, MapClusterLayer, MapControls, useMap } from '@/components/Map.tsx';
 import { ExposureKpi } from '@/components/exposure-kpi.jsx';
+import { InfoHint } from '@/components/info-hint.jsx';
 import { api } from '@/lib/api.js';
 import { ZONES } from '@/lib/constants.js';
 
@@ -92,6 +93,13 @@ export function ExposureDashboard() {
             <h1 className="text-20 font-semibold text-text-primary tracking-tight">
               Exposure Dashboard
             </h1>
+            <InfoHint side="bottom" size={14}>
+              Vista agregada de una cartera concreta: 4 KPIs hero arriba
+              (TIV · EAL · PML · pólizas afectadas) y 6 widgets debajo que
+              cruzan la cartera con la superficie de riesgo del Random Forest
+              v2. Pensado para un underwriter que necesita ver concentración,
+              cola de pérdida y prioridades de revisión en una sola pantalla.
+            </InfoHint>
             {portfolio && (
               <Badge
                 variant="secondary"
@@ -141,16 +149,50 @@ export function ExposureDashboard() {
             <Widget
               title="Geographic concentration"
               badge="clustered · 2 study areas"
+              hint={
+                <>
+                  Burbujas agrupando las pólizas que caen en el mismo bloque
+                  geográfico, superpuestas sobre la superficie de riesgo del
+                  RF (tiles raster píxel-perfect). Un cluster grande sobre
+                  zona roja = concentración de riesgo a vigilar (Solvencia II
+                  pide diversificar la exposición espacial).
+                </>
+              }
+              cite="CARTO Portfolio Screening pattern"
               className="lg:col-span-2 lg:row-span-2"
             >
               <GeographicMap clients={portfolio.clients} />
             </Widget>
 
-            <Widget title="Risk distribution" badge={`${portfolio.n_clients} policies`}>
+            <Widget
+              title="Risk distribution"
+              badge={`${portfolio.n_clients} policies`}
+              hint={
+                <>
+                  Reparto de las pólizas por categoría de riesgo derivada de
+                  la probabilidad del Random Forest: <b>low</b> (p&lt;0.25),
+                  <b> moderate</b> (0.25–0.50), <b>high</b> (0.50–0.75) y
+                  <b> very_high</b> (≥0.75). Cuanto más volumen en rojo,
+                  mayor base esperada de siniestralidad anual.
+                </>
+              }
+            >
               <RiskDonut distribution={exposure.distribution_by_category || {}} />
             </Widget>
 
-            <Widget title="Exposure by product" badge="€ insured value">
+            <Widget
+              title="Exposure by product"
+              badge="€ insured value"
+              hint={
+                <>
+                  Suma del valor asegurado por producto (Particulares ·
+                  Pymes · Autos). Permite ver cuánto capital está expuesto
+                  por línea de negocio antes de aplicar probabilidad de
+                  inundación — útil para underwriting de prima técnica
+                  por ramo.
+                </>
+              }
+            >
               <ExposureByTypeChart clients={portfolio.clients} />
             </Widget>
 
@@ -158,15 +200,54 @@ export function ExposureDashboard() {
              *  approximation): for each policy, plot Σ losses ≥ x as x
              *  varies. The shape tells the underwriter what fraction of
              *  total loss concentrates in the worst tail. */}
-            <Widget title="Loss exceedance curve" badge="Oasis OEP-style">
+            <Widget
+              title="Loss exceedance curve"
+              badge="Oasis OEP-style"
+              hint={
+                <>
+                  Curva de excedencia tipo OEP (Occurrence Exceedance
+                  Probability): para cada umbral de pérdida <i>L</i> en el
+                  eje X, suma del € total de pólizas con pérdida estimada
+                  ≥ <i>L</i>. Una caída brusca indica que pocas pólizas
+                  concentran la mayor parte de la pérdida — la "cola del
+                  portfolio" donde el capital está más vulnerable.
+                </>
+              }
+              cite="Oasis LMF · single-event PML approximation"
+            >
               <LossExceedanceCurve clients={portfolio.clients} />
             </Widget>
 
-            <Widget title="Loss breakdown" badge="DANA scenario">
+            <Widget
+              title="Loss breakdown"
+              badge="DANA scenario"
+              hint={
+                <>
+                  Descomposición de la pérdida esperada total por categoría
+                  de riesgo en el escenario DANA single-event. Cada barra
+                  agrega: Σ (valor_asegurado × P(flood) × damage_ratio)
+                  para las pólizas de esa categoría. Identifica de un
+                  vistazo qué bucket de riesgo aporta más € a la PML.
+                </>
+              }
+            >
               <LossBreakdownChart clients={portfolio.clients} />
             </Widget>
 
-            <Widget title="Top 10 highest risk" badge="sorted by est. loss">
+            <Widget
+              title="Top 10 highest risk"
+              badge="sorted by est. loss"
+              hint={
+                <>
+                  Las 10 pólizas con mayor pérdida estimada en escenario
+                  DANA. Son los candidatos prioritarios para revisión
+                  manual: re-tarificar, renegociar deductibles, exigir
+                  medidas físicas (rejillas anti-retorno, planta no
+                  habitable en cota inundable, garaje en alto) antes
+                  de renovar.
+                </>
+              }
+            >
               <TopRiskClientsTable clients={portfolio.clients} />
             </Widget>
           </div>
@@ -276,13 +357,21 @@ function MethodologyFooter() {
 
 // ────────────────────────────────────────────────────────────────
 // Generic widget card — same chrome for all 6 widgets.
+//   - `hint` (opcional): texto que aparece en tooltip al pasar por el ⓘ
+//     a la derecha del título. Útil para que un no-experto entienda qué
+//     muestra cada gráfica sin tener que leer la metodología.
+//   - `cite` (opcional): chip de referencia bajo el cuerpo del tooltip
+//     (e.g., "Oasis LMF · Brier 1950").
 // ────────────────────────────────────────────────────────────────
-function Widget({ title, badge, children, className = '' }) {
+function Widget({ title, badge, hint, cite, children, className = '' }) {
   return (
     <Card className={'overflow-visible flex flex-col ' + className}>
       <CardHeader className="py-2.5 px-4 border-b border-border-default">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-13 tracking-tight">{title}</CardTitle>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <CardTitle className="text-13 tracking-tight">{title}</CardTitle>
+            {hint && <InfoHint cite={cite}>{hint}</InfoHint>}
+          </div>
           {badge && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
               {badge}
@@ -518,41 +607,34 @@ function GeographicMap({ clients }) {
 
 /** Loads both study-area risk surfaces underneath the cluster bubbles
  *  so the underwriter sees concentration vs hazard intensity in one
- *  glance. Two async fetches in parallel; non-fatal on either failure. */
+ *  glance. Usa raster tiles del RF (píxel-perfect) en vez del geojson
+ *  binado, opacidad baja para no competir con los cluster markers. */
 function ConcentrationRiskBackdrop() {
   const { map, isLoaded } = useMap();
   useEffect(() => {
     if (!map || !isLoaded) return;
-    let cancelled = false;
-    (async () => {
-      const zones = ['valencia', 'algemesi'];
-      await Promise.all(
-        zones.map(async (zone) => {
-          try {
-            const geo = await api.risk.getGeoJSON(zone);
-            if (cancelled) return;
-            const id = `exposure-risk-${zone}`;
-            if (!map.getSource(id)) {
-              map.addSource(id, { type: 'geojson', data: geo });
-              map.addLayer({
-                id,
-                type: 'fill',
-                source: id,
-                paint: {
-                  'fill-color': ['get', 'color'],
-                  'fill-opacity': 0.28,
-                },
-              });
-            }
-          } catch {
-            /* non-fatal */
-          }
-        })
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const zones = ['valencia', 'algemesi'];
+    for (const zone of zones) {
+      const id = `exposure-risk-${zone}`;
+      if (map.getSource(id)) continue;
+      map.addSource(id, {
+        type: 'raster',
+        tiles: [api.risk.tilesUrl(zone)],
+        tileSize: 256,
+        minzoom: 10,
+        maxzoom: 15,
+        attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+      });
+      map.addLayer({
+        id,
+        type: 'raster',
+        source: id,
+        paint: {
+          'raster-opacity': 0.4,
+          'raster-resampling': 'linear',
+        },
+      });
+    }
   }, [map, isLoaded]);
   return null;
 }
