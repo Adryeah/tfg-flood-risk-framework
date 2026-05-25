@@ -802,10 +802,13 @@ function OverlayPanel({
 
   return (
     <div
-      className="absolute top-3 right-14 z-[1000] w-64 bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden"
+      // Ancho compacto en mobile (w-52 = 208px) → en md+ vuelve a w-64
+      // (256px). En mobile el panel + zoom controls a la derecha caben
+      // sin tapar más del 60% del ancho del mapa.
+      className="absolute top-2 right-12 sm:top-3 sm:right-14 z-[1000] w-52 sm:w-64 bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden"
       style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05)' }}
     >
-      <div className="px-3 py-2 flex items-center justify-between border-b border-border-default">
+      <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 flex items-center justify-between border-b border-border-default">
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">
           Overlays
         </span>
@@ -814,7 +817,7 @@ function OverlayPanel({
           source="GET /api/risk/{zone}.geojson · GET /api/risk/{zone}/tail.geojson · GET /api/geo/municipalities.geojson · GET /api/risk/predict?lat=&lon="
         />
       </div>
-      <div className="px-3 py-2 space-y-1.5">
+      <div className="px-2.5 py-1.5 sm:px-3 sm:py-2 space-y-1 sm:space-y-1.5">
         {items.map(({ id, label, color }) => {
           const on = !!visibility[id];
           return (

@@ -320,7 +320,9 @@ export function Comparison() {
   return (
     <div className="space-y-4">
       <div>
-        <div className="flex items-center gap-2 mb-1">
+        {/* Header chips con flex-wrap para que los badges no fuercen
+         *  overflow horizontal en mobile. */}
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <h1 className="text-20 font-semibold text-text-primary tracking-tight">
             Valencia vs Algemesí
           </h1>
@@ -337,14 +339,14 @@ export function Comparison() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden relative">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
+          <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default">
             <div className="flex items-center gap-2 min-w-0">
               <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">
                 Valencia
               </h3>
-              <span className="text-11 text-text-tertiary truncate">
+              <span className="hidden sm:inline text-11 text-text-tertiary truncate">
                 training zone
               </span>
             </div>
@@ -354,7 +356,10 @@ export function Comparison() {
           </div>
           <RiskZoneMap
             zone="valencia"
-            height={360}
+            /* clamp(min, ideal, max): mobile (300px viewport-ratio) sale
+             * ~240, desktop (1500px) sale 360. Evita mapas inútilmente
+             * altos en phone sin tocar el ratio en desktop. */
+            height="clamp(240px, 38vh, 360px)"
             showOverlays={false}
             showLegend={false}
             showZones={false}
@@ -363,12 +368,12 @@ export function Comparison() {
         </div>
 
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden relative">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
+          <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default">
             <div className="flex items-center gap-2 min-w-0">
               <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">
                 Algemesí
               </h3>
-              <span className="text-11 text-text-tertiary truncate">
+              <span className="hidden sm:inline text-11 text-text-tertiary truncate">
                 extrapolation zone
               </span>
             </div>
@@ -378,7 +383,7 @@ export function Comparison() {
           </div>
           <RiskZoneMap
             zone="algemesi"
-            height={360}
+            height="clamp(240px, 38vh, 360px)"
             showOverlays={false}
             showLegend={false}
             showZones={false}
@@ -388,118 +393,124 @@ export function Comparison() {
       </div>
 
       {/* ─── Metrics comparison — denser, with inline value bars, Δ
-       *  column, and InfoHint per metric. Reads like a one-shot
-       *  model-card report rather than a plain HTML table. ──── */}
+       *  column, and InfoHint per metric. En mobile el `(training)` /
+       *  `(extrapolation)` se ocultan (la columna ya lo dice por la
+       *  cabecera Valencia/Algemesí), los paddings se reducen, y el
+       *  hint del header se oculta (touch no hace hover). Permitimos
+       *  scroll horizontal como safety net si el viewport es muy
+       *  estrecho. */}
       <div className="bg-bg-surface border border-border-default rounded">
-        <div className="px-4 py-2.5 border-b border-border-default flex items-center justify-between">
+        <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default flex items-center justify-between gap-3">
           <h3 className="text-13 font-semibold text-text-primary">
             Metrics comparison
           </h3>
-          <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
+          <span className="hidden md:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">
             Hover any metric for definition + transfer reasoning
           </span>
         </div>
-        <table className="w-full text-13">
-          <thead>
-            <tr className="text-11 text-text-tertiary uppercase tracking-wider border-b border-border-default font-mono">
-              <th className="text-left py-2 px-4 font-semibold">Metric</th>
-              <th className="text-right py-2 px-4 font-semibold">
-                Valencia{' '}
-                <span className="text-text-tertiary normal-case font-normal">
-                  (training)
-                </span>
-              </th>
-              <th className="text-right py-2 px-4 font-semibold">
-                Algemesí{' '}
-                <span className="text-text-tertiary normal-case font-normal">
-                  (extrapolation)
-                </span>
-              </th>
-              <th className="text-right py-2 px-4 font-semibold w-[120px]">
-                Δ
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-default">
-            {rows.map((r) => {
-              const docs = METRIC_DOCS[r.label];
-              const vNum = Number(r.v);
-              const aNum = Number(r.a);
-              const delta = Number.isFinite(vNum) && Number.isFinite(aNum)
-                ? aNum - vNum
-                : null;
-              const isMetric = r.deltaKind === 'metric';
-              return (
-                <tr
-                  key={r.label}
-                  className="hover:bg-bg-hover transition-colors"
-                >
-                  <td className="py-2.5 px-4 text-text-secondary">
-                    <span className="inline-flex items-center gap-1.5">
-                      {r.label}
-                      {docs && (
-                        <InfoHint cite={docs.cite}>{docs.body}</InfoHint>
+        <div className="overflow-x-auto">
+          <table className="w-full text-13 min-w-[480px]">
+            <thead>
+              <tr className="text-11 text-text-tertiary uppercase tracking-wider border-b border-border-default font-mono">
+                <th className="text-left py-2 px-2 sm:px-4 font-semibold">Metric</th>
+                <th className="text-right py-2 px-2 sm:px-4 font-semibold">
+                  Valencia{' '}
+                  <span className="hidden md:inline text-text-tertiary normal-case font-normal">
+                    (training)
+                  </span>
+                </th>
+                <th className="text-right py-2 px-2 sm:px-4 font-semibold">
+                  Algemesí{' '}
+                  <span className="hidden md:inline text-text-tertiary normal-case font-normal">
+                    (extrapolation)
+                  </span>
+                </th>
+                <th className="text-right py-2 px-2 sm:px-4 font-semibold w-[80px] sm:w-[120px]">
+                  Δ
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-default">
+              {rows.map((r) => {
+                const docs = METRIC_DOCS[r.label];
+                const vNum = Number(r.v);
+                const aNum = Number(r.a);
+                const delta = Number.isFinite(vNum) && Number.isFinite(aNum)
+                  ? aNum - vNum
+                  : null;
+                const isMetric = r.deltaKind === 'metric';
+                return (
+                  <tr
+                    key={r.label}
+                    className="hover:bg-bg-hover transition-colors"
+                  >
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-text-secondary">
+                      <span className="inline-flex items-center gap-1.5">
+                        {r.label}
+                        {docs && (
+                          <InfoHint cite={docs.cite}>{docs.body}</InfoHint>
+                        )}
+                      </span>
+                    </td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-right font-mono font-medium text-text-primary tabular-nums">
+                      {r.raw
+                        ? `${vNum.toFixed(r.suffix ? 2 : 3)}${r.suffix || ''}`
+                        : vNum.toFixed(3)}
+                      {isMetric && <ValueBar v={vNum} color="#1D4ED8" />}
+                    </td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-right font-mono font-medium text-text-primary tabular-nums">
+                      {r.raw
+                        ? `${aNum.toFixed(r.suffix ? 2 : 3)}${r.suffix || ''}`
+                        : aNum.toFixed(3)}
+                      {isMetric && (
+                        <ValueBar
+                          v={aNum}
+                          color={
+                            delta != null && delta <= -0.25
+                              ? '#DC2626'
+                              : delta != null && delta <= -0.08
+                                ? '#D97706'
+                                : delta != null && delta > 0
+                                  ? '#16A34A'
+                                  : '#94A3B8'
+                          }
+                        />
                       )}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-4 text-right font-mono font-medium text-text-primary tabular-nums">
-                    {r.raw
-                      ? `${vNum.toFixed(r.suffix ? 2 : 3)}${r.suffix || ''}`
-                      : vNum.toFixed(3)}
-                    {isMetric && <ValueBar v={vNum} color="#1D4ED8" />}
-                  </td>
-                  <td className="py-2.5 px-4 text-right font-mono font-medium text-text-primary tabular-nums">
-                    {r.raw
-                      ? `${aNum.toFixed(r.suffix ? 2 : 3)}${r.suffix || ''}`
-                      : aNum.toFixed(3)}
-                    {isMetric && (
-                      <ValueBar
-                        v={aNum}
-                        color={
-                          delta != null && delta <= -0.25
-                            ? '#DC2626'
-                            : delta != null && delta <= -0.08
-                              ? '#D97706'
-                              : delta != null && delta > 0
-                                ? '#16A34A'
-                                : '#94A3B8'
-                        }
+                    </td>
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-right">
+                      <DeltaChip
+                        delta={delta}
+                        kind={r.deltaKind}
+                        suffix={r.suffix?.trim() || ''}
                       />
-                    )}
-                  </td>
-                  <td className="py-2.5 px-4 text-right">
-                    <DeltaChip
-                      delta={delta}
-                      kind={r.deltaKind}
-                      suffix={r.suffix?.trim() || ''}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ─── Performance comparison chart — flow animation + per-bar
        *  severity colour on the Algemesí side + rich tooltip with Δ.
        *  Matches Evidently AI's model-drift report visual. ──── */}
-      <div className="bg-bg-surface border border-border-default rounded p-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-bg-surface border border-border-default rounded p-3 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="text-13 font-semibold text-text-primary">
             Performance comparison
           </h3>
-          <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
+          <span className="hidden sm:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">
             Algemesí bars coloured by drop severity
           </span>
         </div>
         <p className="text-11 text-text-tertiary mb-3">
           Per-metric model behaviour under transferability
         </p>
-        <div ref={chartRef} style={{ height: 320 }} />
+        <div ref={chartRef} className="h-[260px] sm:h-[320px]" />
       </div>
 
-      <div className="bg-brand-50 border-l-2 border-brand-700 rounded p-4">
+      <div className="bg-brand-50 border-l-2 border-brand-700 rounded p-3 sm:p-4">
         <div className="text-10 font-mono font-semibold text-brand-700 uppercase tracking-wider mb-1.5">
           Transferability insight
         </div>
