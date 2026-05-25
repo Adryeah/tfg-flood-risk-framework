@@ -45,6 +45,11 @@ export function RiskZoneMap({
   // from the geojson `color` property is used unchanged.
   threshold = null,
   binaryView = false,
+  // Overlay del ground truth Copernicus EMS EMSR773 sobre el mapa,
+  // como polígonos azul cian semi-transparentes. Usado en la vista
+  // narrativa /dana para comparar "lo que predijo el modelo" vs
+  // "lo que confirmó el ground truth oficial".
+  showGroundTruth = false,
 }) {
   const targets = zone === 'both' ? ['valencia', 'algemesi'] : [zone];
 
@@ -115,6 +120,7 @@ export function RiskZoneMap({
           mode3d={mode3d}
           threshold={threshold}
           binaryView={binaryView}
+          showGroundTruth={showGroundTruth}
           onClick={
             enablePixelInspection
               ? (lat, lon) => {
@@ -210,6 +216,7 @@ function RiskLayers({
   mode3d = false,
   threshold = null,
   binaryView = false,
+  showGroundTruth = false,
 }) {
   const { map, isLoaded } = useMap();
 
@@ -431,6 +438,45 @@ function RiskLayers({
                 'fill-extrusion-vertical-gradient': true,
               },
             });
+          }
+        }
+
+        // ─── Ground truth EMSR773 overlay (opt-in via showGroundTruth) ──
+        //   Carga el polígono oficial de Copernicus EMS de la zona y lo
+        //   añade como un fill cian semi-transparente + un line azul
+        //   marino. Pensado para la vista narrativa /dana, donde el
+        //   comparativo "lo que predijo el modelo" vs "lo que confirmó
+        //   EMSR773" es el centro del relato.
+        if (showGroundTruth) {
+          for (const z of targets) {
+            const sid = `ground-truth-${z}`;
+            if (map.getSource(sid)) continue;
+            try {
+              const gt = await api.geo.groundTruth(z);
+              if (cancelled || !gt) continue;
+              map.addSource(sid, { type: 'geojson', data: gt });
+              map.addLayer({
+                id: `${sid}-fill`,
+                type: 'fill',
+                source: sid,
+                paint: {
+                  'fill-color': '#0EA5E9',
+                  'fill-opacity': 0.42,
+                },
+              });
+              map.addLayer({
+                id: `${sid}-line`,
+                type: 'line',
+                source: sid,
+                paint: {
+                  'line-color': '#0369A1',
+                  'line-width': 1,
+                  'line-opacity': 0.9,
+                },
+              });
+            } catch {
+              // Ground truth no disponible para esta zona — silencioso.
+            }
           }
         }
 

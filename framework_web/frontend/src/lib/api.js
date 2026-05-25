@@ -103,6 +103,10 @@ export const api = {
     // Direct fetch — these GeoJSON files are served statically from
     // backend/data_processed/ via the same proxy as the API.
     municipalities: () => request('/api/geo/municipalities.geojson'),
+    // Ground truth Copernicus EMS EMSR773 recortado a la zona —
+    // usado por la vista narrativa /dana para overlay del "ground
+    // truth" sobre el mapa de predicción del modelo.
+    groundTruth: (zone) => request(`/api/geo/ground_truth/${zone}.geojson`),
   },
 
   portfolio: {

@@ -115,6 +115,47 @@ export function Overview() {
 
   return (
     <div className="space-y-3">
+      {/* ─── PROJECT HERO ─────────────────────────────────────────────
+       *  Tres frases editoriales en font-serif que dejan claro qué es
+       *  ESTO antes de mostrar dashboards. Pensado para un visitante
+       *  en frío (tribunal, Ricard, José) que llega al landing sin
+       *  saber qué cat-model está mirando. Después viene el Daily
+       *  Briefing operativo de siempre. */}
+      <section className="border-b border-border-default pb-5 mb-1">
+        <div className="text-10 font-mono font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-2">
+          TFG · Universitat Autònoma de Barcelona · 2026
+        </div>
+        <p className="font-serif text-20 sm:text-24 leading-snug text-text-primary max-w-3xl tracking-tight">
+          Este <em>framework</em> predice riesgo de inundación con datos
+          públicos de Copernicus. Entrenado <em>antes</em> de la DANA de
+          Valencia, validado contra el evento real EMSR773.
+        </p>
+        <p className="font-serif italic text-13 sm:text-14 text-text-secondary mt-3 max-w-3xl leading-relaxed">
+          Demuestra que es posible construir un <em>cat-model</em>
+          abierto, reproducible y con rigor regulatorio (Solvencia II ·
+          EU AI Act) usando solo datos satelitales gratuitos y un
+          ordenador personal.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-11 font-mono text-text-tertiary">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            Random Forest v2 · 14 features
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            AUC 0.922 · GroupKFold 5×1 km
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            Valencia → Algemesí transferable
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            Adrián Vargas Aceituno · UAB ETS
+          </span>
+        </div>
+      </section>
+
       {/* Header — en mobile stack vertical (título arriba, pill LIVE debajo
        *  alineada a la izquierda como un meta-chip). En sm+ vuelve a la
        *  pose horizontal con la pill empujada a la derecha. */}

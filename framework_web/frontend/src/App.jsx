@@ -10,9 +10,12 @@ import { ExposureDashboard } from './views/exposure-dashboard.jsx';
 import { ModelValidation } from './views/model-validation.jsx';
 import { Transferability } from './views/transferability.jsx';
 import { LeakageAudit } from './views/leakage-audit.jsx';
+import { DanaTimeline } from './views/dana-timeline.jsx';
+import { DataDownloads } from './views/data-downloads.jsx';
 
 const SECTIONS = {
   '/': Overview,
+  '/dana': DanaTimeline,
   '/valencia': ValenciaMap,
   '/algemesi': AlgemesiMap,
   '/comparison': Comparison,
@@ -22,6 +25,7 @@ const SECTIONS = {
   '/validation': ModelValidation,
   '/transferability': Transferability,
   '/leakage': LeakageAudit,
+  '/data': DataDownloads,
 };
 
 function getHashPath() {

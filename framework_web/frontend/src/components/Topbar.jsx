@@ -5,6 +5,7 @@ import { GlobalSearch } from './global-search.jsx';
 
 const SECTION_TITLES = {
   '/': 'Daily Briefing',
+  '/dana': 'DANA · 29 octubre 2024',
   '/valencia': 'Valencia Map',
   '/algemesi': 'Algemesí Map',
   '/comparison': 'Comparison',
@@ -14,6 +15,7 @@ const SECTION_TITLES = {
   '/validation': 'Model & Validation',
   '/transferability': 'Transferability',
   '/leakage': 'Leakage Audit',
+  '/data': 'Data & Downloads',
 };
 
 // Local icon set for the topbar. Accepts className + style so callers can

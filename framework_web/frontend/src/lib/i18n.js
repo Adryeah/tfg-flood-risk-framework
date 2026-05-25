@@ -25,6 +25,7 @@ const EN_ES = {
   METHODOLOGY: 'METODOLOGÍA',
   // Sidebar — items
   Overview: 'Resumen',
+  'DANA · 29 Oct': 'DANA · 29 oct',
   'Valencia Map': 'Mapa Valencia',
   'Algemesí Map': 'Mapa Algemesí',
   Comparison: 'Comparativa',
@@ -33,6 +34,7 @@ const EN_ES = {
   'Model & Validation': 'Modelo y Validación',
   Transferability: 'Transferibilidad',
   'Leakage Audit': 'Auditoría de Fugas',
+  'Data & Downloads': 'Datos y Descargas',
   // Sidebar — status
   'Checking backend…': 'Comprobando backend…',
   'Backend online · model loaded': 'Backend en línea · modelo cargado',
@@ -681,6 +683,37 @@ const EN_ES = {
   // ── Leakage Audit badges ──
   'Solvency II · model validation': 'Solvencia II · validación de modelo',
   'EU AI Act · audit log': 'Ley de IA UE · registro de auditoría',
+
+  // ── Topbar section titles (nuevos) ────────────────────────────
+  'DANA · 29 octubre 2024': 'DANA · 29 octubre 2024',
+
+  // ── Data & Downloads view ────────────────────────────────────
+  'Reproducibility · Open data': 'Reproducibilidad · Datos abiertos',
+  'Risk surface': 'Superficie de riesgo',
+  'Ground truth': 'Ground truth oficial',
+  'Modelo y datos sintéticos': 'Modelo y datos sintéticos',
+  'Citation & repository': 'Cita y repositorio',
+  'Cita académica (BibTeX)': 'Cita académica (BibTeX)',
+  Copiar: 'Copiar',
+  Copiado: 'Copiado',
+  'Código fuente': 'Código fuente',
+  'External': 'Externo',
+  'Download': 'Descarga',
+
+  // ── DANA narrative view ──────────────────────────────────────
+  'Case study · The day that triggered this project':
+    'Caso de estudio · El día que originó este proyecto',
+  'La comparación que hace el caso':
+    'La comparación que sostiene el caso',
+  'Predicción del modelo': 'Predicción del modelo',
+  'pre-DANA': 'pre-DANA',
+  'Lo que pasó realmente': 'Lo que pasó realmente',
+  'ground truth': 'ground truth',
+  'Reconstrucción cronológica': 'Reconstrucción cronológica',
+
+  // ── Overview project hero ────────────────────────────────────
+  'TFG · Universitat Autònoma de Barcelona · 2026':
+    'TFG · Universitat Autònoma de Barcelona · 2026',
 
   // ── Overview / Exposure KPIs + widget chrome (faltaban) ───────
   'Affected policies': 'Pólizas afectadas',

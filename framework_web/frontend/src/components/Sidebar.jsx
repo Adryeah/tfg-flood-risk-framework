@@ -15,6 +15,7 @@ const SIDEBAR_SECTIONS = [
     accent: '#2563EB', // brand-500
     items: [
       { id: 'overview', label: 'Overview', icon: 'layout-dashboard', path: '/' },
+      { id: 'dana', label: 'DANA · 29 Oct', icon: 'cloud-rain', path: '/dana' },
       { id: 'valencia', label: 'Valencia Map', icon: 'map', path: '/valencia' },
       { id: 'algemesi', label: 'Algemesí Map', icon: 'map', path: '/algemesi' },
       { id: 'comparison', label: 'Comparison', icon: 'git-compare', path: '/comparison' },
@@ -36,6 +37,7 @@ const SIDEBAR_SECTIONS = [
       { id: 'validation', label: 'Model & Validation', icon: 'shield-check', path: '/validation' },
       { id: 'transferability', label: 'Transferability', icon: 'flask-conical', path: '/transferability' },
       { id: 'leakage', label: 'Leakage Audit', icon: 'alert-triangle', path: '/leakage' },
+      { id: 'data', label: 'Data & Downloads', icon: 'download', path: '/data' },
     ],
   },
 ];
@@ -50,6 +52,8 @@ function Icon({ name, size = 16, className = '', style }) {
     'shield-check': <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" /></>,
     'flask-conical': <><path d="M14 2v6l2 2h4l2-2V2" /><path d="M10 2v6" /><path d="M6 14h12l-1 10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 14z" /></>,
     'alert-triangle': <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
+    'cloud-rain': <><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" /><line x1="8" y1="19" x2="8" y2="21" /><line x1="8" y1="13" x2="8" y2="15" /><line x1="16" y1="19" x2="16" y2="21" /><line x1="16" y1="13" x2="16" y2="15" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="12" y1="15" x2="12" y2="17" /></>,
+    'download': <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
   };
   return (
     <svg className={className} style={style} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
