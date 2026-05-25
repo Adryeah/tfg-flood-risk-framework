@@ -214,8 +214,11 @@ function Card({ title, subtitle, actions, children }) {
     <div className="bg-bg-surface border border-border-default rounded shadow-sm">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
         <div>
-          <h3 className="text-13 font-semibold text-text-primary tracking-tight">{title}</h3>
-          {subtitle && <p className="text-11 text-text-tertiary mt-0.5">{subtitle}</p>}
+          {/* Título editorial: font-serif sin semibold, mismo registro
+           *  que los h1 de las páginas. Subtítulo (cuando existe) en
+           *  serif italic para mantener la familia tipográfica. */}
+          <h3 className="font-serif text-15 text-text-primary tracking-tight">{title}</h3>
+          {subtitle && <p className="font-serif italic text-12 text-text-tertiary mt-0.5">{subtitle}</p>}
         </div>
         {actions}
       </div>

@@ -38,6 +38,7 @@ import { InfoHint } from '@/components/info-hint';
 import { api } from '@/lib/api.js';
 import { ZONES } from '@/lib/constants.js';
 import { useHashParams } from '@/lib/hash-params.js';
+import { formatMoney } from '@/lib/format.js';
 
 // ─── Product palette (consistent with Portfolio Explorer / Exposure) ──
 const PRODUCT_COLORS = {
@@ -761,15 +762,11 @@ function DockNavCell({
   );
 }
 
-// Shared money formatter — matches Portfolio Explorer / Exposure dashboard.
+// Shared money formatter — usa el util compartido (alias local
+// fmtMoneyDock). El "—" para nulos se devuelve en sitio puntual donde
+// se llama, no en el formatter mismo.
 function fmtMoneyDock(v) {
-  if (v == null) return '—';
-  if (Math.abs(v) >= 1_000_000) {
-    const m = v / 1_000_000;
-    const fixed = m.toFixed(1);
-    return `€${fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed}M`;
-  }
-  return `€${(v / 1000).toFixed(0)}K`;
+  return v == null ? '—' : formatMoney(v);
 }
 
 function DockPolicyCell({ client, loading }) {

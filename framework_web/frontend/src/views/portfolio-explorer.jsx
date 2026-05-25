@@ -25,20 +25,10 @@ import { CreateCustomPortfolioDialog } from '@/components/create-custom-portfoli
 
 import { api } from '@/lib/api.js';
 import { useHashParams } from '@/lib/hash-params.js';
-
-// ─── Money formatter shared across this view ─────────────────────
-// Goal: never show "€1000K" or "€5000K" — switch to €M at 1M.
-// Strips a trailing .0 so "5.0M" reads as "5M". Used by AG Grid
-// value formatters and the heat-bar normalisation logic.
-function fmtMoney(v) {
-  if (v == null) return '';
-  if (Math.abs(v) >= 1_000_000) {
-    const m = v / 1_000_000;
-    const fixed = m.toFixed(1);
-    return `€${fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed}M`;
-  }
-  return `€${(v / 1000).toFixed(0)}K`;
-}
+// Money formatter compartido — alias local fmtMoney para no tocar las
+// callsites. Switch a M en el threshold de redondeo (999_500) → antes
+// valores tipo €999_999 se mostraban como "€1000K" en lugar de "€1M".
+import { formatMoney as fmtMoney } from '@/lib/format.js';
 
 // ─── Exposure aggregator for custom portfolios ──────────────────────
 // The backend doesn't persist custom portfolios, so /exposure isn't
@@ -602,7 +592,7 @@ export function PortfolioExplorer() {
         {/* Left rail: portfolio + filters */}
         <Card className="overflow-hidden flex flex-col">
           <CardHeader className="py-2.5 px-4 border-b border-border-default shrink-0">
-            <CardTitle className="text-13 tracking-tight">Portfolio</CardTitle>
+            <CardTitle className="font-serif text-15 font-normal tracking-tight">Portfolio</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto p-3 space-y-4">
             <PortfolioSelector
@@ -631,7 +621,7 @@ export function PortfolioExplorer() {
         <Card className="overflow-hidden flex flex-col">
           <CardHeader className="py-2 px-4 border-b border-border-default shrink-0">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-13 tracking-tight">
+              <CardTitle className="font-serif text-15 font-normal tracking-tight">
                 Clients ·{' '}
                 <span className="font-mono text-text-secondary tabular-nums">
                   {filteredClients.length.toLocaleString()}

@@ -349,7 +349,7 @@ export function Comparison() {
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden relative">
           <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default">
             <div className="flex items-center gap-2 min-w-0">
-              <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">
+              <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">
                 Valencia
               </h3>
               <span className="hidden sm:inline text-11 text-text-tertiary truncate">
@@ -376,7 +376,7 @@ export function Comparison() {
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden relative">
           <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default">
             <div className="flex items-center gap-2 min-w-0">
-              <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">
+              <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">
                 Algemesí
               </h3>
               <span className="hidden sm:inline text-11 text-text-tertiary truncate">
@@ -407,7 +407,7 @@ export function Comparison() {
        *  estrecho. */}
       <div className="bg-bg-surface border border-border-default rounded">
         <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default flex items-center justify-between gap-3">
-          <h3 className="text-13 font-semibold text-text-primary">
+          <h3 className="font-serif text-15 text-text-primary tracking-tight">
             Metrics comparison
           </h3>
           <span className="hidden md:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">
@@ -506,7 +506,7 @@ export function Comparison() {
        *  Matches Evidently AI's model-drift report visual. ──── */}
       <div className="bg-bg-surface border border-border-default rounded p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h3 className="text-13 font-semibold text-text-primary">
+          <h3 className="font-serif text-15 text-text-primary tracking-tight">
             Performance comparison
           </h3>
           <span className="hidden sm:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">

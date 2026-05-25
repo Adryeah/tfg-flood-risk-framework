@@ -371,7 +371,10 @@ function Widget({ title, badge, hint, cite, children, className = '' }) {
       <CardHeader className="py-2.5 px-4 border-b border-border-default">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <CardTitle className="text-13 tracking-tight">{title}</CardTitle>
+            {/* Título editorial: font-serif sin semibold, mismo registro
+             *  que los h1 de las páginas. El badge a la derecha hace de
+             *  eyebrow (mono caps tracked). */}
+            <CardTitle className="font-serif text-15 font-normal tracking-tight">{title}</CardTitle>
             {hint && <InfoHint cite={cite}>{hint}</InfoHint>}
           </div>
           {badge && (

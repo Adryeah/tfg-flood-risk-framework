@@ -5,6 +5,11 @@ import { KpiCard } from '../components/KpiCard.jsx';
 import { InfoTooltip } from '../components/InfoTooltip.jsx';
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { api } from '../lib/api.js';
+// Money + percent helpers compartidos en src/lib/format.js. Importamos
+// formatMoneySpaced (símbolo detrás, espacio) bajo el alias formatEur
+// para no tocar las callsites existentes. Arregla además el bug
+// 1000K → 1M en la frontera de redondeo.
+import { formatMoneySpaced as formatEur, formatPercent } from '../lib/format.js';
 import {
   CHART_COLORS,
   chartGrid,
@@ -49,14 +54,6 @@ const MUNICIPALITY_CENTROIDS = [
   { name: 'Valencia',    lat: 39.4750, lon: -0.3750 },
 ];
 
-function formatEur(value) {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M €`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K €`;
-  return `${Math.round(value)} €`;
-}
-function formatPercent(value, decimals = 1) {
-  return `${(value * 100).toFixed(decimals)}%`;
-}
 
 export function Overview() {
   const [valMetrics, setValMetrics] = useState(null);
@@ -305,7 +302,7 @@ export function Overview() {
       <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
           <div className="flex items-center gap-1.5 min-w-0">
-            <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">
+            <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">
               Risk surface · study areas
             </h3>
             <InfoTooltip
@@ -364,12 +361,15 @@ export function Overview() {
 }
 
 // ─── Chart card wrapper ────────────────────────────────────────
+// Editorial register: título en font-serif sin semibold para que case
+// con los h1 de las páginas (que también son serif). El badge sigue
+// haciendo de "eyebrow" — mono caps tracked-out, alineado a la derecha.
 function ChartCard({ title, badge, info, children }) {
   return (
     <div className="bg-bg-surface border border-border-default rounded shadow-sm flex flex-col overflow-visible h-full">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
         <div className="flex items-center gap-1.5 min-w-0">
-          <h3 className="text-13 font-semibold text-text-primary truncate tracking-tight">{title}</h3>
+          <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">{title}</h3>
           {info && <InfoTooltip what={info.what} source={info.source} />}
         </div>
         {badge && (

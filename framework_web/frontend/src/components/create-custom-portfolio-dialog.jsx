@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api.js';
+import { formatMoney } from '@/lib/format.js';
 
 /**
  * Custom portfolio creation dialog.
@@ -53,12 +54,7 @@ const PRESETS = {
 };
 
 function fmtMoney(v) {
-  if (v == null) return '—';
-  if (v >= 1_000_000) {
-    const m = v / 1_000_000;
-    return `€${m.toFixed(1).replace(/\.0$/, '')}M`;
-  }
-  return `€${(v / 1000).toFixed(0)}K`;
+  return v == null ? '—' : formatMoney(v);
 }
 
 export function CreateCustomPortfolioDialog({ open, onOpenChange, onCreated }) {
