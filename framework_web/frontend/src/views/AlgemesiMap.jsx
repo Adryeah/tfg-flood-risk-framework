@@ -152,19 +152,28 @@ export function AlgemesiMap() {
 
   return (
     <div className="space-y-3">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-20 font-semibold text-text-primary tracking-tight">
-            Algemesí Risk Map
+      {/* ─── HEADER · editorial register, mismo patrón que ValenciaMap
+       *  pero con eyebrow "Zone 02 · Extrapolation" y acento amber
+       *  (risk-medium) en el badge para marcar visualmente que esta es
+       *  la zona NO entrenada. */}
+      <header>
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
+          Operations · Zone 02 · Extrapolation
+        </div>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
+            Risk map
+            <span className="text-text-tertiary font-normal mx-2 not-italic">·</span>
+            <span className="italic">Algemesí</span>
           </h1>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium">
             Extrapolation zone
           </span>
         </div>
-        <p className="text-12 text-text-secondary">
-          Ribera Alta del Júcar · Model applied without retraining · Transferability test
+        <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
+          Ribera Alta del Júcar · Algemesí + Alzira · Same model, transferred without retraining as a geographic generalisation test.
         </p>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">

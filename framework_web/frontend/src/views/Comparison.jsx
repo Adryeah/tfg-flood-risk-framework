@@ -320,12 +320,18 @@ export function Comparison() {
 
   return (
     <div className="space-y-4">
-      <div>
-        {/* Header chips con flex-wrap para que los badges no fuercen
-         *  overflow horizontal en mobile. */}
-        <div className="flex flex-wrap items-center gap-2 mb-1">
-          <h1 className="text-20 font-semibold text-text-primary tracking-tight">
-            Valencia vs Algemesí
+      {/* ─── HEADER · editorial register, "slash title" con ambas zonas
+       *  en serif italic — lee como portada de doble página de revista
+       *  (Valencia / Algemesí), no como card de dashboard. */}
+      <header>
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
+          Methodology · Transferability test
+        </div>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
+            <span className="italic">Valencia</span>
+            <span className="text-text-tertiary font-normal mx-2 not-italic">/</span>
+            <span className="italic">Algemesí</span>
           </h1>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-brand-50 text-brand-700 text-10 font-mono font-semibold uppercase tracking-wider">
             Same model
@@ -334,11 +340,10 @@ export function Comparison() {
             Different zone
           </span>
         </div>
-        <p className="text-12 text-text-secondary">
-          Geographic transferability test — Random Forest v2 applied without
-          retraining
+        <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
+          Geographic generalisation test: the same Random Forest v2 trained in l'Horta Sud, applied to Algemesí without retraining or recalibration.
         </p>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden relative">

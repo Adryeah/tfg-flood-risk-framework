@@ -103,9 +103,19 @@ const EN_ES = {
   // Info tooltips chrome
   What: 'Qué',
   Source: 'Fuente',
-  // Valencia / Algemesí map views
+  // Valencia / Algemesí map views — nuevo header editorial
+  //   (legacy "Valencia Risk Map" / "Algemesí Risk Map" se mantienen
+  //   por si alguna ruta antigua los referencia, pero el nuevo h1
+  //   se compone con "Risk map" + place name en italic)
   'Valencia Risk Map': 'Mapa de riesgo · Valencia',
   'Algemesí Risk Map': 'Mapa de riesgo · Algemesí',
+  'Risk map': 'Mapa de riesgo',
+  'Operations · Zone 01 · Training': 'Operaciones · Zona 01 · Entrenamiento',
+  'Operations · Zone 02 · Extrapolation': 'Operaciones · Zona 02 · Extrapolación',
+  "l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random Forest v2.":
+    "l'Horta Sud · 14 municipios afectados por la DANA · Superficie de probabilidad de inundación del modelo Random Forest v2.",
+  'Ribera Alta del Júcar · Algemesí + Alzira · Same model, transferred without retraining as a geographic generalisation test.':
+    'Ribera Alta del Júcar · Algemesí + Alzira · Mismo modelo, transferido sin re-entrenamiento como test de generalización geográfica.',
   'Training zone': 'Zona de entrenamiento',
   'Extrapolation zone': 'Zona de extrapolación',
   Statistics: 'Estadísticas',
@@ -146,6 +156,9 @@ const EN_ES = {
   'Valencia vs Algemesí': 'Valencia vs Algemesí',
   'Same model': 'Mismo modelo',
   'Different zone': 'Distinta zona',
+  'Methodology · Transferability test': 'Metodología · Test de transferibilidad',
+  'Geographic generalisation test: the same Random Forest v2 trained in l\'Horta Sud, applied to Algemesí without retraining or recalibration.':
+    'Test de generalización geográfica: el mismo Random Forest v2 entrenado en l\'Horta Sud, aplicado a Algemesí sin re-entrenamiento ni recalibración.',
   'Geographic transferability test — Random Forest v2 applied without retraining':
     'Test de transferibilidad geográfica — Random Forest v2 aplicado sin re-entrenamiento',
   'Metrics comparison': 'Comparativa de métricas',
@@ -668,6 +681,29 @@ const EN_ES = {
   // ── Leakage Audit badges ──
   'Solvency II · model validation': 'Solvencia II · validación de modelo',
   'EU AI Act · audit log': 'Ley de IA UE · registro de auditoría',
+
+  // ── Overview / Exposure KPIs + widget chrome (faltaban) ───────
+  'Affected policies': 'Pólizas afectadas',
+  'Expected annual loss': 'Pérdida anual esperada',
+  'If a DANA hits today': 'Si una DANA ocurriera hoy',
+  'Single-event loss if a DANA hits today':
+    'Pérdida single-event si una DANA ocurriera hoy',
+  'Loss exceedance curve': 'Curva de excedencia de pérdida',
+  'TIV share': 'Cuota TIV',
+  'PML share': 'Cuota PML',
+
+  // ── Policy Map · dock metrics (faltaban) ──────────────────────
+  Insured: 'Asegurado',
+  Premium: 'Prima',
+  'Est. loss': 'Pérdida est.',
+  Position: 'Posición',
+  Distribution: 'Distribución',
+  Policy: 'Póliza',
+  'Nearest HR': 'Alto Riesgo más cercano',
+
+  // ── Methodology eyebrow (compartido entre páginas) ────────────
+  'Methodology': 'Metodología',
+  'Audit verdict': 'Veredicto de auditoría',
 
   // ── Leakage Audit · forensic redesign (case-file UI) ──────
   // Strings introducidos cuando la vista se rediseñó como expediente

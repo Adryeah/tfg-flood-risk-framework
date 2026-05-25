@@ -53,19 +53,28 @@ export function ValenciaMap() {
 
   return (
     <div className="space-y-3">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h1 className="text-20 font-semibold text-text-primary tracking-tight">
-            Valencia Risk Map
+      {/* ─── HEADER · editorial register (eyebrow + serif title + italic
+       *  subtitle). Coincide con el patrón de model-validation.jsx para
+       *  que las páginas top-nav se sientan parte de la misma "publicación"
+       *  en lugar de cards de SaaS dashboard idénticas. */}
+      <header>
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
+          Operations · Zone 01 · Training
+        </div>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
+            Risk map
+            <span className="text-text-tertiary font-normal mx-2 not-italic">·</span>
+            <span className="italic">Valencia</span>
           </h1>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-brand-50 text-brand-700">
             Training zone
           </span>
         </div>
-        <p className="text-12 text-text-secondary">
-          l'Horta Sud · Flood probability surface from Random Forest v2 · DANA October 2024
+        <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
+          l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random Forest v2.
         </p>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
         <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
