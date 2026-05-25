@@ -9,7 +9,7 @@
 | **Autor** | Adrián Vargas Aceituno |
 | **Tutor académico** | Prof. José A. López-Salcedo (DTES/SPCOMNAV, UAB) |
 | **Tutor empresa** | Ricard (CIO, Zurich Insurance Spain) |
-| **Curso** | 2024–2025 |
+| **Curso** | 2025–2026 |
 
 ---
 
