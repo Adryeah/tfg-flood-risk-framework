@@ -41,11 +41,12 @@ const METRIC_DOCS = {
 
 // ─── Inline value bar (renders a thin coloured bar inside a number
 // cell, proportional to its value [0..1]). Adds visual character to
-// the otherwise plain numeric table.
+// the otherwise plain numeric table. En mobile las barras se ocultan
+// para liberar ancho — el número con tabular-nums ya basta.
 function ValueBar({ v, color = '#1D4ED8' }) {
   const pct = Math.min(100, Math.max(0, (v ?? 0) * 100));
   return (
-    <div className="relative mt-1 h-1 rounded-sm overflow-hidden bg-bg-subtle">
+    <div className="hidden sm:block relative mt-1 h-1 rounded-sm overflow-hidden bg-bg-subtle">
       <div
         className="absolute inset-y-0 left-0 rounded-sm transition-[width] duration-500"
         style={{ width: `${pct}%`, background: color }}
@@ -409,7 +410,10 @@ export function Comparison() {
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-13 min-w-[480px]">
+          {/* min-w 380 (no 480) ahora que las ValueBars de cada celda
+           *  desaparecen en mobile — la Δ column entra sin scroll en
+           *  pantallas de 360px+. */}
+          <table className="w-full text-13 min-w-[380px]">
             <thead>
               <tr className="text-11 text-text-tertiary uppercase tracking-wider border-b border-border-default font-mono">
                 <th className="text-left py-2 px-2 sm:px-4 font-semibold">Metric</th>

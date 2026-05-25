@@ -317,7 +317,7 @@ export function PolicyMap() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem)] gap-2 p-3 sm:p-4 pb-3">
+    <div className="flex flex-col min-h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3.5rem)] gap-2 p-3 sm:p-4 pb-3">
       {/* Header — slim single line so the map gets maximum vertical room. */}
       <div className="flex items-center justify-between gap-4 shrink-0 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
@@ -683,16 +683,17 @@ function PolicyDock({
   loading,
 }) {
   return (
-    <div
-      className="shrink-0 bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden"
-      style={{ height: 168 }}
-    >
+    <div className="shrink-0 bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
+      {/* En mobile las 4 celdas se apilan verticalmente con divisorias
+       *  horizontales — cada bloque queda legible sin tener que comprimir
+       *  texto en ~80px de ancho. En md+ vuelve al grid horizontal 4-col
+       *  de 168px de alto. */}
       <div
-        className="grid h-full divide-x divide-border-default"
-        style={{
-          gridTemplateColumns:
-            '180px minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr)',
-        }}
+        className="
+          grid divide-y divide-border-default
+          md:divide-y-0 md:divide-x md:h-[168px]
+          md:[grid-template-columns:180px_minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,1fr)]
+        "
       >
         <DockNavCell
           current={current}
