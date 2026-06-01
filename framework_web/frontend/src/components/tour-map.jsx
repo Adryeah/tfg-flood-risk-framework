@@ -2,55 +2,50 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { Tile3DLayer } from '@deck.gl/geo-layers';
 import { ScatterplotLayer, ColumnLayer } from '@deck.gl/layers';
-// _TerrainExtension viene con prefijo underscore en deck.gl 9.x
-// porque es experimental. Lo aliasamos para que el resto del código
-// se lea limpio.
 import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import { FlyToInterpolator } from '@deck.gl/core';
 import { Tiles3DLoader } from '@loaders.gl/3d-tiles';
+import { Map as MapLibreReact } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { formatMoney, formatPercent } from '@/lib/format.js';
 
-// ─── Google Photorealistic 3D Tiles ──────────────────────────────
+// ─── Setup gratuito por defecto, premium con API key ──────────────
 //
-// Es la base fotogramétrica REAL que Google publica para más de 2.500
-// ciudades del mundo, incluida toda Valencia metropolitana. Renderiza
-// fachadas, tejados, balcones, persianas reales — no extrusiones.
-// Lo usan CARTO con deck.gl, GeoFlood Studio (NYU) y Google Earth
-// Studio. Es el "Hollywood-grade" del análisis de cartera.
+// Modo GRATIS (sin ninguna key):
+//   Basemap: OpenFreeMap Liberty (vector tiles, sin clave)
+//   Edificios 3D: extrusión OSM via fill-extrusion del propio estilo
+//   Pólizas: marcadores deck.gl encima
 //
-// La API key se carga de VITE_GOOGLE_MAPS_API_KEY al build. Sin key
-// el Tile3DLayer no carga — fallback a un mapa MapLibre con OSM
-// queda como TODO (ahora preferimos fallar rápido con mensaje claro).
+// Modo PREMIUM (con VITE_GOOGLE_MAPS_API_KEY):
+//   Basemap: Google Photorealistic 3D Tiles (Tile3DLayer)
+//   Edificios: fotogramétricos reales
+//   Pólizas: igual encima
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-const GOOGLE_3D_URL = GOOGLE_KEY
+const HAS_GOOGLE = Boolean(GOOGLE_KEY);
+const GOOGLE_3D_URL = HAS_GOOGLE
   ? `https://tile.googleapis.com/v1/3dtiles/root.json?key=${GOOGLE_KEY}`
   : null;
+const FREE_BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
-// ─── Mapeo planta / altitud (Z-axis logic) ───────────────────────
-// Convierte el subtype textual en metros sobre el suelo, que es lo
-// que TerrainExtension('offset') usa para colocar el marker a la
-// altura correcta del piso del cliente.
+// ─── Z-axis logic ───────────────────────────────────────────────
 function policyFloorIdx(p) {
   if (p.product === 'autos') return 0;
   if (p.ground_floor) return 0;
   return Math.max(1, Math.min(p.floor_count || 1, 12));
 }
-function policyAltitude(p) {
-  if (p.product === 'autos') return 0; // pavimento
-  if (p.subtype === 'comercio' || p.subtype === 'nave') return 0.5;
-  const f = policyFloorIdx(p);
-  return f === 0 ? 1.2 : f * 3; // 3 m por planta — TerrainExtension
-                                  // SUMA esto a la cota real del DEM
-                                  // de las 3D Tiles, así que la altitud
-                                  // queda anclada al edificio real.
-}
 function buildingFloors(p) {
   if (p.product === 'autos') return 1;
   return Math.max(policyFloorIdx(p) + 1, p.floor_count || 1, 1);
 }
+function policyAltitude(p) {
+  if (p.product === 'autos') return 0;
+  if (p.subtype === 'comercio' || p.subtype === 'nave') return 0.5;
+  const f = policyFloorIdx(p);
+  return f === 0 ? 1.2 : f * 3;
+}
 
-// ─── Descripción rica de la póliza (para el panel) ───────────────
+// ─── Descripción rica ──────────────────────────────────────────
 function describePolicy(p) {
   const SUBTYPE_LABEL = {
     chalet: 'Chalet unifamiliar',
@@ -79,9 +74,13 @@ function locationText(p) {
   return `Planta ${f}.ª · ático del edificio (${f + 1} plantas)`;
 }
 
-// ─── Color RGB por categoría de riesgo ───────────────────────────
-// deck.gl quiere arrays [r, g, b, a] en 0–255.
-function colorRGBA(category, alpha = 220) {
+// ─── Paleta · azul para no-activos, color de riesgo para activos
+// El cambio del enfoque visual: el color de riesgo se reserva para
+// LA póliza que estás inspeccionando ahora; el resto son data points
+// azules que invitan a click. Estilo Bloomberg "every dot is data".
+const BLUE_BASE = [56, 189, 248, 200]; // sky-400
+const BLUE_HOVER = [125, 211, 252, 240]; // sky-300
+function riskRGBA(category, alpha = 240) {
   const RGB = {
     low: [251, 191, 36],
     moderate: [248, 113, 113],
@@ -91,18 +90,19 @@ function colorRGBA(category, alpha = 220) {
   return [...(RGB[category] || [148, 163, 184]), alpha];
 }
 
-// ─── Bearing rotado por póliza (variedad cinematográfica) ───────
 function bearingFor(idx) {
   return 35 + ((idx * 17) % 70) - 35;
 }
 
 // ─── TourMap principal ──────────────────────────────────────────
-export function TourMap({ policies, activeIndex }) {
+export function TourMap({ policies, activeIndex, onSelectPolicy }) {
   const liftStartRef = useRef(performance.now());
   const [liftT, setLiftT] = useState(1);
+  const [pulseT, setPulseT] = useState(0);
+  const [hoverIdx, setHoverIdx] = useState(-1);
   const prevActiveRef = useRef(-1);
 
-  // Re-lanzar animación de "ascenso" del halo cuando cambia el activo
+  // ── Animación de "ascenso" del halo al cambiar póliza ──────────
   useEffect(() => {
     if (activeIndex === prevActiveRef.current) return;
     prevActiveRef.current = activeIndex;
@@ -110,16 +110,26 @@ export function TourMap({ policies, activeIndex }) {
     setLiftT(0);
     let id;
     const tick = (now) => {
-      const dt = (now - liftStartRef.current) / 900;
-      const t = Math.min(dt, 1);
-      setLiftT(1 - Math.pow(1 - t, 4)); // ease-out-quart
+      const t = Math.min((now - liftStartRef.current) / 900, 1);
+      setLiftT(1 - Math.pow(1 - t, 4));
       if (t < 1) id = requestAnimationFrame(tick);
     };
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
   }, [activeIndex]);
 
-  // ── Camera view state (DeckGL controla la cámara via React) ──
+  // ── Pulso permanente del activo (radio oscila ±3 m cada 2s) ────
+  useEffect(() => {
+    let id;
+    const tick = () => {
+      setPulseT(performance.now() * 0.001);
+      id = requestAnimationFrame(tick);
+    };
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  // ── Camera viewState ───────────────────────────────────────────
   const activePolicy = policies?.[activeIndex];
   const viewState = useMemo(() => {
     const p = activePolicy;
@@ -133,9 +143,6 @@ export function TourMap({ policies, activeIndex }) {
       };
     }
     const policyAlt = policyAltitude(p);
-    // Cámara adaptativa a la planta (igual que la versión anterior):
-    //   - planta baja  → zoom 17.4 · pitch 60° (drone cercano)
-    //   - ático        → zoom 17.0 · pitch 50° (más alto, más horizontal)
     return {
       longitude: p.lon,
       latitude: p.lat,
@@ -150,81 +157,97 @@ export function TourMap({ policies, activeIndex }) {
   // ── Layers ────────────────────────────────────────────────────
   const layers = useMemo(() => {
     if (!policies?.length) return [];
-
     const activePol = policies[activeIndex];
     const activeAlt = activePol ? policyAltitude(activePol) : 0;
-    // El offset de "ascenso" se aplica SOLO al halo activo. Empieza
-    // en -activeAlt (a ras de suelo) y termina en 0 (en su planta).
     const liftOffset = -activeAlt * (1 - liftT);
+    // Pulso del radio del ring activo (sinusoidal entre 8 y 14)
+    const pulseRadius = 8 + Math.sin(pulseT * Math.PI) * 3;
 
     const layers = [];
 
-    // Google Photorealistic 3D Tiles — solo si hay API key.
     if (GOOGLE_3D_URL) {
       layers.push(
         new Tile3DLayer({
           id: 'google-photorealistic-3d',
           data: GOOGLE_3D_URL,
           loader: Tiles3DLoader,
-          // Sin este flag los tiles del horizonte no se cargan en
-          // ángulos altos de pitch.
           loadOptions: { fetch: { mode: 'cors' } },
           operation: 'terrain+draw',
         })
       );
     }
 
-    // Ring 2D en el suelo · clamp al terreno real de las tiles 3D.
+    // ─── Rings 2D · interactivos + animados ─────────────────────
     layers.push(
       new ScatterplotLayer({
         id: 'policy-rings',
         data: policies,
         getPosition: (d) => [d.lon, d.lat, 0],
-        getRadius: (d, { index }) => (index === activeIndex ? 8 : 4),
+        getRadius: (d, { index }) => {
+          if (index === activeIndex) return pulseRadius;
+          if (index === hoverIdx) return 6;
+          return 4;
+        },
         radiusUnits: 'meters',
-        radiusMinPixels: 4,
-        getFillColor: (d, { index }) =>
-          colorRGBA(d.risk_category, index === activeIndex ? 240 : 160),
+        radiusMinPixels: 5,
+        getFillColor: (d, { index }) => {
+          if (index === activeIndex) return riskRGBA(d.risk_category, 250);
+          if (index === hoverIdx) return BLUE_HOVER;
+          return BLUE_BASE;
+        },
         stroked: true,
         getLineColor: [248, 250, 252, 240],
-        getLineWidth: (d, { index }) => (index === activeIndex ? 1.5 : 0.7),
+        getLineWidth: (d, { index }) => (index === activeIndex ? 1.8 : 0.6),
         lineWidthUnits: 'meters',
         extensions: [new TerrainExtension()],
-        terrainDrawMode: 'drape', // se pegan al suelo de las 3D Tiles
+        terrainDrawMode: 'drape',
         pickable: true,
-        updateTriggers: { getRadius: activeIndex, getFillColor: activeIndex, getLineWidth: activeIndex },
+        autoHighlight: true,
+        onClick: (info) => {
+          if (info.index >= 0 && onSelectPolicy) {
+            onSelectPolicy(info.index);
+          }
+        },
+        onHover: (info) => {
+          setHoverIdx(info.index >= 0 ? info.index : -1);
+        },
+        updateTriggers: {
+          getRadius: [activeIndex, hoverIdx, pulseRadius],
+          getFillColor: [activeIndex, hoverIdx],
+          getLineWidth: activeIndex,
+        },
       })
     );
 
-    // Beam blanco vertical · ColumnLayer extruded desde el suelo
-    // hasta la planta de la póliza. Las pólizas non-edificio
-    // (autos, nave, comercio) NO necesitan beam.
-    const beamData = policies.map((p, i) => ({
-      ...p,
-      _i: i,
-      _isActive: i === activeIndex,
-      _hasBeam: p.product !== 'autos' && p.subtype !== 'nave' && p.subtype !== 'comercio',
-    }));
+    // ─── Beams (rayos verticales) ────────────────────────────────
+    const beamData = policies
+      .map((p, i) => ({ ...p, _i: i, _isActive: i === activeIndex, _isHover: i === hoverIdx }))
+      .filter(
+        (d) =>
+          d.product !== 'autos' && d.subtype !== 'nave' && d.subtype !== 'comercio'
+      );
     layers.push(
       new ColumnLayer({
         id: 'policy-beams',
-        data: beamData.filter((d) => d._hasBeam),
+        data: beamData,
         getPosition: (d) => [d.lon, d.lat, 0],
         diskResolution: 14,
-        radius: 0.8,
+        radius: 0.7,
         radiusUnits: 'meters',
         extruded: true,
         getElevation: (d) => policyAltitude(d),
-        getFillColor: (d) =>
-          d._isActive ? [255, 255, 255, 230] : [226, 232, 240, 120],
+        getFillColor: (d) => {
+          if (d._isActive) return [255, 255, 255, 230];
+          if (d._isHover) return [...BLUE_HOVER];
+          return [...BLUE_BASE.slice(0, 3), 90];
+        },
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'offset',
-        updateTriggers: { getFillColor: activeIndex },
+        updateTriggers: { getFillColor: [activeIndex, hoverIdx] },
       })
     );
 
-    // Halo coloreado en la planta de la póliza. El activo se anima
-    // (sube desde el suelo a su altura) vía liftOffset.
+    // ─── Halos ───────────────────────────────────────────────────
     layers.push(
       new ColumnLayer({
         id: 'policy-halos',
@@ -241,7 +264,6 @@ export function TourMap({ policies, activeIndex }) {
           if (d.subtype === 'comercio') return 3.2;
           return 1.0;
         },
-        getLineColor: [248, 250, 252, 255],
         getRadius: (d) => {
           if (d.subtype === 'nave') return 7.5;
           if (d.subtype === 'comercio') return 4.2;
@@ -250,22 +272,25 @@ export function TourMap({ policies, activeIndex }) {
         },
         radiusUnits: 'meters',
         extruded: true,
-        getFillColor: (d, { index }) =>
-          colorRGBA(d.risk_category, index === activeIndex ? 230 : 100),
+        getFillColor: (d, { index }) => {
+          if (index === activeIndex) return riskRGBA(d.risk_category, 230);
+          if (index === hoverIdx) return [...BLUE_HOVER.slice(0, 3), 180];
+          return [...BLUE_BASE.slice(0, 3), 90];
+        },
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'offset',
         updateTriggers: {
           getPosition: [activeIndex, liftT],
-          getFillColor: activeIndex,
+          getFillColor: [activeIndex, hoverIdx],
         },
       })
     );
 
-    // Floor stack — discos blancos por planta del edificio (solo
-    // para productos con plantas reales).
+    // ─── Floor stack ─────────────────────────────────────────────
     const stackData = [];
     policies.forEach((p, i) => {
-      if (p.product === 'autos' || p.subtype === 'nave' || p.subtype === 'comercio') return;
+      if (p.product === 'autos' || p.subtype === 'nave' || p.subtype === 'comercio')
+        return;
       const total = buildingFloors(p);
       for (let f = 1; f <= total; f++) {
         stackData.push({ ...p, _i: i, _floor: f, _z: f * 3 });
@@ -281,35 +306,14 @@ export function TourMap({ policies, activeIndex }) {
         radiusUnits: 'meters',
         extruded: true,
         getElevation: 0.2,
-        getFillColor: [248, 250, 252, 90],
+        getFillColor: [248, 250, 252, 85],
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'offset',
       })
     );
 
     return layers;
-  }, [policies, activeIndex, liftT]);
-
-  // ── Render ───────────────────────────────────────────────────
-  if (!GOOGLE_3D_URL) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-bg-base p-6 text-center">
-        <div>
-          <div className="text-13 text-risk-high font-semibold mb-2">
-            Falta la API key de Google Maps Platform
-          </div>
-          <div className="text-12 text-text-secondary max-w-md mx-auto leading-relaxed">
-            Esta vista usa Google Photorealistic 3D Tiles (CARTO + deck.gl
-            stack). Crea un proyecto en console.cloud.google.com, activa la
-            <code className="font-mono mx-1">Map Tiles API</code>, genera
-            una API key y añádela como variable de entorno{' '}
-            <code className="font-mono">VITE_GOOGLE_MAPS_API_KEY</code> en
-            Vercel + tu .env.local.
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [policies, activeIndex, liftT, pulseT, hoverIdx, onSelectPolicy]);
 
   return (
     <div className="absolute inset-0">
@@ -317,8 +321,40 @@ export function TourMap({ policies, activeIndex }) {
         viewState={viewState}
         controller={true}
         layers={layers}
+        getCursor={({ isHovering, isDragging }) =>
+          isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
+        }
         style={{ position: 'absolute', inset: 0 }}
-      />
+      >
+        {/* Basemap UNDER el deck.gl. En modo GRATIS es MapLibre con
+         *  el estilo Liberty de OpenFreeMap (sin clave, edificios 3D
+         *  extruidos por el propio estilo). En modo PREMIUM no se
+         *  renderiza porque Tile3DLayer ya provee la base
+         *  fotogramétrica completa. */}
+        {!HAS_GOOGLE && (
+          <MapLibreReact mapStyle={FREE_BASEMAP_STYLE} reuseMaps />
+        )}
+      </DeckGL>
+
+      {/* Badge de modo (esquina inferior derecha) */}
+      <div
+        className="hidden md:flex absolute bottom-5 right-5 z-[600] items-center gap-2 px-2.5 py-1.5 rounded-sm backdrop-blur-md"
+        style={{
+          background: 'rgba(15,23,42,0.78)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          color: 'rgba(248,250,252,0.7)',
+        }}
+      >
+        <span
+          className="inline-block w-1.5 h-1.5 rounded-full"
+          style={{ background: HAS_GOOGLE ? '#22D3EE' : '#94A3B8' }}
+        />
+        <span className="text-10 font-mono uppercase tracking-[0.16em]">
+          {HAS_GOOGLE
+            ? 'Google Photorealistic 3D'
+            : 'OpenFreeMap · Free tier'}
+        </span>
+      </div>
 
       <CinematicPanel
         policy={policies[activeIndex]}
@@ -356,7 +392,8 @@ function CinematicPanel({ policy, index, total }) {
       style={{
         background: 'rgba(15,23,42,0.80)',
         border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
+        boxShadow:
+          '0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
         color: '#F8FAFC',
       }}
     >
@@ -364,29 +401,57 @@ function CinematicPanel({ policy, index, total }) {
         className="flex items-center justify-between mb-2 text-10 font-mono uppercase tracking-[0.16em]"
         style={{ color: 'rgba(248,250,252,0.55)' }}
       >
-        <span>Póliza {index + 1} de {total}</span>
+        <span>
+          Póliza {index + 1} de {total}
+        </span>
         <span style={{ color: tint }}>
           Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}
         </span>
       </div>
-      <div className="font-mono text-14 mb-0.5 tracking-tight" style={{ color: '#F8FAFC' }}>
+      <div
+        className="font-mono text-14 mb-0.5 tracking-tight"
+        style={{ color: '#F8FAFC' }}
+      >
         {policy.id}
       </div>
-      <div className="font-serif italic text-15 leading-snug mb-0.5" style={{ color: '#F8FAFC' }}>
+      <div
+        className="font-serif italic text-15 leading-snug mb-0.5"
+        style={{ color: '#F8FAFC' }}
+      >
         {description}
       </div>
-      <div className="text-12 leading-snug mb-1" style={{ color: 'rgba(248,250,252,0.72)' }}>
+      <div
+        className="text-12 leading-snug mb-1"
+        style={{ color: 'rgba(248,250,252,0.72)' }}
+      >
         {location}
       </div>
-      <div className="text-10 font-mono uppercase tracking-wider mb-3" style={{ color: 'rgba(248,250,252,0.45)' }}>
+      <div
+        className="text-10 font-mono uppercase tracking-wider mb-3"
+        style={{ color: 'rgba(248,250,252,0.45)' }}
+      >
         {year ? `Construido ${year} · ` : ''}
         {policy.lat?.toFixed(4)}, {policy.lon?.toFixed(4)}
       </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <PanelMetric label="P(flood)" value={formatPercent(policy.risk_probability, 1)} tint={tint} />
+      <div
+        className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t"
+        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+      >
+        <PanelMetric
+          label="P(flood)"
+          value={formatPercent(policy.risk_probability, 1)}
+          tint={tint}
+        />
         <PanelMetric label="Asegurado" value={formatMoney(policy.insured_value)} />
-        <PanelMetric label="Pérdida est." value={formatMoney(policy.estimated_loss_dana)} tint={tint} />
-        <PanelMetric label="Prima anual" value={formatMoney(policy.annual_premium)} />
+        <PanelMetric
+          label="Pérdida est."
+          value={formatMoney(policy.estimated_loss_dana)}
+          tint={tint}
+        />
+        <PanelMetric
+          label="Prima anual"
+          value={formatMoney(policy.annual_premium)}
+        />
       </div>
     </div>
   );
@@ -395,17 +460,23 @@ function CinematicPanel({ policy, index, total }) {
 function PanelMetric({ label, value, tint }) {
   return (
     <div className="min-w-0">
-      <div className="text-9 font-mono uppercase tracking-wider mb-0.5" style={{ color: 'rgba(248,250,252,0.5)' }}>
+      <div
+        className="text-9 font-mono uppercase tracking-wider mb-0.5"
+        style={{ color: 'rgba(248,250,252,0.5)' }}
+      >
         {label}
       </div>
-      <div className="font-mono text-13 truncate" style={{ color: tint || '#F8FAFC', fontWeight: 600 }}>
+      <div
+        className="font-mono text-13 truncate"
+        style={{ color: tint || '#F8FAFC', fontWeight: 600 }}
+      >
         {value}
       </div>
     </div>
   );
 }
 
-// ─── MiniMap (sin cambios) ───────────────────────────────────────
+// ─── MiniMap SVG ─────────────────────────────────────────────────
 function MiniMap({ policies, activeIndex }) {
   if (!policies || policies.length === 0) return null;
   const W = 168, H = 168, PAD = 14;
@@ -435,7 +506,10 @@ function MiniMap({ policies, activeIndex }) {
         boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
       }}
     >
-      <div className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
+      <div
+        className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]"
+        style={{ color: 'rgba(248,250,252,0.55)' }}
+      >
         Tour map · {activeIndex + 1}/{policies.length}
       </div>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
@@ -445,16 +519,48 @@ function MiniMap({ policies, activeIndex }) {
           if (i === activeIndex) return null;
           const [x, y] = project(p.lon, p.lat);
           return (
-            <circle key={i} cx={x} cy={y} r={2.5} fill={p._color || '#94A3B8'} fillOpacity="0.85" />
+            <circle
+              key={i}
+              cx={x}
+              cy={y}
+              r={2.5}
+              fill="#38BDF8"
+              fillOpacity="0.75"
+            />
           );
         })}
         {active && (
           <g>
-            <circle cx={ax} cy={ay} r="11" fill="none" stroke={active._color || '#FFFFFF'} strokeWidth="1.5" opacity="0.6">
-              <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite" />
+            <circle
+              cx={ax}
+              cy={ay}
+              r="11"
+              fill="none"
+              stroke={active._color || '#FFFFFF'}
+              strokeWidth="1.5"
+              opacity="0.6"
+            >
+              <animate
+                attributeName="r"
+                values="8;14;8"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="0.7;0;0.7"
+                dur="2s"
+                repeatCount="indefinite"
+              />
             </circle>
-            <circle cx={ax} cy={ay} r="5" fill={active._color || '#FFFFFF'} stroke="#FFFFFF" strokeWidth="2" />
+            <circle
+              cx={ax}
+              cy={ay}
+              r="5"
+              fill={active._color || '#FFFFFF'}
+              stroke="#FFFFFF"
+              strokeWidth="2"
+            />
           </g>
         )}
       </svg>

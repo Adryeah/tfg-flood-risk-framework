@@ -221,7 +221,11 @@ export function PolicyTour3D() {
               </div>
             }
           >
-            <TourMap policies={tourPolicies} activeIndex={activeIndex} />
+            <TourMap
+              policies={tourPolicies}
+              activeIndex={activeIndex}
+              onSelectPolicy={setActiveIndex}
+            />
           </Suspense>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-text-tertiary text-13">
