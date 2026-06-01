@@ -16,7 +16,7 @@ import { formatMoney, formatPercent } from '@/lib/format.js';
 // los tiene tageados).
 const BASE_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
-// ─── Mapeo planta / altitud (mismo que la versión Cesium) ────────
+// ─── Mapeo planta / altitud ──────────────────────────────────────
 function policyFloorIdx(p) {
   if (p.product === 'autos') return 0;
   if (p.ground_floor) return 0;
@@ -30,6 +30,97 @@ function policyAltitude(p) {
   if (p.product === 'autos') return 0.5;
   const f = policyFloorIdx(p);
   return f === 0 ? 1.2 : f * 3;
+}
+
+// ─── Descripción rica de la póliza ──────────────────────────────
+// Convierte el subtype técnico en lenguaje natural para el panel
+// cinematográfico. Le da personalidad a "Chalet unifamiliar"
+// en vez del feo "particulares · chalet".
+function describePolicy(p) {
+  const SUBTYPE_LABEL = {
+    chalet: 'Chalet unifamiliar',
+    casa: 'Vivienda unifamiliar',
+    piso_alto: 'Vivienda en altura',
+    piso_bajo: 'Vivienda en planta baja',
+    piso: 'Vivienda',
+    comercio: 'Local comercial',
+    oficina: 'Oficina',
+    nave: 'Nave industrial',
+    coche: 'Vehículo · turismo',
+    moto: 'Vehículo · motocicleta',
+    furgoneta: 'Vehículo · furgoneta',
+  };
+  return SUBTYPE_LABEL[p.subtype] || p.subtype || p.product;
+}
+
+// Detalle de la ubicación (planta / posición dentro del edificio).
+function locationText(p) {
+  if (p.product === 'autos') return 'Aparcamiento a pie de calle';
+  if (p.subtype === 'nave') {
+    return 'Local industrial · planta baja';
+  }
+  if (p.subtype === 'comercio') {
+    return 'Local a pie de calle · planta baja';
+  }
+  if (p.ground_floor) {
+    const n = p.floor_count || 1;
+    return n > 1
+      ? `Planta baja · edificio de ${n} alturas`
+      : 'Planta baja';
+  }
+  const f = p.floor_count || 1;
+  return `Planta ${f}.ª · ático del edificio (${f + 1} plantas)`;
+}
+
+// ─── Snap al edificio real más cercano ──────────────────────────
+// Calcula el centroide de un polígono (anillo exterior) en
+// coordenadas geográficas. Suficientemente preciso para edificios
+// urbanos a la resolución de zoom 16+.
+function polygonCentroid(ring) {
+  let cx = 0, cy = 0;
+  const n = ring.length - 1; // último coincide con primero (cerrado)
+  for (let i = 0; i < n; i++) {
+    cx += ring[i][0];
+    cy += ring[i][1];
+  }
+  return [cx / n, cy / n];
+}
+
+function findNearestBuilding(map, lon, lat) {
+  if (!map || !map.isStyleLoaded()) return null;
+  const point = map.project([lon, lat]);
+  // Caja de búsqueda de ±80 px en pantalla — captura el edificio
+  // donde "vive" la póliza + algunos vecinos. Filtramos por distancia
+  // geográfica al lon/lat original para no saltar a un edificio que
+  // por casualidad cae en la caja pero está lejos.
+  const features = map.queryRenderedFeatures(
+    [[point.x - 80, point.y - 80], [point.x + 80, point.y + 80]],
+    { layers: ['buildings-3d'] }
+  );
+  if (!features.length) return null;
+  let best = null;
+  let bestDist = Infinity;
+  for (const f of features) {
+    if (f.geometry.type !== 'Polygon') continue;
+    const ring = f.geometry.coordinates[0];
+    if (!ring || ring.length < 4) continue;
+    const c = polygonCentroid(ring);
+    const dx = c[0] - lon;
+    const dy = c[1] - lat;
+    const d = dx * dx + dy * dy;
+    if (d < bestDist) {
+      bestDist = d;
+      best = {
+        lon: c[0],
+        lat: c[1],
+        height:
+          f.properties?.render_height ||
+          f.properties?.height ||
+          null,
+      };
+    }
+  }
+  return best;
 }
 
 // Aproximación de círculo (polígono N-lados) métrico alrededor de
@@ -58,6 +149,106 @@ const RISK_HEX = {
   very_high: '#7F1D1D',
 };
 
+// ─── Construcción de features por póliza ───────────────────────
+// Diferencia el visual por subtype:
+//   - autos (coche/moto/furgoneta) → SOLO ring + pequeño disco
+//     a 1.5 m, sin beam ni stack (están en la calle, no en plantas).
+//   - nave                          → extrusión grande de ground
+//     (radio 8 m, altura 6 m). Se ve como un volumen industrial.
+//   - comercio                      → halo medio a pie de calle
+//     (radio 4 m, altura 3.5 m).
+//   - piso/oficina/chalet/casa      → beam + halo + stack (defaults).
+//
+// Acepta un mapa opcional `snapMap` que sobreescribe lon/lat de la
+// póliza cuando ya hemos encontrado a qué edificio real pertenece.
+function buildPolicyFeatures(policies, snapMap = {}) {
+  const beams = [];
+  const halos = [];
+  const floors = [];
+  const rings = [];
+  policies.forEach((p, i) => {
+    const snap = snapMap[i];
+    const lon = snap ? snap.lon : p.lon;
+    const lat = snap ? snap.lat : p.lat;
+    const color = RISK_HEX[p.risk_category] || '#94A3B8';
+    const props = { idx: i, color, subtype: p.subtype || '' };
+
+    rings.push({
+      type: 'Feature',
+      id: i,
+      geometry: { type: 'Point', coordinates: [lon, lat] },
+      properties: props,
+    });
+
+    // Autos: solo disco bajito a nivel de calle (capó del coche).
+    if (p.product === 'autos') {
+      halos.push(
+        circleFeature(lon, lat, 2.2, { ...props, base: 0.2, top: 1.4 }, i)
+      );
+      return;
+    }
+
+    // Nave industrial: volumen tipo "almacén" a nivel del suelo.
+    if (p.subtype === 'nave') {
+      halos.push(
+        circleFeature(lon, lat, 7.5, { ...props, base: 0, top: 5 }, i)
+      );
+      return;
+    }
+
+    // Comercio: halo medio a pie de calle.
+    if (p.subtype === 'comercio') {
+      halos.push(
+        circleFeature(lon, lat, 4.2, { ...props, base: 0, top: 3.2 }, i)
+      );
+      return;
+    }
+
+    // Por defecto (piso, chalet, casa, oficina): beam + halo + stack.
+    // Si tenemos altura del edificio real, ajustamos la altitud
+    // proporcionalmente (planta = floor_idx / total_floors × altura).
+    let alt = policyAltitude(p);
+    let totalFloors = buildingFloors(p);
+    if (snap && snap.height && totalFloors > 0) {
+      // Encajamos la planta de la póliza dentro de la altura real
+      // del edificio en lugar de asumir 3 m por planta.
+      const floorIdx = policyFloorIdx(p);
+      const floorH = snap.height / Math.max(totalFloors, 1);
+      alt = floorIdx === 0 ? Math.min(1.2, floorH * 0.4) : floorIdx * floorH;
+      totalFloors = Math.max(totalFloors, Math.round(snap.height / 3));
+    }
+
+    beams.push(
+      circleFeature(lon, lat, 0.9, { ...props, top: Math.max(alt, 2.5) }, i)
+    );
+    halos.push(
+      circleFeature(
+        lon,
+        lat,
+        4.0,
+        { ...props, base: Math.max(alt - 0.7, 0.2), top: alt + 1.0 },
+        i
+      )
+    );
+    const floorH = snap && snap.height && totalFloors > 0
+      ? snap.height / totalFloors
+      : 3;
+    for (let f = 1; f <= totalFloors; f++) {
+      const z = f * floorH;
+      floors.push(
+        circleFeature(
+          lon,
+          lat,
+          3.0,
+          { ...props, base: z - 0.12, top: z + 0.12 },
+          `${i}-f${f}`
+        )
+      );
+    }
+  });
+  return { beams, halos, floors, rings };
+}
+
 // ─── TourMap principal ───────────────────────────────────────────
 export function TourMap({ policies, activeIndex }) {
   const containerRef = useRef(null);
@@ -65,7 +256,11 @@ export function TourMap({ policies, activeIndex }) {
   const liftRef = useRef(0);
   const liftAnimRef = useRef(null);
   const prevActiveRef = useRef(-1);
+  const snapMapRef = useRef({});
   const [ready, setReady] = useState(false);
+  // Bumping este número fuerza re-render de las features sin tocar
+  // la dependencia `policies` (necesario cuando hacemos snap a edificio).
+  const [snapTick, setSnapTick] = useState(0);
 
   // ── Init MapLibre once ──────────────────────────────────────────
   useEffect(() => {
@@ -280,53 +475,22 @@ export function TourMap({ policies, activeIndex }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Reconstruir entidades cuando cambia la lista de pólizas ───
+  // ── Reset snap cuando cambia la lista de pólizas ──────────────
+  useEffect(() => {
+    snapMapRef.current = {};
+    setSnapTick(0);
+  }, [policies]);
+
+  // ── Reconstruir entidades cuando cambia la lista o el snap ────
   useEffect(() => {
     if (!ready) return;
     const map = mapRef.current;
     if (!map || !policies?.length) return;
 
-    const beams = [];
-    const halos = [];
-    const floors = [];
-    const rings = [];
-    policies.forEach((p, i) => {
-      const alt = policyAltitude(p);
-      const totalFloors = buildingFloors(p);
-      const color = RISK_HEX[p.risk_category] || '#94A3B8';
-      const props = { idx: i, color };
-
-      beams.push(
-        circleFeature(p.lon, p.lat, 0.9, { ...props, top: Math.max(alt, 2.5) }, i)
-      );
-      halos.push(
-        circleFeature(
-          p.lon,
-          p.lat,
-          4.2,
-          { ...props, base: Math.max(alt - 0.7, 0.2), top: alt + 1.1 },
-          i
-        )
-      );
-      rings.push({
-        type: 'Feature',
-        id: i,
-        geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
-        properties: props,
-      });
-      for (let f = 1; f <= totalFloors; f++) {
-        const z = f * 3;
-        floors.push(
-          circleFeature(
-            p.lon,
-            p.lat,
-            3.1,
-            { ...props, base: z - 0.12, top: z + 0.12 },
-            `${i}-f${f}`
-          )
-        );
-      }
-    });
+    const { beams, halos, floors, rings } = buildPolicyFeatures(
+      policies,
+      snapMapRef.current
+    );
     const update = (sid, features) => {
       const src = map.getSource(sid);
       if (src) src.setData({ type: 'FeatureCollection', features });
@@ -335,7 +499,21 @@ export function TourMap({ policies, activeIndex }) {
     update('policy-halos', halos);
     update('policy-rings', rings);
     update('policy-floors', floors);
-  }, [ready, policies]);
+
+    // Re-aplicar feature-state del active (setData lo borra).
+    if (prevActiveRef.current >= 0) {
+      ['policy-beams', 'policy-halos', 'policy-rings'].forEach((s) => {
+        try {
+          map.setFeatureState(
+            { source: s, id: prevActiveRef.current },
+            { active: true }
+          );
+        } catch {
+          /* silent */
+        }
+      });
+    }
+  }, [ready, policies, snapTick]);
 
   // ── Camera flyTo + lift animation cuando cambia activeIndex ────
   useEffect(() => {
@@ -422,6 +600,29 @@ export function TourMap({ policies, activeIndex }) {
       duration: 1500,
       easing: (t) => 1 - Math.pow(1 - t, 3),
     });
+
+    // ── Snap a edificio real una vez la cámara aterriza ────────
+    // Solo aplicable a productos no-autos. Si encontramos un edificio
+    // razonablemente cerca, movemos beam/halo/floor stack a su
+    // centroide y usamos la altura real del edificio para calcular
+    // a qué altitud va la planta de la póliza.
+    if (p.product !== 'autos' && snapMapRef.current[activeIndex] == null) {
+      const handler = () => {
+        // Pequeño delay para que las tiles del nuevo viewport
+        // terminen de cargarse después del moveend.
+        setTimeout(() => {
+          const snap = findNearestBuilding(map, p.lon, p.lat);
+          if (snap) {
+            snapMapRef.current = {
+              ...snapMapRef.current,
+              [activeIndex]: snap,
+            };
+            setSnapTick((t) => t + 1);
+          }
+        }, 250);
+      };
+      map.once('moveend', handler);
+    }
   }, [ready, activeIndex, policies]);
 
   return (
@@ -449,11 +650,6 @@ export function TourMap({ policies, activeIndex }) {
 // ─── CinematicPanel ──────────────────────────────────────────────
 function CinematicPanel({ policy, index, total }) {
   if (!policy) return null;
-  const PRODUCT_LABEL = {
-    particulares: 'Particulares',
-    pymes: 'Pymes',
-    autos: 'Autos',
-  };
   const RISK_LABEL = {
     low: 'Bajo',
     moderate: 'Moderado',
@@ -467,18 +663,15 @@ function CinematicPanel({ policy, index, total }) {
     very_high: '#7F1D1D',
   };
   const tint = RISK_TINT[policy.risk_category] || '#94A3B8';
-  const planta =
-    policy.product === 'autos'
-      ? 'Parking · planta 0'
-      : policy.ground_floor
-        ? 'Planta baja'
-        : `Planta ${policy.floor_count || 1}.ª de ${(policy.floor_count || 1) + 1}`;
+  const description = describePolicy(policy);
+  const location = locationText(policy);
+  const year = policy.construction_year;
   return (
     <div
       key={index}
-      className="hidden md:block absolute bottom-5 left-5 z-[600] w-[340px] rounded-md p-4 pt-3.5 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300"
+      className="hidden md:block absolute bottom-5 left-5 z-[600] w-[360px] rounded-md p-4 pt-3.5 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300"
       style={{
-        background: 'rgba(15,23,42,0.78)',
+        background: 'rgba(15,23,42,0.80)',
         border: '1px solid rgba(255,255,255,0.10)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
         color: '#F8FAFC',
@@ -499,12 +692,27 @@ function CinematicPanel({ policy, index, total }) {
       >
         {policy.id}
       </div>
+      {/* Tipo de inmueble · grande, serif italic */}
       <div
-        className="font-serif italic text-13 mb-3 leading-snug"
-        style={{ color: 'rgba(248,250,252,0.78)' }}
+        className="font-serif italic text-15 leading-snug mb-0.5"
+        style={{ color: '#F8FAFC' }}
       >
-        {PRODUCT_LABEL[policy.product] || policy.product}
-        {policy.subtype ? ` · ${policy.subtype}` : ''} · {planta}
+        {description}
+      </div>
+      {/* Ubicación específica (planta + edificio o calle si auto) */}
+      <div
+        className="text-12 leading-snug mb-1"
+        style={{ color: 'rgba(248,250,252,0.72)' }}
+      >
+        {location}
+      </div>
+      {/* Metadata adicional · año, dirección aproximada */}
+      <div
+        className="text-10 font-mono uppercase tracking-wider mb-3"
+        style={{ color: 'rgba(248,250,252,0.45)' }}
+      >
+        {year ? `Construido ${year} · ` : ''}
+        {policy.lat?.toFixed(4)}, {policy.lon?.toFixed(4)}
       </div>
       <div
         className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t"
