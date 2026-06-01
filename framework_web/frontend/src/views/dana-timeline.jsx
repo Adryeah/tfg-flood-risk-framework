@@ -235,6 +235,104 @@ export function DanaTimeline() {
         </p>
       </section>
 
+      {/* ─── EL VEREDICTO NUMÉRICO · RECALL DEL MODELO ───────────────
+       *  La comparación visual de arriba ya muestra que las dos
+       *  siluetas coinciden; aquí lo cuantificamos con la métrica
+       *  operativa más relevante: Recall buffered a 100 m. Tres
+       *  capas de información en una sola card:
+       *    1. Big mono number con el 95.8% (verde recall, dorado AUC)
+       *    2. Barra horizontal verde/gris con la cuota capturada vs
+       *       no detectada en km².
+       *    3. Strip inferior con recall píxel-exacto, AUC, F1 como
+       *       contexto secundario. */}
+      <section>
+        <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-3">
+          El veredicto numérico · cómo de bien acertó el modelo
+        </div>
+        <div className="bg-bg-surface border border-border-default rounded shadow-sm p-5 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 items-center">
+            {/* Big recall number */}
+            <div>
+              <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-2">
+                Recall · tolerancia 100 m
+              </div>
+              <div className="flex items-baseline gap-2 mb-3">
+                <span
+                  className="font-mono font-semibold tabular-nums"
+                  style={{ fontSize: 52, lineHeight: 1, color: '#15803D' }}
+                >
+                  95.8%
+                </span>
+                <span className="text-12 font-mono text-text-tertiary">
+                  cobertura
+                </span>
+              </div>
+              <p className="font-serif italic text-13 text-text-secondary leading-snug">
+                De cada 100 píxeles que se inundaron realmente, el modelo
+                había marcado 96 como riesgo alto en su predicción
+                pre-DANA. Sin haber visto nunca el evento.
+              </p>
+            </div>
+
+            {/* Barra de cobertura + KPIs secundarios */}
+            <div>
+              <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary mb-1.5">
+                Área inundada según EMSR773
+              </div>
+              <div className="h-3 bg-bg-subtle rounded-sm overflow-hidden flex">
+                <div
+                  style={{
+                    width: '95.8%',
+                    background: 'linear-gradient(90deg, #15803D 0%, #16A34A 100%)',
+                  }}
+                  title="Detectados por el modelo"
+                />
+                <div
+                  style={{ width: '4.2%', background: '#94A3B8' }}
+                  title="No detectados (zona estructural)"
+                />
+              </div>
+              <div className="mt-1.5 flex justify-between text-11 font-mono">
+                <span style={{ color: '#15803D' }}>
+                  ≈ 190.7 km² capturados
+                </span>
+                <span className="text-text-tertiary">
+                  ≈ 8.3 km² no detectados
+                </span>
+              </div>
+
+              {/* KPIs secundarios */}
+              <div className="mt-4 pt-3 border-t border-border-default grid grid-cols-3 gap-3">
+                <SecondaryKpi
+                  label="Recall · píxel-exacto"
+                  value="77.7%"
+                  note="Sin tolerancia espacial"
+                />
+                <SecondaryKpi
+                  label="AUC ROC"
+                  value="0.922"
+                  note="Capacidad de ranking"
+                />
+                <SecondaryKpi
+                  label="F1 · operacional"
+                  value="0.485"
+                  note="Threshold 0.614"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
+          Las dos siluetas de los mapas de arriba no son anecdóticas:
+          el modelo había anticipado el <strong>95.8% de la geografía
+          del evento real</strong> a tolerancia de manzana (100 m). El
+          4.2% no detectado corresponde casi en su totalidad a píxeles
+          aislados — artefactos de la rasterización del shapefile
+          EMSR773 — no a errores estructurales del modelo. Detalle
+          metodológico completo en el capítulo 5 de la memoria.
+        </p>
+      </section>
+
       {/* ─── TIMELINE · 5 fases ──────────────────────────────────────
        *  Estructura editorial: línea vertical fina + bloques de fecha
        *  + título + prosa serif. Cada fase tiene icono y acento de
@@ -300,6 +398,25 @@ export function DanaTimeline() {
           Memoria del TFG, Capítulo 7 · <em>Discusión</em>.
         </p>
       </section>
+    </div>
+  );
+}
+
+// ─── KPI secundario para la sección de recall ───────────────────
+function SecondaryKpi({ label, value, note }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary mb-0.5 truncate">
+        {label}
+      </div>
+      <div className="font-mono font-medium tabular-nums text-13 text-text-primary">
+        {value}
+      </div>
+      {note && (
+        <div className="text-10 text-text-tertiary font-serif italic mt-0.5 truncate">
+          {note}
+        </div>
+      )}
     </div>
   );
 }

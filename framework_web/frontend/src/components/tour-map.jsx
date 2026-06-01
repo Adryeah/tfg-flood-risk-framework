@@ -5,7 +5,7 @@ import { ScatterplotLayer, ColumnLayer } from '@deck.gl/layers';
 import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import { FlyToInterpolator } from '@deck.gl/core';
 import { Tiles3DLoader } from '@loaders.gl/3d-tiles';
-import { Map as MapLibreReact } from 'react-map-gl/maplibre';
+import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { formatMoney, formatPercent } from '@/lib/format.js';
@@ -101,6 +101,22 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
   const [pulseT, setPulseT] = useState(0);
   const [hoverIdx, setHoverIdx] = useState(-1);
   const prevActiveRef = useRef(-1);
+  const mapContainerRef = useRef(null);
+  const mapLibreRef = useRef(null);
+
+  // ViewState compartida entre DeckGL y MapLibre. DeckGL la actualiza
+  // durante las transiciones via onViewStateChange; sincronizamos al
+  // basemap MapLibre con .jumpTo() en cada cambio para que la base
+  // siga la cámara sin sacudidas (cuando deck.gl es controlled, los
+  // intermediate viewStates fluyen a través del callback).
+  const initialVS = useMemo(() => {
+    const p = policies?.[activeIndex];
+    return p
+      ? { longitude: p.lon, latitude: p.lat, zoom: 16.5, pitch: 55, bearing: 0 }
+      : { longitude: -0.4, latitude: 39.42, zoom: 15, pitch: 55, bearing: 0 };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [viewState, setViewState] = useState(initialVS);
 
   // ── Animación de "ascenso" del halo al cambiar póliza ──────────
   useEffect(() => {
@@ -129,21 +145,13 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // ── Camera viewState ───────────────────────────────────────────
+  // ── Lanzar transición de cámara al cambiar póliza ───────────────
   const activePolicy = policies?.[activeIndex];
-  const viewState = useMemo(() => {
+  useEffect(() => {
     const p = activePolicy;
-    if (!p) {
-      return {
-        longitude: -0.4,
-        latitude: 39.42,
-        zoom: 15,
-        pitch: 55,
-        bearing: 0,
-      };
-    }
+    if (!p) return;
     const policyAlt = policyAltitude(p);
-    return {
+    setViewState({
       longitude: p.lon,
       latitude: p.lat,
       zoom: Math.max(17.0, 17.4 - policyAlt * 0.02),
@@ -151,8 +159,52 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
       bearing: bearingFor(activeIndex),
       transitionDuration: 1500,
       transitionInterpolator: new FlyToInterpolator({ speed: 1.6 }),
-    };
+    });
   }, [activePolicy, activeIndex]);
+
+  // ── Init MapLibre basemap (solo en modo free) ──────────────────
+  useEffect(() => {
+    if (HAS_GOOGLE) return;
+    if (!mapContainerRef.current || mapLibreRef.current) return;
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: FREE_BASEMAP_STYLE,
+      center: [initialVS.longitude, initialVS.latitude],
+      zoom: initialVS.zoom,
+      pitch: initialVS.pitch,
+      bearing: initialVS.bearing,
+      // No interactive: deck.gl maneja todos los inputs encima.
+      interactive: false,
+      attributionControl: { compact: true },
+    });
+    mapLibreRef.current = map;
+    return () => {
+      try {
+        map.remove();
+      } catch {
+        /* silent */
+      }
+      mapLibreRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Sync MapLibre basemap a viewState (con cada tick deck.gl) ──
+  useEffect(() => {
+    if (HAS_GOOGLE) return;
+    const map = mapLibreRef.current;
+    if (!map) return;
+    try {
+      map.jumpTo({
+        center: [viewState.longitude, viewState.latitude],
+        zoom: viewState.zoom,
+        pitch: viewState.pitch,
+        bearing: viewState.bearing,
+      });
+    } catch {
+      /* silent — puede pasar durante el dispose */
+    }
+  }, [viewState]);
 
   // ── Layers ────────────────────────────────────────────────────
   const layers = useMemo(() => {
@@ -317,24 +369,28 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
 
   return (
     <div className="absolute inset-0">
+      {/* Basemap detrás (sibling, no child de DeckGL). Solo en modo
+       *  free; en modo premium el Tile3DLayer de Google sustituye la
+       *  base. interactive: false → todos los inputs los maneja DeckGL
+       *  encima, así no compiten por el pan/zoom. */}
+      {!HAS_GOOGLE && (
+        <div
+          ref={mapContainerRef}
+          className="absolute inset-0"
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
+
       <DeckGL
         viewState={viewState}
+        onViewStateChange={(e) => setViewState(e.viewState)}
         controller={true}
         layers={layers}
         getCursor={({ isHovering, isDragging }) =>
           isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
         }
         style={{ position: 'absolute', inset: 0 }}
-      >
-        {/* Basemap UNDER el deck.gl. En modo GRATIS es MapLibre con
-         *  el estilo Liberty de OpenFreeMap (sin clave, edificios 3D
-         *  extruidos por el propio estilo). En modo PREMIUM no se
-         *  renderiza porque Tile3DLayer ya provee la base
-         *  fotogramétrica completa. */}
-        {!HAS_GOOGLE && (
-          <MapLibreReact mapStyle={FREE_BASEMAP_STYLE} reuseMaps />
-        )}
-      </DeckGL>
+      />
 
       {/* Badge de modo (esquina inferior derecha) */}
       <div
