@@ -160,6 +160,11 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     if (!containerRef.current || viewerRef.current) return;
 
     let cancelled = false;
+    // Cesium 1.124+ deprecó `imageryProvider` y `terrainProvider` en el
+    // constructor. Ahora pasamos `baseLayer: false` para suprimir la
+    // imagery default y la añadimos manualmente después, así nos
+    // aseguramos de que SIEMPRE haya un basemap visible (sin esto la
+    // escena salía como espacio negro).
     const viewer = new Cesium.Viewer(containerRef.current, {
       animation: false,
       timeline: false,
@@ -171,16 +176,17 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
       navigationHelpButton: false,
       infoBox: false,
       selectionIndicator: false,
-      // CARTO dark imagery como base — coincide con la identidad de
-      // la app. Cuando carguemos Google 3D Tiles más abajo, esta
-      // imagery se ve apenas en los bordes del bbox.
-      imageryProvider: new Cesium.UrlTemplateImageryProvider({
-        url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        credit: '© CARTO · © OpenStreetMap contributors',
-      }),
-      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      baseLayer: false,
     });
     viewerRef.current = viewer;
+
+    // ── Base imagery: OpenStreetMap (no key, siempre disponible) ──
+    viewer.imageryLayers.addImageryProvider(
+      new Cesium.OpenStreetMapImageryProvider({
+        url: 'https://tile.openstreetmap.org/',
+        credit: '© OpenStreetMap contributors',
+      })
+    );
 
     // Estetica: cielo + niebla + atmósfera. Los flags de skyAtmosphere
     // y skyBox vienen activos por defecto en Cesium; aquí los afinamos
@@ -420,24 +426,33 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     liftAnimRef.current = requestAnimationFrame(tick);
 
     // ── Camera flyTo ─────────────────────────────────────────────
-    // Bearing variado por póliza (en Cesium: heading). Pitch 58° de
-    // MapLibre se traduce aquí en pitch -32° (Cesium mide desde el
-    // horizonte hacia abajo: -90 = nadir, 0 = horizonte).
-    const headingDeg = -15 + ((activeIndex * 23) % 70) - 35;
-    const heading = Cesium.Math.toRadians(headingDeg);
-    const pitch = Cesium.Math.toRadians(-32);
-    // Posición destino: ligeramente desplazada en altura para que el
-    // edificio del centro se vea con perspectiva, no de frente.
-    const targetCart = Cesium.Cartesian3.fromDegrees(p.lon, p.lat, 240);
-
-    viewer.camera.flyToBoundingSphere(
-      new Cesium.BoundingSphere(targetCart, 90),
-      {
-        offset: new Cesium.HeadingPitchRange(heading, pitch, 320),
-        duration: 1.5,
-        easingFunction: Cesium.EasingFunction.QUADRATIC_OUT,
-      }
+    // Posición y orientación EXPLÍCITAS: el camera se coloca a 120 m
+    // al sur de la póliza, a 90 m de altura, mirando hacia el norte
+    // con pitch -28° (mira hacia abajo y un poco al frente). Heading
+    // se rota ligeramente por póliza para variedad cinematográfica
+    // sin marear (más rotación → desorienta al espectador).
+    const headingDeg = -8 + ((activeIndex * 17) % 40) - 20;
+    // El offset Sur depende del bearing: queremos que la cámara esté
+    // detrás de la perspectiva del bearing. Simplificado: -0.0011°
+    // ≈ 120 m al sur, 50 m al este como toque.
+    const dLat = -0.0011 * Math.cos(Cesium.Math.toRadians(headingDeg));
+    const dLon = -0.0011 * Math.sin(Cesium.Math.toRadians(headingDeg))
+      / Math.cos(Cesium.Math.toRadians(p.lat));
+    const destination = Cesium.Cartesian3.fromDegrees(
+      p.lon + dLon,
+      p.lat + dLat,
+      90 // metros sobre el terreno
     );
+    viewer.camera.flyTo({
+      destination,
+      orientation: {
+        heading: Cesium.Math.toRadians(headingDeg),
+        pitch: Cesium.Math.toRadians(-28),
+        roll: 0,
+      },
+      duration: 1.5,
+      easingFunction: Cesium.EasingFunction.QUADRATIC_OUT,
+    });
   }, [ready, activeIndex, policies]);
 
   return (
