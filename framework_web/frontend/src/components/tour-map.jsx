@@ -27,15 +27,31 @@ function circleFeature(lon, lat, radiusM, props, id) {
   };
 }
 
-// Altura "razonable" para representar la planta de una póliza, en
-// metros sobre el terreno. Aproximación didáctica (las pólizas son
-// sintéticas; ver cap. 4 de la memoria). Cada planta vale 3 m, planta
-// baja = 0 m, autos en parking ≈ 0.5 m.
+// Índice de planta de la PÓLIZA dentro del edificio.
+//   ground_floor=true       → 0 (planta baja)
+//   ground_floor=false      → floor_count   (asumimos planta alta = la
+//                              última del edificio)
+//   product=autos           → 0 (parking)
+function policyFloorIdx(policy) {
+  if (policy.product === 'autos') return 0;
+  if (policy.ground_floor) return 0;
+  return Math.max(1, Math.min(policy.floor_count || 1, 12));
+}
+
+// Total de plantas del edificio (para dibujar el stack completo de
+// discos uno por planta).
+function buildingFloors(policy) {
+  if (policy.product === 'autos') return 1;
+  return Math.max(policyFloorIdx(policy) + 1, policy.floor_count || 1, 1);
+}
+
+// Altura en metros (relativa al terreno) de la planta de la póliza.
+// 3 m por planta, planta baja = 1 m para que el halo sea visible
+// (un disco a altura 0 quedaría enterrado por la calle).
 function policyAltitude(policy) {
   if (policy.product === 'autos') return 0.5;
-  if (policy.ground_floor) return 1; // 1 m de altura para que el halo sea visible
-  const f = Math.max(1, Math.min(policy.floor_count || 1, 12));
-  return f * 3;
+  const f = policyFloorIdx(policy);
+  return f === 0 ? 1.2 : f * 3;
 }
 
 export function TourMap({ policies, activeIndex }) {
@@ -50,10 +66,10 @@ export function TourMap({ policies, activeIndex }) {
     <div className="absolute inset-0">
       <Map
         center={initialCenter}
-        zoom={13.5}
+        zoom={14}
         minZoom={9}
         maxZoom={19}
-        pitch={50}
+        pitch={48}
         bearing={-20}
         maxPitch={75}
         className="h-full w-full"
@@ -281,8 +297,11 @@ function TourLayers({ policies, activeIndex }) {
           type: 'raster',
           source: sid,
           paint: {
-            'raster-opacity': 0.6,
-            'raster-saturation': 0.3,
+            // Bajamos opacidad para que el rojo no se trague los
+            // edificios ni el contexto del basemap. La saturación
+            // boosted se quita por la misma razón: el color del modelo
+            // tiene que ser "tinte de calle", no plasta de pintura.
+            'raster-opacity': 0.35,
             'raster-resampling': 'linear',
           },
         });
@@ -373,9 +392,39 @@ function TourLayers({ policies, activeIndex }) {
       });
     }
 
+    // ─── FLOOR-STACK · 1 disco por cada planta del edificio ────
+    //   Visualiza "el edificio en transparencia": una pila de discos
+    //   de 0.4 m de grosor a alturas 3, 6, 9, 12 m... La planta de la
+    //   póliza se renderiza ABAJO (en policy-halos) con un disco más
+    //   grande y brillante. El stack es contexto: "está en el 4º de
+    //   un edificio de 8", no solo "está en el 4º".
+    if (!map.getSource('policy-floors')) {
+      map.addSource('policy-floors', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+    }
+    if (!map.getLayer('policy-floors')) {
+      map.addLayer({
+        id: 'policy-floors',
+        type: 'fill-extrusion',
+        source: 'policy-floors',
+        paint: {
+          'fill-extrusion-color': '#F8FAFC',
+          'fill-extrusion-base': ['get', 'base'],
+          'fill-extrusion-height': ['get', 'top'],
+          'fill-extrusion-opacity': 0.28,
+        },
+      });
+    }
+
     // ─── HALO en la planta — fill-extrusion de un círculo mayor,
-    // entre base = altPiso - 0.75 y top = altPiso + 1.5. Color por
-    // categoría de riesgo. Activa: más opaco.
+    // coloreado por categoría de riesgo. base/height vienen del
+    // feature, pero se les SUMA una feature-state `liftOffset` que
+    // sirve para animar el halo activo desde el suelo hasta su
+    // planta cuando aterriza la cámara (efecto "ascensor").
+    //   - Halo no activo  → liftOffset = 0 → base/height estáticos
+    //   - Halo activo     → liftOffset animado de -altitudPiso → 0
     if (!map.getSource('policy-halos')) {
       map.addSource('policy-halos', {
         type: 'geojson',
@@ -389,13 +438,21 @@ function TourLayers({ policies, activeIndex }) {
         source: 'policy-halos',
         paint: {
           'fill-extrusion-color': ['get', 'color'],
-          'fill-extrusion-base': ['get', 'base'],
-          'fill-extrusion-height': ['get', 'top'],
+          'fill-extrusion-base': [
+            '+',
+            ['get', 'base'],
+            ['coalesce', ['feature-state', 'liftOffset'], 0],
+          ],
+          'fill-extrusion-height': [
+            '+',
+            ['get', 'top'],
+            ['coalesce', ['feature-state', 'liftOffset'], 0],
+          ],
           'fill-extrusion-opacity': [
             'case',
             ['boolean', ['feature-state', 'active'], false],
-            0.85,
-            0.4,
+            0.88,
+            0.32,
           ],
           'fill-extrusion-vertical-gradient': true,
         },
@@ -443,32 +500,67 @@ function TourLayers({ policies, activeIndex }) {
     const beams = [];
     const halos = [];
     const rings = [];
+    const floors = [];     // Stack: 1 disco por cada planta del edificio
     policies.forEach((p, i) => {
       const alt = policyAltitude(p);
+      const totalFloors = buildingFloors(p);
       const props = {
         idx: i,
         color: p._color || '#94A3B8',
         category: p.risk_category || 'low',
         product: p.product || 'particulares',
       };
+
+      // Beam vertical desde el suelo hasta la planta de la póliza
       beams.push(
-        circleFeature(p.lon, p.lat, 1.0, { ...props, top: Math.max(alt, 2) }, i)
+        circleFeature(
+          p.lon,
+          p.lat,
+          0.9,
+          { ...props, top: Math.max(alt + 0.4, 2.5) },
+          i
+        )
       );
+
+      // Halo grande coloreado en la planta exacta de la póliza
       halos.push(
         circleFeature(
           p.lon,
           p.lat,
-          3.5,
-          { ...props, base: Math.max(alt - 0.75, 0), top: alt + 1.5 },
+          4.5,
+          {
+            ...props,
+            base: Math.max(alt - 0.6, 0.2),
+            top: alt + 1.0,
+          },
           i
         )
       );
+
+      // Anillo en el suelo
       rings.push({
         type: 'Feature',
         id: i,
         geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
         properties: props,
       });
+
+      // Stack de plantas — uno por cada planta del edificio. Discos
+      // finos (0.3 m) blancos semi-transparentes, contexto visual de
+      // "cuántas plantas tiene el edificio". El que coincide con la
+      // planta de la póliza queda CUBIERTO por el halo coloreado.
+      for (let f = 1; f <= totalFloors; f++) {
+        const z = f * 3;
+        floors.push(
+          circleFeature(
+            p.lon,
+            p.lat,
+            3.2,
+            { ...props, base: z - 0.15, top: z + 0.15 },
+            `${i}-f${f}`
+          )
+        );
+      }
     });
     const update = (sid, features) => {
       const src = map.getSource(sid);
@@ -477,14 +569,22 @@ function TourLayers({ policies, activeIndex }) {
     update('policy-beams', beams);
     update('policy-halos', halos);
     update('policy-rings', rings);
+    update('policy-floors', floors);
   }, [map, isLoaded, policies]);
 
   // ─── Active feature-state + flyTo cuando cambia activeIndex ────
   const prevActiveRef = useRef(-1);
+  const liftAnimRef = useRef(null);
   useEffect(() => {
     if (!map || !isLoaded || !policies?.length) return;
     const p = policies[activeIndex];
     if (!p) return;
+
+    // Cancelar animación previa de lift si está en curso
+    if (liftAnimRef.current != null) {
+      cancelAnimationFrame(liftAnimRef.current);
+      liftAnimRef.current = null;
+    }
 
     // Limpiar el active anterior, marcar el nuevo
     const SOURCES = ['policy-beams', 'policy-halos', 'policy-rings'];
@@ -493,7 +593,7 @@ function TourLayers({ policies, activeIndex }) {
         try {
           map.setFeatureState(
             { source: src, id: prevActiveRef.current },
-            { active: false }
+            { active: false, liftOffset: 0 }
           );
         } catch {
           /* silent */
@@ -509,14 +609,48 @@ function TourLayers({ policies, activeIndex }) {
     });
     prevActiveRef.current = activeIndex;
 
+    // ─── Animación de "ascenso" del halo activo ────────────────
+    // El halo arranca al nivel del suelo y sube hasta su planta
+    // exacta en 900 ms. Visualmente lee como "esta póliza está en
+    // la planta N" — verlo subir explica mejor la altura que
+    // simplemente verlo aparecido arriba.
+    const targetAlt = policyAltitude(p);
+    const startTime = performance.now();
+    const DURATION = 900;
+    const startOffset = -targetAlt; // halo comienza en el suelo
+    const tick = (now) => {
+      const t = Math.min((now - startTime) / DURATION, 1);
+      // ease-out-quart (más dramático que cubic al aterrizar)
+      const eased = 1 - Math.pow(1 - t, 4);
+      const value = startOffset * (1 - eased);
+      try {
+        map.setFeatureState(
+          { source: 'policy-halos', id: activeIndex },
+          { liftOffset: value, active: true }
+        );
+      } catch {
+        /* silent */
+      }
+      if (t < 1) {
+        liftAnimRef.current = requestAnimationFrame(tick);
+      } else {
+        liftAnimRef.current = null;
+      }
+    };
+    liftAnimRef.current = requestAnimationFrame(tick);
+
     // Bearing rotado ligeramente por póliza para que no todas las
     // tomas se vean iguales — añade variedad cinematográfica.
     const bearing = -15 + ((activeIndex * 23) % 70) - 35;
 
+    // Pitch + zoom ajustados para que los edificios se vean a escala
+    // humana: pitch 58° (no tan tumbado como 65, que aplastaba los
+    // edificios visualmente) + zoom 17.2 (ligeramente más lejos para
+    // que se vea más contexto urbano alrededor de la póliza).
     map.easeTo({
       center: [p.lon, p.lat],
-      zoom: 17.6,
-      pitch: 65,
+      zoom: 17.2,
+      pitch: 58,
       bearing,
       duration: 1500,
       // ease-out-cubic — empieza rápido, frena suave al aterrizar
