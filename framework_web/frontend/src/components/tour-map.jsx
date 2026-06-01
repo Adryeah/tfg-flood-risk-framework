@@ -160,11 +160,11 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     if (!containerRef.current || viewerRef.current) return;
 
     let cancelled = false;
-    // Cesium 1.124+ deprecó `imageryProvider` y `terrainProvider` en el
-    // constructor. Ahora pasamos `baseLayer: false` para suprimir la
-    // imagery default y la añadimos manualmente después, así nos
-    // aseguramos de que SIEMPRE haya un basemap visible (sin esto la
-    // escena salía como espacio negro).
+    // En Cesium 1.124+ el constructor sin `baseLayer` usa el default
+    // de Ion: Bing Maps Aerial vía el token público integrado. Eso es
+    // satélite real de Valencia — exactamente lo que queremos para una
+    // demo cinematográfica de UW. Si en el futuro el token se agota,
+    // sustituir por una URL pública (Esri World Imagery, Maptiler).
     const viewer = new Cesium.Viewer(containerRef.current, {
       animation: false,
       timeline: false,
@@ -176,17 +176,8 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
       navigationHelpButton: false,
       infoBox: false,
       selectionIndicator: false,
-      baseLayer: false,
     });
     viewerRef.current = viewer;
-
-    // ── Base imagery: OpenStreetMap (no key, siempre disponible) ──
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.OpenStreetMapImageryProvider({
-        url: 'https://tile.openstreetmap.org/',
-        credit: '© OpenStreetMap contributors',
-      })
-    );
 
     // Estetica: cielo + niebla + atmósfera. Los flags de skyAtmosphere
     // y skyBox vienen activos por defecto en Cesium; aquí los afinamos
@@ -425,29 +416,30 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     };
     liftAnimRef.current = requestAnimationFrame(tick);
 
-    // ── Camera flyTo ─────────────────────────────────────────────
-    // Posición y orientación EXPLÍCITAS: el camera se coloca a 120 m
-    // al sur de la póliza, a 90 m de altura, mirando hacia el norte
-    // con pitch -28° (mira hacia abajo y un poco al frente). Heading
-    // se rota ligeramente por póliza para variedad cinematográfica
-    // sin marear (más rotación → desorienta al espectador).
-    const headingDeg = -8 + ((activeIndex * 17) % 40) - 20;
-    // El offset Sur depende del bearing: queremos que la cámara esté
-    // detrás de la perspectiva del bearing. Simplificado: -0.0011°
-    // ≈ 120 m al sur, 50 m al este como toque.
-    const dLat = -0.0011 * Math.cos(Cesium.Math.toRadians(headingDeg));
-    const dLon = -0.0011 * Math.sin(Cesium.Math.toRadians(headingDeg))
+    // ── Camera flyTo (street-level cinematic) ───────────────────
+    // Cámara a escala humana: 45 m de altura sobre el suelo (≈ una
+    // grúa o un dron bajo), 55 m al sur de la póliza, mirando al
+    // norte con pitch -12° (casi horizontal — lee como "drone que
+    // se acerca al edificio" en vez de "vista cenital"). Heading
+    // rotado ligeramente por póliza para variedad cinematográfica.
+    const headingDeg = -8 + ((activeIndex * 17) % 30) - 15;
+    const hRad = Cesium.Math.toRadians(headingDeg);
+    // Offset al opuesto del heading: queremos estar DETRÁS de la
+    // cámara para que mire AL frente del edificio. ~55 m totales.
+    const offsetMeters = 55;
+    const dLat = -offsetMeters / 111111 * Math.cos(hRad);
+    const dLon = -offsetMeters / 111111 * Math.sin(hRad)
       / Math.cos(Cesium.Math.toRadians(p.lat));
     const destination = Cesium.Cartesian3.fromDegrees(
       p.lon + dLon,
       p.lat + dLat,
-      90 // metros sobre el terreno
+      45 // metros sobre el ellipsoide; Valencia ≈ 10 m sobre nivel del mar
     );
     viewer.camera.flyTo({
       destination,
       orientation: {
-        heading: Cesium.Math.toRadians(headingDeg),
-        pitch: Cesium.Math.toRadians(-28),
+        heading: hRad,
+        pitch: Cesium.Math.toRadians(-12),
         roll: 0,
       },
       duration: 1.5,
