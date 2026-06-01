@@ -1,465 +1,426 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { formatMoney, formatPercent } from '@/lib/format.js';
 
-// ─── Lazy-load Cesium desde CDN ──────────────────────────────────
+// ─── Vector tile basemap · Google Maps 3D look ───────────────────
+// OpenFreeMap "Liberty" style: stack open-source (OpenMapTiles schema)
+// con calles, agua, parques, puntos de interés y etiquetas. Sin clave
+// API, sin satélite. Es exactamente el look "Google Maps en 3D" que
+// pidió el usuario: tonos crema, calles claras, edificios estilizados.
 //
-// Cesium 1.141 desde jsDelivr (~800 KB gzipped). Se descarga UNA VEZ
-// y la primera vez que se monta este componente; en navegaciones
-// subsecuentes a /tour la promesa cacheada lo devuelve inmediato.
-//
-// Cargamos también widgets.css (~24 KB) y configuramos CESIUM_BASE_URL
-// para que los workers y assets resolvan correctamente desde el CDN.
-const CESIUM_VERSION = '1.141.0';
-const CESIUM_BASE = `https://cdn.jsdelivr.net/npm/cesium@${CESIUM_VERSION}/Build/Cesium/`;
+// El estilo NO incluye edificios 3D por defecto; los añadimos como
+// capa fill-extrusion sobre el source-layer `building` del mismo
+// dataset (los polígonos de edificios traen `render_height` cuando OSM
+// los tiene tageados).
+const BASE_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
-let cesiumLoadPromise = null;
-function loadCesium() {
-  if (cesiumLoadPromise) return cesiumLoadPromise;
-  if (typeof window !== 'undefined' && window.Cesium) {
-    cesiumLoadPromise = Promise.resolve(window.Cesium);
-    return cesiumLoadPromise;
-  }
-  cesiumLoadPromise = new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') return reject(new Error('no window'));
-    window.CESIUM_BASE_URL = CESIUM_BASE;
-    // CSS
-    if (!document.querySelector('link[data-cesium]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = `${CESIUM_BASE}Widgets/widgets.css`;
-      link.dataset.cesium = 'true';
-      document.head.appendChild(link);
-    }
-    // JS
-    const script = document.createElement('script');
-    script.src = `${CESIUM_BASE}Cesium.js`;
-    script.async = true;
-    script.onload = () => {
-      if (window.Cesium) resolve(window.Cesium);
-      else reject(new Error('Cesium global no encontrado tras la carga'));
-    };
-    script.onerror = () => reject(new Error('No se pudo cargar Cesium desde el CDN'));
-    document.head.appendChild(script);
-  });
-  return cesiumLoadPromise;
+// ─── Mapeo planta / altitud (mismo que la versión Cesium) ────────
+function policyFloorIdx(p) {
+  if (p.product === 'autos') return 0;
+  if (p.ground_floor) return 0;
+  return Math.max(1, Math.min(p.floor_count || 1, 12));
 }
-
-// ─── Configuración Cesium ion ────────────────────────────────────
-//
-// Cesium funciona con un token de Cesium ion que da acceso a:
-//   - Cesium World Terrain (terreno fotométrico global)
-//   - Cesium OSM Buildings (extrusiones de edificios OSM, default)
-//   - Cesium Sentinel-2 imagery (opcional)
-//
-// Si VITE_CESIUM_ION_TOKEN está definida, la usamos. Si no, Cesium
-// trae un default access token integrado que basta para demos. Para
-// Google Photorealistic 3D Tiles hay que añadir el asset 2275207
-// a la cuenta de Cesium ion (free tier suficiente).
-const ION_TOKEN = import.meta.env.VITE_CESIUM_ION_TOKEN;
-
-// Toggle: si la variable existe y es no-empty, intentamos cargar
-// Google Photorealistic 3D Tiles (edificios fotogramétricos reales).
-// Si falla o no está, fallback automático a Cesium OSM Buildings.
-const USE_GOOGLE_3D = import.meta.env.VITE_USE_GOOGLE_3D_TILES === 'true';
-
-// ─── Mapeo planta / altitud ──────────────────────────────────────
-function policyFloorIdx(policy) {
-  if (policy.product === 'autos') return 0;
-  if (policy.ground_floor) return 0;
-  return Math.max(1, Math.min(policy.floor_count || 1, 12));
+function buildingFloors(p) {
+  if (p.product === 'autos') return 1;
+  return Math.max(policyFloorIdx(p) + 1, p.floor_count || 1, 1);
 }
-function buildingFloors(policy) {
-  if (policy.product === 'autos') return 1;
-  return Math.max(policyFloorIdx(policy) + 1, policy.floor_count || 1, 1);
-}
-function policyAltitude(policy) {
-  if (policy.product === 'autos') return 0.5;
-  const f = policyFloorIdx(policy);
+function policyAltitude(p) {
+  if (p.product === 'autos') return 0.5;
+  const f = policyFloorIdx(p);
   return f === 0 ? 1.2 : f * 3;
 }
 
-// Color del halo por categoría de riesgo. Devuelve un Cesium.Color
-// pero requiere que Cesium esté cargado — recibimos la referencia por
-// parámetro porque a nivel module-scope Cesium no existe todavía.
-function colorFor(Cesium, category) {
-  const hex = {
-    low: '#FBBF24',
-    moderate: '#F87171',
-    high: '#DC2626',
-    very_high: '#7F1D1D',
-  }[category] || '#94A3B8';
-  return Cesium.Color.fromCssColorString(hex);
+// Aproximación de círculo (polígono N-lados) métrico alrededor de
+// (lon, lat). Usado como footprint de las columnas fill-extrusion.
+function circleFeature(lon, lat, radiusM, props, id) {
+  const N = 18;
+  const ring = [];
+  const dLat = radiusM / 111111;
+  const dLon = radiusM / (111111 * Math.cos((lat * Math.PI) / 180));
+  for (let i = 0; i <= N; i++) {
+    const a = (i / N) * 2 * Math.PI;
+    ring.push([lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)]);
+  }
+  return {
+    type: 'Feature',
+    id,
+    geometry: { type: 'Polygon', coordinates: [ring] },
+    properties: props,
+  };
 }
+
+const RISK_HEX = {
+  low: '#FBBF24',
+  moderate: '#F87171',
+  high: '#DC2626',
+  very_high: '#7F1D1D',
+};
 
 // ─── TourMap principal ───────────────────────────────────────────
-// Wrapper que primero carga Cesium dinámicamente, después renderiza
-// el viewer. Mientras carga, fallback con el panel de "Cargando…".
-export function TourMap(props) {
-  const [Cesium, setCesium] = useState(
-    typeof window !== 'undefined' ? window.Cesium : null
-  );
-  const [loadError, setLoadError] = useState(null);
-
-  useEffect(() => {
-    if (Cesium) return;
-    let cancelled = false;
-    loadCesium()
-      .then((c) => {
-        if (cancelled) return;
-        if (ION_TOKEN) c.Ion.defaultAccessToken = ION_TOKEN;
-        setCesium(c);
-      })
-      .catch((err) => !cancelled && setLoadError(err.message || String(err)));
-    return () => {
-      cancelled = true;
-    };
-  }, [Cesium]);
-
-  if (loadError) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-bg-base p-6 text-center">
-        <div>
-          <div className="text-13 text-risk-high font-semibold mb-1">
-            No se pudo cargar el motor 3D
-          </div>
-          <div className="text-12 text-text-secondary max-w-sm">
-            {loadError}
-            <br />
-            Comprueba tu conexión o recarga la página.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!Cesium) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-13 font-mono uppercase tracking-[0.18em] text-text-secondary animate-pulse">
-          Cargando motor 3D · ~800 KB…
-        </div>
-      </div>
-    );
-  }
-
-  return <TourMapInner Cesium={Cesium} {...props} />;
-}
-
-// ─── Componente interno con acceso a Cesium ya cargado ──────────
-function TourMapInner({ Cesium, policies, activeIndex }) {
+export function TourMap({ policies, activeIndex }) {
   const containerRef = useRef(null);
-  const viewerRef = useRef(null);
-  const entitiesRef = useRef({ beams: [], halos: [], floors: [], rings: [] });
+  const mapRef = useRef(null);
+  const liftRef = useRef(0);
   const liftAnimRef = useRef(null);
-  const liftValueRef = useRef(0);
+  const prevActiveRef = useRef(-1);
   const [ready, setReady] = useState(false);
 
-  // ── Init Cesium viewer once ────────────────────────────────────
+  // ── Init MapLibre once ──────────────────────────────────────────
   useEffect(() => {
-    if (!containerRef.current || viewerRef.current) return;
+    if (!containerRef.current || mapRef.current) return;
 
-    let cancelled = false;
-    // En Cesium 1.124+ el constructor sin `baseLayer` usa el default
-    // de Ion: Bing Maps Aerial vía el token público integrado. Eso es
-    // satélite real de Valencia — exactamente lo que queremos para una
-    // demo cinematográfica de UW. Si en el futuro el token se agota,
-    // sustituir por una URL pública (Esri World Imagery, Maptiler).
-    const viewer = new Cesium.Viewer(containerRef.current, {
-      animation: false,
-      timeline: false,
-      baseLayerPicker: false,
-      fullscreenButton: false,
-      geocoder: false,
-      homeButton: false,
-      sceneModePicker: false,
-      navigationHelpButton: false,
-      infoBox: false,
-      selectionIndicator: false,
+    const initCenter =
+      policies && policies[activeIndex]
+        ? [policies[activeIndex].lon, policies[activeIndex].lat]
+        : [-0.4, 39.42];
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: BASE_STYLE,
+      center: initCenter,
+      zoom: 16.5,
+      pitch: 55,
+      bearing: -15,
+      maxPitch: 80,
+      attributionControl: { compact: true },
     });
-    viewerRef.current = viewer;
+    mapRef.current = map;
 
-    // Estética: forzamos DAYLIGHT permanente. Sin esto Cesium oscurece
-    // la imagery según la hora UTC del reloj → la escena salía en
-    // modo nocturno en cualquier zona donde fuera de noche localmente.
-    // Las empresas de cat-model (One Concern, JBA) hacen exactamente
-    // esto: bloquean la iluminación dinámica para que el demo se vea
-    // SIEMPRE bien.
-    viewer.scene.globe.enableLighting = false;
-    viewer.scene.globe.dynamicAtmosphereLighting = false;
-    viewer.scene.globe.showGroundAtmosphere = false;
-    viewer.scene.skyAtmosphere.show = true;
-    viewer.scene.fog.enabled = true;
-    viewer.scene.fog.density = 0.00005;
-    // Iluminación direccional fija: sol al SE a 45° (luz mediterránea
-    // de media mañana). Da sombras suaves en los edificios sin que
-    // dependa del reloj.
-    viewer.scene.light = new Cesium.DirectionalLight({
-      direction: new Cesium.Cartesian3(-0.4, -0.7, -0.6),
-    });
-
-    // Quitar el logo de Cesium del DOM (se mantiene en el credit
-    // container, donde toca para cumplir la atribución).
-    viewer.cesiumWidget.creditContainer.style.display = 'none';
-
-    // Carga terreno mundial + edificios 3D
-    (async () => {
-      try {
-        const terrain = await Cesium.createWorldTerrainAsync({
-          requestVertexNormals: true,
-          requestWaterMask: false,
+    map.on('load', () => {
+      // Edificios 3D extruidos desde el source-layer `building` del
+      // mismo dataset. Color crema-grisáceo para mantener el look
+      // Google Maps (no edificios de cartón de juguete).
+      if (!map.getLayer('buildings-3d')) {
+        map.addLayer({
+          id: 'buildings-3d',
+          source: 'openmaptiles',
+          'source-layer': 'building',
+          type: 'fill-extrusion',
+          minzoom: 14,
+          paint: {
+            'fill-extrusion-color': [
+              'interpolate',
+              ['linear'],
+              ['coalesce', ['get', 'render_height'], ['get', 'height'], 8],
+              0, '#F1F5F9',  // edificios bajos en blanco roto
+              30, '#CBD5E1', // edificios medios en gris medio
+              80, '#94A3B8', // rascacielos en gris más oscuro
+            ],
+            'fill-extrusion-height': [
+              'coalesce',
+              ['get', 'render_height'],
+              ['get', 'height'],
+              8,
+            ],
+            'fill-extrusion-base': [
+              'coalesce',
+              ['get', 'render_min_height'],
+              ['get', 'min_height'],
+              0,
+            ],
+            'fill-extrusion-opacity': [
+              'interpolate', ['linear'], ['zoom'],
+              14, 0, 15, 0.6, 16.5, 0.9,
+            ],
+            'fill-extrusion-vertical-gradient': true,
+          },
         });
-        if (cancelled) return;
-        viewer.terrainProvider = terrain;
-      } catch (err) {
-        console.warn('Cesium World Terrain unavailable, using ellipsoid:', err.message);
       }
 
-      // Intentar Google Photorealistic 3D Tiles si el flag está activo;
-      // fallback automático a Cesium OSM Buildings (extruidos pero
-      // todavía con sombras + light dinámico de Cesium).
-      try {
-        if (USE_GOOGLE_3D) {
-          const tileset = await Cesium.createGooglePhotorealistic3DTileset();
-          if (cancelled) {
-            tileset.destroy?.();
-            return;
-          }
-          viewer.scene.primitives.add(tileset);
-        } else {
-          const osm = await Cesium.createOsmBuildingsAsync();
-          if (cancelled) {
-            osm.destroy?.();
-            return;
-          }
-          viewer.scene.primitives.add(osm);
-        }
-      } catch (err) {
-        console.warn('3D buildings unavailable:', err.message);
-        // Fallback final: OSM Buildings
+      // Si el estilo trae una capa de edificios 2D plana, la ocultamos
+      // para que no compita con la extrusión 3D.
+      const flatBuildingLayers = map
+        .getStyle()
+        .layers.filter(
+          (l) => l.id !== 'buildings-3d' && /building/i.test(l.id) && l.type === 'fill'
+        );
+      flatBuildingLayers.forEach((l) => {
         try {
-          const osm = await Cesium.createOsmBuildingsAsync();
-          if (cancelled) return;
-          viewer.scene.primitives.add(osm);
+          map.setLayoutProperty(l.id, 'visibility', 'none');
         } catch {
-          /* sin edificios — escena minimalista */
+          /* silent */
         }
+      });
+
+      // ─── Sources de pólizas (4 capas) ──────────────────────────
+      ['policy-floors', 'policy-beams', 'policy-halos', 'policy-rings'].forEach(
+        (sid) => {
+          if (!map.getSource(sid)) {
+            map.addSource(sid, {
+              type: 'geojson',
+              data: { type: 'FeatureCollection', features: [] },
+            });
+          }
+        }
+      );
+
+      // Stack de plantas del edificio (discos blancos transparentes
+      // por planta — contexto visual de "está en planta N de M").
+      map.addLayer({
+        id: 'policy-floors',
+        type: 'fill-extrusion',
+        source: 'policy-floors',
+        paint: {
+          'fill-extrusion-color': '#FFFFFF',
+          'fill-extrusion-base': ['get', 'base'],
+          'fill-extrusion-height': ['get', 'top'],
+          'fill-extrusion-opacity': 0.42,
+        },
+      });
+
+      // Beam blanco (rayo láser) desde el suelo hasta la planta.
+      map.addLayer({
+        id: 'policy-beams',
+        type: 'fill-extrusion',
+        source: 'policy-beams',
+        paint: {
+          'fill-extrusion-color': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false],
+            '#FFFFFF',
+            '#E2E8F0',
+          ],
+          'fill-extrusion-height': ['get', 'top'],
+          'fill-extrusion-base': 0,
+          'fill-extrusion-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false],
+            0.95,
+            0.5,
+          ],
+        },
+      });
+
+      // Halo coloreado por riesgo en la planta exacta. Base/height
+      // se suman a un `liftOffset` por feature-state para animar el
+      // ascenso del halo activo desde el suelo a su planta.
+      map.addLayer({
+        id: 'policy-halos',
+        type: 'fill-extrusion',
+        source: 'policy-halos',
+        paint: {
+          'fill-extrusion-color': ['get', 'color'],
+          'fill-extrusion-base': [
+            '+',
+            ['get', 'base'],
+            ['coalesce', ['feature-state', 'liftOffset'], 0],
+          ],
+          'fill-extrusion-height': [
+            '+',
+            ['get', 'top'],
+            ['coalesce', ['feature-state', 'liftOffset'], 0],
+          ],
+          'fill-extrusion-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false],
+            0.92,
+            0.42,
+          ],
+          'fill-extrusion-vertical-gradient': true,
+        },
+      });
+
+      // Ring 2D en el suelo (visible a cualquier zoom).
+      map.addLayer({
+        id: 'policy-rings',
+        type: 'circle',
+        source: 'policy-rings',
+        paint: {
+          'circle-radius': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false],
+            14,
+            6,
+          ],
+          'circle-color': ['get', 'color'],
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-width': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false],
+            3,
+            1.2,
+          ],
+          'circle-opacity': 0.95,
+          'circle-pitch-alignment': 'map',
+        },
+      });
+
+      // Sky atmosférico (cielo del horizonte cuando hay pitch alto).
+      if (map.setSky) {
+        map.setSky({
+          'sky-color': '#A7C5E1',
+          'horizon-color': '#E8EEF5',
+          'fog-color': '#CBD5E1',
+          'fog-ground-blend': 0.05,
+          'horizon-fog-blend': 0.5,
+          'sky-horizon-blend': 0.65,
+          'atmosphere-blend': 0.8,
+        });
       }
 
-      if (!cancelled) setReady(true);
-    })();
+      setReady(true);
+    });
 
     return () => {
-      cancelled = true;
       if (liftAnimRef.current != null) {
         cancelAnimationFrame(liftAnimRef.current);
         liftAnimRef.current = null;
       }
-      if (viewerRef.current && !viewerRef.current.isDestroyed()) {
-        viewerRef.current.destroy();
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+        } catch {
+          /* silent */
+        }
       }
-      viewerRef.current = null;
+      mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Crear entidades (beams + halos + floor stack + rings) ──────
+  // ── Reconstruir entidades cuando cambia la lista de pólizas ───
   useEffect(() => {
     if (!ready) return;
-    const viewer = viewerRef.current;
-    if (!viewer || !policies?.length) return;
+    const map = mapRef.current;
+    if (!map || !policies?.length) return;
 
-    // Limpiar entidades anteriores
-    const all = entitiesRef.current;
-    [...all.beams, ...all.halos, ...all.floors, ...all.rings].forEach((e) => {
-      try {
-        viewer.entities.remove(e);
-      } catch {
-        /* silent */
-      }
-    });
-    entitiesRef.current = { beams: [], halos: [], floors: [], rings: [] };
-
-    policies.forEach((p, idx) => {
-      const targetAlt = policyAltitude(p);
+    const beams = [];
+    const halos = [];
+    const floors = [];
+    const rings = [];
+    policies.forEach((p, i) => {
+      const alt = policyAltitude(p);
       const totalFloors = buildingFloors(p);
-      const isActive = idx === activeIndex;
-      const baseColor = colorFor(Cesium, p.risk_category);
+      const color = RISK_HEX[p.risk_category] || '#94A3B8';
+      const props = { idx: i, color };
 
-      // ─── BEAM blanco vertical desde el suelo hasta la planta ────
-      const beam = viewer.entities.add({
-        id: `beam-${idx}`,
-        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, targetAlt / 2),
-        cylinder: {
-          length: targetAlt,
-          topRadius: 0.7,
-          bottomRadius: 0.7,
-          material: Cesium.Color.WHITE.withAlpha(isActive ? 0.95 : 0.42),
-          outline: false,
-        },
+      beams.push(
+        circleFeature(p.lon, p.lat, 0.9, { ...props, top: Math.max(alt, 2.5) }, i)
+      );
+      halos.push(
+        circleFeature(
+          p.lon,
+          p.lat,
+          4.2,
+          { ...props, base: Math.max(alt - 0.7, 0.2), top: alt + 1.1 },
+          i
+        )
+      );
+      rings.push({
+        type: 'Feature',
+        id: i,
+        geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+        properties: props,
       });
-      entitiesRef.current.beams.push(beam);
-
-      // ─── HALO de color en la planta exacta ───────────────────────
-      // Usamos CallbackProperty para la posición Z porque cuando la
-      // póliza activa cambia, animamos un "ascenso" desde el suelo.
-      // Para las no-activas el offset es 0 (estáticas).
-      const halo = viewer.entities.add({
-        id: `halo-${idx}`,
-        position: new Cesium.CallbackProperty((_time, result) => {
-          const offset = idx === activeIndex ? liftValueRef.current : 0;
-          return Cesium.Cartesian3.fromDegrees(
-            p.lon,
-            p.lat,
-            targetAlt + offset,
-            Cesium.Ellipsoid.WGS84,
-            result
-          );
-        }, false),
-        ellipsoid: {
-          radii: new Cesium.Cartesian3(4.5, 4.5, 0.9),
-          material: baseColor.withAlpha(isActive ? 0.88 : 0.35),
-          outline: false,
-        },
-      });
-      entitiesRef.current.halos.push(halo);
-
-      // ─── FLOOR STACK · discos transparentes por planta ──────────
       for (let f = 1; f <= totalFloors; f++) {
         const z = f * 3;
-        const disc = viewer.entities.add({
-          id: `floor-${idx}-${f}`,
-          position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, z),
-          ellipsoid: {
-            radii: new Cesium.Cartesian3(3.0, 3.0, 0.18),
-            material: Cesium.Color.fromCssColorString('#F8FAFC').withAlpha(0.28),
-            outline: false,
-          },
-        });
-        entitiesRef.current.floors.push(disc);
+        floors.push(
+          circleFeature(
+            p.lon,
+            p.lat,
+            3.1,
+            { ...props, base: z - 0.12, top: z + 0.12 },
+            `${i}-f${f}`
+          )
+        );
       }
-
-      // ─── RING en el suelo (point siempre visible) ────────────────
-      const ring = viewer.entities.add({
-        id: `ring-${idx}`,
-        position: Cesium.Cartesian3.fromDegrees(p.lon, p.lat, 0.2),
-        point: {
-          pixelSize: isActive ? 16 : 8,
-          color: baseColor,
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: isActive ? 2.5 : 1.2,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        },
-      });
-      entitiesRef.current.rings.push(ring);
     });
+    const update = (sid, features) => {
+      const src = map.getSource(sid);
+      if (src) src.setData({ type: 'FeatureCollection', features });
+    };
+    update('policy-beams', beams);
+    update('policy-halos', halos);
+    update('policy-rings', rings);
+    update('policy-floors', floors);
   }, [ready, policies]);
 
   // ── Camera flyTo + lift animation cuando cambia activeIndex ────
-  const prevActiveRef = useRef(-1);
   useEffect(() => {
     if (!ready) return;
-    const viewer = viewerRef.current;
-    if (!viewer || !policies?.length) return;
+    const map = mapRef.current;
+    if (!map || !policies?.length) return;
     const p = policies[activeIndex];
     if (!p) return;
 
-    // Reset visual del active anterior
-    if (prevActiveRef.current >= 0 && prevActiveRef.current !== activeIndex) {
-      const prev = policies[prevActiveRef.current];
-      if (prev) {
-        const prevColor = colorFor(Cesium, prev.risk_category);
-        const prevBeam = entitiesRef.current.beams[prevActiveRef.current];
-        if (prevBeam) {
-          prevBeam.cylinder.material = Cesium.Color.WHITE.withAlpha(0.42);
-        }
-        const prevHalo = entitiesRef.current.halos[prevActiveRef.current];
-        if (prevHalo) {
-          prevHalo.ellipsoid.material = prevColor.withAlpha(0.35);
-        }
-        const prevRing = entitiesRef.current.rings[prevActiveRef.current];
-        if (prevRing) {
-          prevRing.point.pixelSize = 8;
-          prevRing.point.outlineWidth = 1.2;
-        }
-      }
-    }
-    // Highlight nuevo activo
-    const activeBeam = entitiesRef.current.beams[activeIndex];
-    if (activeBeam) {
-      activeBeam.cylinder.material = Cesium.Color.WHITE.withAlpha(0.95);
-    }
-    const activeHalo = entitiesRef.current.halos[activeIndex];
-    if (activeHalo) {
-      activeHalo.ellipsoid.material = colorFor(Cesium, p.risk_category).withAlpha(0.88);
-    }
-    const activeRing = entitiesRef.current.rings[activeIndex];
-    if (activeRing) {
-      activeRing.point.pixelSize = 16;
-      activeRing.point.outlineWidth = 2.5;
-    }
-    prevActiveRef.current = activeIndex;
-
-    // ── Lift animation (active halo sube del suelo a su planta) ──
+    // Cancelar lift previo
     if (liftAnimRef.current != null) {
       cancelAnimationFrame(liftAnimRef.current);
       liftAnimRef.current = null;
     }
+
+    // Reset feature-state del active anterior
+    const SOURCES = ['policy-beams', 'policy-halos', 'policy-rings'];
+    if (prevActiveRef.current >= 0 && prevActiveRef.current !== activeIndex) {
+      SOURCES.forEach((s) => {
+        try {
+          map.setFeatureState(
+            { source: s, id: prevActiveRef.current },
+            { active: false, liftOffset: 0 }
+          );
+        } catch {
+          /* silent */
+        }
+      });
+    }
+    SOURCES.forEach((s) => {
+      try {
+        map.setFeatureState(
+          { source: s, id: activeIndex },
+          { active: true }
+        );
+      } catch {
+        /* silent */
+      }
+    });
+    prevActiveRef.current = activeIndex;
+
+    // Lift animation del halo: arranca al nivel del suelo y sube
+    // hasta la planta de la póliza en 900 ms (ease-out-quart).
     const targetAlt = policyAltitude(p);
     const startOffset = -targetAlt;
     const startTime = performance.now();
     const DURATION = 900;
-    liftValueRef.current = startOffset;
+    liftRef.current = startOffset;
     const tick = (now) => {
       const t = Math.min((now - startTime) / DURATION, 1);
       const eased = 1 - Math.pow(1 - t, 4);
-      liftValueRef.current = startOffset * (1 - eased);
+      liftRef.current = startOffset * (1 - eased);
+      try {
+        map.setFeatureState(
+          { source: 'policy-halos', id: activeIndex },
+          { liftOffset: liftRef.current, active: true }
+        );
+      } catch {
+        /* silent */
+      }
       if (t < 1) {
         liftAnimRef.current = requestAnimationFrame(tick);
       } else {
-        liftValueRef.current = 0;
+        liftRef.current = 0;
         liftAnimRef.current = null;
       }
     };
     liftAnimRef.current = requestAnimationFrame(tick);
 
-    // ── Camera flyTo (altura adaptativa por planta) ─────────────
-    //
-    // El truco que da el efecto "I'm Tony Stark mirando la planta
-    // exacta" es que la cámara SE ELEVA con la planta de la póliza:
-    //
-    //   · Planta baja / parking  → cámara a ~14 m, pitch -22° (drone)
-    //   · Piso intermedio (15 m) → cámara a ~22 m, pitch -16° (medio)
-    //   · Ático (30 m)            → cámara a ~38 m, pitch -10° (alta)
-    //
-    // La distancia horizontal aumenta también con la altura para que
-    // el edificio no se salga del frame en ángulos picados. Heading
-    // se rota un pelín por póliza para variedad cinematográfica.
+    // ── Camera adaptive (zoom + pitch responden a la altura) ────
+    //   Planta baja      → zoom 17.4, pitch 60° (drone cercano)
+    //   Piso intermedio  → zoom 17.2, pitch 56°
+    //   Ático (12 m+)    → zoom 17.0, pitch 50° (más alto, más horizontal)
     const policyAlt = policyAltitude(p);
-    const camAlt = Math.max(policyAlt + 10, 14);
-    const camPitch = -Math.max(8, 22 - policyAlt * 0.5);
-    const camDist = 35 + policyAlt * 1.4;
-
+    const zoomTarget = Math.max(17.0, 17.4 - policyAlt * 0.02);
+    const pitchTarget = Math.max(48, 60 - policyAlt * 0.4);
     const headingDeg = -8 + ((activeIndex * 17) % 30) - 15;
-    const hRad = Cesium.Math.toRadians(headingDeg);
-    // Offset hacia atrás del heading para que la cámara MIRE al
-    // edificio desde detrás (heading apunta hacia el edificio).
-    const dLat = -camDist / 111111 * Math.cos(hRad);
-    const dLon = -camDist / 111111 * Math.sin(hRad)
-      / Math.cos(Cesium.Math.toRadians(p.lat));
-    const destination = Cesium.Cartesian3.fromDegrees(
-      p.lon + dLon,
-      p.lat + dLat,
-      camAlt
-    );
-    viewer.camera.flyTo({
-      destination,
-      orientation: {
-        heading: hRad,
-        pitch: Cesium.Math.toRadians(camPitch),
-        roll: 0,
-      },
-      duration: 1.5,
-      easingFunction: Cesium.EasingFunction.QUADRATIC_OUT,
+
+    map.easeTo({
+      center: [p.lon, p.lat],
+      zoom: zoomTarget,
+      pitch: pitchTarget,
+      bearing: headingDeg,
+      duration: 1500,
+      easing: (t) => 1 - Math.pow(1 - t, 3),
     });
   }, [ready, activeIndex, policies]);
 
@@ -467,16 +428,14 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     <div className="absolute inset-0">
       <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Loading overlay mientras Cesium inicializa */}
       {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center bg-bg-base/80 backdrop-blur-sm pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center bg-bg-base/80 pointer-events-none">
           <div className="text-13 font-mono uppercase tracking-[0.18em] text-text-secondary animate-pulse">
             Cargando escena 3D…
           </div>
         </div>
       )}
 
-      {/* Panel cinematográfico + mini-map se mantienen */}
       <CinematicPanel
         policy={policies[activeIndex]}
         index={activeIndex}
@@ -487,7 +446,7 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
   );
 }
 
-// ─── Panel cinematográfico (sin cambios respecto a la versión MapLibre) ────
+// ─── CinematicPanel ──────────────────────────────────────────────
 function CinematicPanel({ policy, index, total }) {
   if (!policy) return null;
   const PRODUCT_LABEL = {
@@ -525,21 +484,43 @@ function CinematicPanel({ policy, index, total }) {
         color: '#F8FAFC',
       }}
     >
-      <div className="flex items-center justify-between mb-2 text-10 font-mono uppercase tracking-[0.16em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
+      <div
+        className="flex items-center justify-between mb-2 text-10 font-mono uppercase tracking-[0.16em]"
+        style={{ color: 'rgba(248,250,252,0.55)' }}
+      >
         <span>Póliza {index + 1} de {total}</span>
-        <span style={{ color: tint }}>Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}</span>
+        <span style={{ color: tint }}>
+          Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}
+        </span>
       </div>
-      <div className="font-mono text-14 mb-0.5 tracking-tight" style={{ color: '#F8FAFC' }}>
+      <div
+        className="font-mono text-14 mb-0.5 tracking-tight"
+        style={{ color: '#F8FAFC' }}
+      >
         {policy.id}
       </div>
-      <div className="font-serif italic text-13 mb-3 leading-snug" style={{ color: 'rgba(248,250,252,0.78)' }}>
+      <div
+        className="font-serif italic text-13 mb-3 leading-snug"
+        style={{ color: 'rgba(248,250,252,0.78)' }}
+      >
         {PRODUCT_LABEL[policy.product] || policy.product}
         {policy.subtype ? ` · ${policy.subtype}` : ''} · {planta}
       </div>
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <PanelMetric label="P(flood)" value={formatPercent(policy.risk_probability, 1)} tint={tint} />
+      <div
+        className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t"
+        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+      >
+        <PanelMetric
+          label="P(flood)"
+          value={formatPercent(policy.risk_probability, 1)}
+          tint={tint}
+        />
         <PanelMetric label="Asegurado" value={formatMoney(policy.insured_value)} />
-        <PanelMetric label="Pérdida est." value={formatMoney(policy.estimated_loss_dana)} tint={tint} />
+        <PanelMetric
+          label="Pérdida est."
+          value={formatMoney(policy.estimated_loss_dana)}
+          tint={tint}
+        />
         <PanelMetric label="Prima anual" value={formatMoney(policy.annual_premium)} />
       </div>
     </div>
@@ -549,24 +530,33 @@ function CinematicPanel({ policy, index, total }) {
 function PanelMetric({ label, value, tint }) {
   return (
     <div className="min-w-0">
-      <div className="text-9 font-mono uppercase tracking-wider mb-0.5" style={{ color: 'rgba(248,250,252,0.5)' }}>
+      <div
+        className="text-9 font-mono uppercase tracking-wider mb-0.5"
+        style={{ color: 'rgba(248,250,252,0.5)' }}
+      >
         {label}
       </div>
-      <div className="font-mono text-13 truncate" style={{ color: tint || '#F8FAFC', fontWeight: 600 }}>
+      <div
+        className="font-mono text-13 truncate"
+        style={{ color: tint || '#F8FAFC', fontWeight: 600 }}
+      >
         {value}
       </div>
     </div>
   );
 }
 
-// ─── MiniMap SVG (sin cambios) ───────────────────────────────────
+// ─── MiniMap (SVG, sin cambios) ──────────────────────────────────
 function MiniMap({ policies, activeIndex }) {
   if (!policies || policies.length === 0) return null;
   const W = 168;
   const H = 168;
   const PAD = 14;
 
-  let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
+  let minLon = Infinity,
+    minLat = Infinity,
+    maxLon = -Infinity,
+    maxLat = -Infinity;
   for (const p of policies) {
     if (p.lon < minLon) minLon = p.lon;
     if (p.lat < minLat) minLat = p.lat;
@@ -593,12 +583,27 @@ function MiniMap({ policies, activeIndex }) {
         boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
       }}
     >
-      <div className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
+      <div
+        className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]"
+        style={{ color: 'rgba(248,250,252,0.55)' }}
+      >
         Tour map · {activeIndex + 1}/{policies.length}
       </div>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
-        <line x1={W / 2} y1="0" x2={W / 2} y2={H} stroke="rgba(255,255,255,0.04)" />
-        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="rgba(255,255,255,0.04)" />
+        <line
+          x1={W / 2}
+          y1="0"
+          x2={W / 2}
+          y2={H}
+          stroke="rgba(255,255,255,0.04)"
+        />
+        <line
+          x1="0"
+          y1={H / 2}
+          x2={W}
+          y2={H / 2}
+          stroke="rgba(255,255,255,0.04)"
+        />
         {policies.map((p, i) => {
           if (i === activeIndex) return null;
           const [x, y] = project(p.lon, p.lat);
@@ -615,11 +620,36 @@ function MiniMap({ policies, activeIndex }) {
         })}
         {active && (
           <g>
-            <circle cx={ax} cy={ay} r="11" fill="none" stroke={active._color || '#FFFFFF'} strokeWidth="1.5" opacity="0.6">
-              <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite" />
+            <circle
+              cx={ax}
+              cy={ay}
+              r="11"
+              fill="none"
+              stroke={active._color || '#FFFFFF'}
+              strokeWidth="1.5"
+              opacity="0.6"
+            >
+              <animate
+                attributeName="r"
+                values="8;14;8"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="0.7;0;0.7"
+                dur="2s"
+                repeatCount="indefinite"
+              />
             </circle>
-            <circle cx={ax} cy={ay} r="5" fill={active._color || '#FFFFFF'} stroke="#FFFFFF" strokeWidth="2" />
+            <circle
+              cx={ax}
+              cy={ay}
+              r="5"
+              fill={active._color || '#FFFFFF'}
+              stroke="#FFFFFF"
+              strokeWidth="2"
+            />
           </g>
         )}
       </svg>
