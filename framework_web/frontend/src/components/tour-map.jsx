@@ -1,41 +1,56 @@
-import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import DeckGL from '@deck.gl/react';
+import { Tile3DLayer } from '@deck.gl/geo-layers';
+import { ScatterplotLayer, ColumnLayer } from '@deck.gl/layers';
+// _TerrainExtension viene con prefijo underscore en deck.gl 9.x
+// porque es experimental. Lo aliasamos para que el resto del código
+// se lea limpio.
+import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
+import { FlyToInterpolator } from '@deck.gl/core';
+import { Tiles3DLoader } from '@loaders.gl/3d-tiles';
 
 import { formatMoney, formatPercent } from '@/lib/format.js';
 
-// ─── Vector tile basemap · Google Maps 3D look ───────────────────
-// OpenFreeMap "Liberty" style: stack open-source (OpenMapTiles schema)
-// con calles, agua, parques, puntos de interés y etiquetas. Sin clave
-// API, sin satélite. Es exactamente el look "Google Maps en 3D" que
-// pidió el usuario: tonos crema, calles claras, edificios estilizados.
+// ─── Google Photorealistic 3D Tiles ──────────────────────────────
 //
-// El estilo NO incluye edificios 3D por defecto; los añadimos como
-// capa fill-extrusion sobre el source-layer `building` del mismo
-// dataset (los polígonos de edificios traen `render_height` cuando OSM
-// los tiene tageados).
-const BASE_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+// Es la base fotogramétrica REAL que Google publica para más de 2.500
+// ciudades del mundo, incluida toda Valencia metropolitana. Renderiza
+// fachadas, tejados, balcones, persianas reales — no extrusiones.
+// Lo usan CARTO con deck.gl, GeoFlood Studio (NYU) y Google Earth
+// Studio. Es el "Hollywood-grade" del análisis de cartera.
+//
+// La API key se carga de VITE_GOOGLE_MAPS_API_KEY al build. Sin key
+// el Tile3DLayer no carga — fallback a un mapa MapLibre con OSM
+// queda como TODO (ahora preferimos fallar rápido con mensaje claro).
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const GOOGLE_3D_URL = GOOGLE_KEY
+  ? `https://tile.googleapis.com/v1/3dtiles/root.json?key=${GOOGLE_KEY}`
+  : null;
 
-// ─── Mapeo planta / altitud ──────────────────────────────────────
+// ─── Mapeo planta / altitud (Z-axis logic) ───────────────────────
+// Convierte el subtype textual en metros sobre el suelo, que es lo
+// que TerrainExtension('offset') usa para colocar el marker a la
+// altura correcta del piso del cliente.
 function policyFloorIdx(p) {
   if (p.product === 'autos') return 0;
   if (p.ground_floor) return 0;
   return Math.max(1, Math.min(p.floor_count || 1, 12));
 }
+function policyAltitude(p) {
+  if (p.product === 'autos') return 0; // pavimento
+  if (p.subtype === 'comercio' || p.subtype === 'nave') return 0.5;
+  const f = policyFloorIdx(p);
+  return f === 0 ? 1.2 : f * 3; // 3 m por planta — TerrainExtension
+                                  // SUMA esto a la cota real del DEM
+                                  // de las 3D Tiles, así que la altitud
+                                  // queda anclada al edificio real.
+}
 function buildingFloors(p) {
   if (p.product === 'autos') return 1;
   return Math.max(policyFloorIdx(p) + 1, p.floor_count || 1, 1);
 }
-function policyAltitude(p) {
-  if (p.product === 'autos') return 0.5;
-  const f = policyFloorIdx(p);
-  return f === 0 ? 1.2 : f * 3;
-}
 
-// ─── Descripción rica de la póliza ──────────────────────────────
-// Convierte el subtype técnico en lenguaje natural para el panel
-// cinematográfico. Le da personalidad a "Chalet unifamiliar"
-// en vez del feo "particulares · chalet".
+// ─── Descripción rica de la póliza (para el panel) ───────────────
 function describePolicy(p) {
   const SUBTYPE_LABEL = {
     chalet: 'Chalet unifamiliar',
@@ -52,590 +67,258 @@ function describePolicy(p) {
   };
   return SUBTYPE_LABEL[p.subtype] || p.subtype || p.product;
 }
-
-// Detalle de la ubicación (planta / posición dentro del edificio).
 function locationText(p) {
   if (p.product === 'autos') return 'Aparcamiento a pie de calle';
-  if (p.subtype === 'nave') {
-    return 'Local industrial · planta baja';
-  }
-  if (p.subtype === 'comercio') {
-    return 'Local a pie de calle · planta baja';
-  }
+  if (p.subtype === 'nave') return 'Local industrial · planta baja';
+  if (p.subtype === 'comercio') return 'Local a pie de calle · planta baja';
   if (p.ground_floor) {
     const n = p.floor_count || 1;
-    return n > 1
-      ? `Planta baja · edificio de ${n} alturas`
-      : 'Planta baja';
+    return n > 1 ? `Planta baja · edificio de ${n} alturas` : 'Planta baja';
   }
   const f = p.floor_count || 1;
   return `Planta ${f}.ª · ático del edificio (${f + 1} plantas)`;
 }
 
-// ─── Snap al edificio real más cercano ──────────────────────────
-// Calcula el centroide de un polígono (anillo exterior) en
-// coordenadas geográficas. Suficientemente preciso para edificios
-// urbanos a la resolución de zoom 16+.
-function polygonCentroid(ring) {
-  let cx = 0, cy = 0;
-  const n = ring.length - 1; // último coincide con primero (cerrado)
-  for (let i = 0; i < n; i++) {
-    cx += ring[i][0];
-    cy += ring[i][1];
-  }
-  return [cx / n, cy / n];
-}
-
-function findNearestBuilding(map, lon, lat) {
-  if (!map || !map.isStyleLoaded()) return null;
-  const point = map.project([lon, lat]);
-  // Caja de búsqueda de ±80 px en pantalla — captura el edificio
-  // donde "vive" la póliza + algunos vecinos. Filtramos por distancia
-  // geográfica al lon/lat original para no saltar a un edificio que
-  // por casualidad cae en la caja pero está lejos.
-  const features = map.queryRenderedFeatures(
-    [[point.x - 80, point.y - 80], [point.x + 80, point.y + 80]],
-    { layers: ['buildings-3d'] }
-  );
-  if (!features.length) return null;
-  let best = null;
-  let bestDist = Infinity;
-  for (const f of features) {
-    if (f.geometry.type !== 'Polygon') continue;
-    const ring = f.geometry.coordinates[0];
-    if (!ring || ring.length < 4) continue;
-    const c = polygonCentroid(ring);
-    const dx = c[0] - lon;
-    const dy = c[1] - lat;
-    const d = dx * dx + dy * dy;
-    if (d < bestDist) {
-      bestDist = d;
-      best = {
-        lon: c[0],
-        lat: c[1],
-        height:
-          f.properties?.render_height ||
-          f.properties?.height ||
-          null,
-      };
-    }
-  }
-  return best;
-}
-
-// Aproximación de círculo (polígono N-lados) métrico alrededor de
-// (lon, lat). Usado como footprint de las columnas fill-extrusion.
-function circleFeature(lon, lat, radiusM, props, id) {
-  const N = 18;
-  const ring = [];
-  const dLat = radiusM / 111111;
-  const dLon = radiusM / (111111 * Math.cos((lat * Math.PI) / 180));
-  for (let i = 0; i <= N; i++) {
-    const a = (i / N) * 2 * Math.PI;
-    ring.push([lon + dLon * Math.cos(a), lat + dLat * Math.sin(a)]);
-  }
-  return {
-    type: 'Feature',
-    id,
-    geometry: { type: 'Polygon', coordinates: [ring] },
-    properties: props,
+// ─── Color RGB por categoría de riesgo ───────────────────────────
+// deck.gl quiere arrays [r, g, b, a] en 0–255.
+function colorRGBA(category, alpha = 220) {
+  const RGB = {
+    low: [251, 191, 36],
+    moderate: [248, 113, 113],
+    high: [220, 38, 38],
+    very_high: [127, 29, 29],
   };
+  return [...(RGB[category] || [148, 163, 184]), alpha];
 }
 
-const RISK_HEX = {
-  low: '#FBBF24',
-  moderate: '#F87171',
-  high: '#DC2626',
-  very_high: '#7F1D1D',
-};
-
-// ─── Construcción de features por póliza ───────────────────────
-// Diferencia el visual por subtype:
-//   - autos (coche/moto/furgoneta) → SOLO ring + pequeño disco
-//     a 1.5 m, sin beam ni stack (están en la calle, no en plantas).
-//   - nave                          → extrusión grande de ground
-//     (radio 8 m, altura 6 m). Se ve como un volumen industrial.
-//   - comercio                      → halo medio a pie de calle
-//     (radio 4 m, altura 3.5 m).
-//   - piso/oficina/chalet/casa      → beam + halo + stack (defaults).
-//
-// Acepta un mapa opcional `snapMap` que sobreescribe lon/lat de la
-// póliza cuando ya hemos encontrado a qué edificio real pertenece.
-function buildPolicyFeatures(policies, snapMap = {}) {
-  const beams = [];
-  const halos = [];
-  const floors = [];
-  const rings = [];
-  policies.forEach((p, i) => {
-    const snap = snapMap[i];
-    const lon = snap ? snap.lon : p.lon;
-    const lat = snap ? snap.lat : p.lat;
-    const color = RISK_HEX[p.risk_category] || '#94A3B8';
-    const props = { idx: i, color, subtype: p.subtype || '' };
-
-    rings.push({
-      type: 'Feature',
-      id: i,
-      geometry: { type: 'Point', coordinates: [lon, lat] },
-      properties: props,
-    });
-
-    // Autos: solo disco bajito a nivel de calle (capó del coche).
-    if (p.product === 'autos') {
-      halos.push(
-        circleFeature(lon, lat, 2.2, { ...props, base: 0.2, top: 1.4 }, i)
-      );
-      return;
-    }
-
-    // Nave industrial: volumen tipo "almacén" a nivel del suelo.
-    if (p.subtype === 'nave') {
-      halos.push(
-        circleFeature(lon, lat, 7.5, { ...props, base: 0, top: 5 }, i)
-      );
-      return;
-    }
-
-    // Comercio: halo medio a pie de calle.
-    if (p.subtype === 'comercio') {
-      halos.push(
-        circleFeature(lon, lat, 4.2, { ...props, base: 0, top: 3.2 }, i)
-      );
-      return;
-    }
-
-    // Por defecto (piso, chalet, casa, oficina): beam + halo + stack.
-    // Si tenemos altura del edificio real, ajustamos la altitud
-    // proporcionalmente (planta = floor_idx / total_floors × altura).
-    let alt = policyAltitude(p);
-    let totalFloors = buildingFloors(p);
-    if (snap && snap.height && totalFloors > 0) {
-      // Encajamos la planta de la póliza dentro de la altura real
-      // del edificio en lugar de asumir 3 m por planta.
-      const floorIdx = policyFloorIdx(p);
-      const floorH = snap.height / Math.max(totalFloors, 1);
-      alt = floorIdx === 0 ? Math.min(1.2, floorH * 0.4) : floorIdx * floorH;
-      totalFloors = Math.max(totalFloors, Math.round(snap.height / 3));
-    }
-
-    beams.push(
-      circleFeature(lon, lat, 0.9, { ...props, top: Math.max(alt, 2.5) }, i)
-    );
-    halos.push(
-      circleFeature(
-        lon,
-        lat,
-        4.0,
-        { ...props, base: Math.max(alt - 0.7, 0.2), top: alt + 1.0 },
-        i
-      )
-    );
-    const floorH = snap && snap.height && totalFloors > 0
-      ? snap.height / totalFloors
-      : 3;
-    for (let f = 1; f <= totalFloors; f++) {
-      const z = f * floorH;
-      floors.push(
-        circleFeature(
-          lon,
-          lat,
-          3.0,
-          { ...props, base: z - 0.12, top: z + 0.12 },
-          `${i}-f${f}`
-        )
-      );
-    }
-  });
-  return { beams, halos, floors, rings };
+// ─── Bearing rotado por póliza (variedad cinematográfica) ───────
+function bearingFor(idx) {
+  return 35 + ((idx * 17) % 70) - 35;
 }
 
-// ─── TourMap principal ───────────────────────────────────────────
+// ─── TourMap principal ──────────────────────────────────────────
 export function TourMap({ policies, activeIndex }) {
-  const containerRef = useRef(null);
-  const mapRef = useRef(null);
-  const liftRef = useRef(0);
-  const liftAnimRef = useRef(null);
+  const liftStartRef = useRef(performance.now());
+  const [liftT, setLiftT] = useState(1);
   const prevActiveRef = useRef(-1);
-  const snapMapRef = useRef({});
-  const [ready, setReady] = useState(false);
-  // Bumping este número fuerza re-render de las features sin tocar
-  // la dependencia `policies` (necesario cuando hacemos snap a edificio).
-  const [snapTick, setSnapTick] = useState(0);
 
-  // ── Init MapLibre once ──────────────────────────────────────────
+  // Re-lanzar animación de "ascenso" del halo cuando cambia el activo
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-
-    const initCenter =
-      policies && policies[activeIndex]
-        ? [policies[activeIndex].lon, policies[activeIndex].lat]
-        : [-0.4, 39.42];
-
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: BASE_STYLE,
-      center: initCenter,
-      zoom: 16.5,
-      pitch: 55,
-      bearing: -15,
-      maxPitch: 80,
-      attributionControl: { compact: true },
-    });
-    mapRef.current = map;
-
-    map.on('load', () => {
-      // Edificios 3D extruidos desde el source-layer `building` del
-      // mismo dataset. Color crema-grisáceo para mantener el look
-      // Google Maps (no edificios de cartón de juguete).
-      if (!map.getLayer('buildings-3d')) {
-        map.addLayer({
-          id: 'buildings-3d',
-          source: 'openmaptiles',
-          'source-layer': 'building',
-          type: 'fill-extrusion',
-          minzoom: 14,
-          paint: {
-            'fill-extrusion-color': [
-              'interpolate',
-              ['linear'],
-              ['coalesce', ['get', 'render_height'], ['get', 'height'], 8],
-              0, '#F1F5F9',  // edificios bajos en blanco roto
-              30, '#CBD5E1', // edificios medios en gris medio
-              80, '#94A3B8', // rascacielos en gris más oscuro
-            ],
-            'fill-extrusion-height': [
-              'coalesce',
-              ['get', 'render_height'],
-              ['get', 'height'],
-              8,
-            ],
-            'fill-extrusion-base': [
-              'coalesce',
-              ['get', 'render_min_height'],
-              ['get', 'min_height'],
-              0,
-            ],
-            'fill-extrusion-opacity': [
-              'interpolate', ['linear'], ['zoom'],
-              14, 0, 15, 0.6, 16.5, 0.9,
-            ],
-            'fill-extrusion-vertical-gradient': true,
-          },
-        });
-      }
-
-      // Si el estilo trae una capa de edificios 2D plana, la ocultamos
-      // para que no compita con la extrusión 3D.
-      const flatBuildingLayers = map
-        .getStyle()
-        .layers.filter(
-          (l) => l.id !== 'buildings-3d' && /building/i.test(l.id) && l.type === 'fill'
-        );
-      flatBuildingLayers.forEach((l) => {
-        try {
-          map.setLayoutProperty(l.id, 'visibility', 'none');
-        } catch {
-          /* silent */
-        }
-      });
-
-      // ─── Sources de pólizas (4 capas) ──────────────────────────
-      ['policy-floors', 'policy-beams', 'policy-halos', 'policy-rings'].forEach(
-        (sid) => {
-          if (!map.getSource(sid)) {
-            map.addSource(sid, {
-              type: 'geojson',
-              data: { type: 'FeatureCollection', features: [] },
-            });
-          }
-        }
-      );
-
-      // Stack de plantas del edificio (discos blancos transparentes
-      // por planta — contexto visual de "está en planta N de M").
-      map.addLayer({
-        id: 'policy-floors',
-        type: 'fill-extrusion',
-        source: 'policy-floors',
-        paint: {
-          'fill-extrusion-color': '#FFFFFF',
-          'fill-extrusion-base': ['get', 'base'],
-          'fill-extrusion-height': ['get', 'top'],
-          'fill-extrusion-opacity': 0.42,
-        },
-      });
-
-      // Beam blanco (rayo láser) desde el suelo hasta la planta.
-      map.addLayer({
-        id: 'policy-beams',
-        type: 'fill-extrusion',
-        source: 'policy-beams',
-        paint: {
-          'fill-extrusion-color': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            '#FFFFFF',
-            '#E2E8F0',
-          ],
-          'fill-extrusion-height': ['get', 'top'],
-          'fill-extrusion-base': 0,
-          'fill-extrusion-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            0.95,
-            0.5,
-          ],
-        },
-      });
-
-      // Halo coloreado por riesgo en la planta exacta. Base/height
-      // se suman a un `liftOffset` por feature-state para animar el
-      // ascenso del halo activo desde el suelo a su planta.
-      map.addLayer({
-        id: 'policy-halos',
-        type: 'fill-extrusion',
-        source: 'policy-halos',
-        paint: {
-          'fill-extrusion-color': ['get', 'color'],
-          'fill-extrusion-base': [
-            '+',
-            ['get', 'base'],
-            ['coalesce', ['feature-state', 'liftOffset'], 0],
-          ],
-          'fill-extrusion-height': [
-            '+',
-            ['get', 'top'],
-            ['coalesce', ['feature-state', 'liftOffset'], 0],
-          ],
-          'fill-extrusion-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            0.92,
-            0.42,
-          ],
-          'fill-extrusion-vertical-gradient': true,
-        },
-      });
-
-      // Ring 2D en el suelo (visible a cualquier zoom).
-      map.addLayer({
-        id: 'policy-rings',
-        type: 'circle',
-        source: 'policy-rings',
-        paint: {
-          'circle-radius': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            14,
-            6,
-          ],
-          'circle-color': ['get', 'color'],
-          'circle-stroke-color': '#FFFFFF',
-          'circle-stroke-width': [
-            'case',
-            ['boolean', ['feature-state', 'active'], false],
-            3,
-            1.2,
-          ],
-          'circle-opacity': 0.95,
-          'circle-pitch-alignment': 'map',
-        },
-      });
-
-      // Sky atmosférico (cielo del horizonte cuando hay pitch alto).
-      if (map.setSky) {
-        map.setSky({
-          'sky-color': '#A7C5E1',
-          'horizon-color': '#E8EEF5',
-          'fog-color': '#CBD5E1',
-          'fog-ground-blend': 0.05,
-          'horizon-fog-blend': 0.5,
-          'sky-horizon-blend': 0.65,
-          'atmosphere-blend': 0.8,
-        });
-      }
-
-      setReady(true);
-    });
-
-    return () => {
-      if (liftAnimRef.current != null) {
-        cancelAnimationFrame(liftAnimRef.current);
-        liftAnimRef.current = null;
-      }
-      if (mapRef.current) {
-        try {
-          mapRef.current.remove();
-        } catch {
-          /* silent */
-        }
-      }
-      mapRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Reset snap cuando cambia la lista de pólizas ──────────────
-  useEffect(() => {
-    snapMapRef.current = {};
-    setSnapTick(0);
-  }, [policies]);
-
-  // ── Reconstruir entidades cuando cambia la lista o el snap ────
-  useEffect(() => {
-    if (!ready) return;
-    const map = mapRef.current;
-    if (!map || !policies?.length) return;
-
-    const { beams, halos, floors, rings } = buildPolicyFeatures(
-      policies,
-      snapMapRef.current
-    );
-    const update = (sid, features) => {
-      const src = map.getSource(sid);
-      if (src) src.setData({ type: 'FeatureCollection', features });
-    };
-    update('policy-beams', beams);
-    update('policy-halos', halos);
-    update('policy-rings', rings);
-    update('policy-floors', floors);
-
-    // Re-aplicar feature-state del active (setData lo borra).
-    if (prevActiveRef.current >= 0) {
-      ['policy-beams', 'policy-halos', 'policy-rings'].forEach((s) => {
-        try {
-          map.setFeatureState(
-            { source: s, id: prevActiveRef.current },
-            { active: true }
-          );
-        } catch {
-          /* silent */
-        }
-      });
-    }
-  }, [ready, policies, snapTick]);
-
-  // ── Camera flyTo + lift animation cuando cambia activeIndex ────
-  useEffect(() => {
-    if (!ready) return;
-    const map = mapRef.current;
-    if (!map || !policies?.length) return;
-    const p = policies[activeIndex];
-    if (!p) return;
-
-    // Cancelar lift previo
-    if (liftAnimRef.current != null) {
-      cancelAnimationFrame(liftAnimRef.current);
-      liftAnimRef.current = null;
-    }
-
-    // Reset feature-state del active anterior
-    const SOURCES = ['policy-beams', 'policy-halos', 'policy-rings'];
-    if (prevActiveRef.current >= 0 && prevActiveRef.current !== activeIndex) {
-      SOURCES.forEach((s) => {
-        try {
-          map.setFeatureState(
-            { source: s, id: prevActiveRef.current },
-            { active: false, liftOffset: 0 }
-          );
-        } catch {
-          /* silent */
-        }
-      });
-    }
-    SOURCES.forEach((s) => {
-      try {
-        map.setFeatureState(
-          { source: s, id: activeIndex },
-          { active: true }
-        );
-      } catch {
-        /* silent */
-      }
-    });
+    if (activeIndex === prevActiveRef.current) return;
     prevActiveRef.current = activeIndex;
-
-    // Lift animation del halo: arranca al nivel del suelo y sube
-    // hasta la planta de la póliza en 900 ms (ease-out-quart).
-    const targetAlt = policyAltitude(p);
-    const startOffset = -targetAlt;
-    const startTime = performance.now();
-    const DURATION = 900;
-    liftRef.current = startOffset;
+    liftStartRef.current = performance.now();
+    setLiftT(0);
+    let id;
     const tick = (now) => {
-      const t = Math.min((now - startTime) / DURATION, 1);
-      const eased = 1 - Math.pow(1 - t, 4);
-      liftRef.current = startOffset * (1 - eased);
-      try {
-        map.setFeatureState(
-          { source: 'policy-halos', id: activeIndex },
-          { liftOffset: liftRef.current, active: true }
-        );
-      } catch {
-        /* silent */
-      }
-      if (t < 1) {
-        liftAnimRef.current = requestAnimationFrame(tick);
-      } else {
-        liftRef.current = 0;
-        liftAnimRef.current = null;
-      }
+      const dt = (now - liftStartRef.current) / 900;
+      const t = Math.min(dt, 1);
+      setLiftT(1 - Math.pow(1 - t, 4)); // ease-out-quart
+      if (t < 1) id = requestAnimationFrame(tick);
     };
-    liftAnimRef.current = requestAnimationFrame(tick);
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [activeIndex]);
 
-    // ── Camera adaptive (zoom + pitch responden a la altura) ────
-    //   Planta baja      → zoom 17.4, pitch 60° (drone cercano)
-    //   Piso intermedio  → zoom 17.2, pitch 56°
-    //   Ático (12 m+)    → zoom 17.0, pitch 50° (más alto, más horizontal)
-    const policyAlt = policyAltitude(p);
-    const zoomTarget = Math.max(17.0, 17.4 - policyAlt * 0.02);
-    const pitchTarget = Math.max(48, 60 - policyAlt * 0.4);
-    const headingDeg = -8 + ((activeIndex * 17) % 30) - 15;
-
-    map.easeTo({
-      center: [p.lon, p.lat],
-      zoom: zoomTarget,
-      pitch: pitchTarget,
-      bearing: headingDeg,
-      duration: 1500,
-      easing: (t) => 1 - Math.pow(1 - t, 3),
-    });
-
-    // ── Snap a edificio real una vez la cámara aterriza ────────
-    // Solo aplicable a productos no-autos. Si encontramos un edificio
-    // razonablemente cerca, movemos beam/halo/floor stack a su
-    // centroide y usamos la altura real del edificio para calcular
-    // a qué altitud va la planta de la póliza.
-    if (p.product !== 'autos' && snapMapRef.current[activeIndex] == null) {
-      const handler = () => {
-        // Pequeño delay para que las tiles del nuevo viewport
-        // terminen de cargarse después del moveend.
-        setTimeout(() => {
-          const snap = findNearestBuilding(map, p.lon, p.lat);
-          if (snap) {
-            snapMapRef.current = {
-              ...snapMapRef.current,
-              [activeIndex]: snap,
-            };
-            setSnapTick((t) => t + 1);
-          }
-        }, 250);
+  // ── Camera view state (DeckGL controla la cámara via React) ──
+  const activePolicy = policies?.[activeIndex];
+  const viewState = useMemo(() => {
+    const p = activePolicy;
+    if (!p) {
+      return {
+        longitude: -0.4,
+        latitude: 39.42,
+        zoom: 15,
+        pitch: 55,
+        bearing: 0,
       };
-      map.once('moveend', handler);
     }
-  }, [ready, activeIndex, policies]);
+    const policyAlt = policyAltitude(p);
+    // Cámara adaptativa a la planta (igual que la versión anterior):
+    //   - planta baja  → zoom 17.4 · pitch 60° (drone cercano)
+    //   - ático        → zoom 17.0 · pitch 50° (más alto, más horizontal)
+    return {
+      longitude: p.lon,
+      latitude: p.lat,
+      zoom: Math.max(17.0, 17.4 - policyAlt * 0.02),
+      pitch: Math.max(48, 60 - policyAlt * 0.4),
+      bearing: bearingFor(activeIndex),
+      transitionDuration: 1500,
+      transitionInterpolator: new FlyToInterpolator({ speed: 1.6 }),
+    };
+  }, [activePolicy, activeIndex]);
+
+  // ── Layers ────────────────────────────────────────────────────
+  const layers = useMemo(() => {
+    if (!policies?.length) return [];
+
+    const activePol = policies[activeIndex];
+    const activeAlt = activePol ? policyAltitude(activePol) : 0;
+    // El offset de "ascenso" se aplica SOLO al halo activo. Empieza
+    // en -activeAlt (a ras de suelo) y termina en 0 (en su planta).
+    const liftOffset = -activeAlt * (1 - liftT);
+
+    const layers = [];
+
+    // Google Photorealistic 3D Tiles — solo si hay API key.
+    if (GOOGLE_3D_URL) {
+      layers.push(
+        new Tile3DLayer({
+          id: 'google-photorealistic-3d',
+          data: GOOGLE_3D_URL,
+          loader: Tiles3DLoader,
+          // Sin este flag los tiles del horizonte no se cargan en
+          // ángulos altos de pitch.
+          loadOptions: { fetch: { mode: 'cors' } },
+          operation: 'terrain+draw',
+        })
+      );
+    }
+
+    // Ring 2D en el suelo · clamp al terreno real de las tiles 3D.
+    layers.push(
+      new ScatterplotLayer({
+        id: 'policy-rings',
+        data: policies,
+        getPosition: (d) => [d.lon, d.lat, 0],
+        getRadius: (d, { index }) => (index === activeIndex ? 8 : 4),
+        radiusUnits: 'meters',
+        radiusMinPixels: 4,
+        getFillColor: (d, { index }) =>
+          colorRGBA(d.risk_category, index === activeIndex ? 240 : 160),
+        stroked: true,
+        getLineColor: [248, 250, 252, 240],
+        getLineWidth: (d, { index }) => (index === activeIndex ? 1.5 : 0.7),
+        lineWidthUnits: 'meters',
+        extensions: [new TerrainExtension()],
+        terrainDrawMode: 'drape', // se pegan al suelo de las 3D Tiles
+        pickable: true,
+        updateTriggers: { getRadius: activeIndex, getFillColor: activeIndex, getLineWidth: activeIndex },
+      })
+    );
+
+    // Beam blanco vertical · ColumnLayer extruded desde el suelo
+    // hasta la planta de la póliza. Las pólizas non-edificio
+    // (autos, nave, comercio) NO necesitan beam.
+    const beamData = policies.map((p, i) => ({
+      ...p,
+      _i: i,
+      _isActive: i === activeIndex,
+      _hasBeam: p.product !== 'autos' && p.subtype !== 'nave' && p.subtype !== 'comercio',
+    }));
+    layers.push(
+      new ColumnLayer({
+        id: 'policy-beams',
+        data: beamData.filter((d) => d._hasBeam),
+        getPosition: (d) => [d.lon, d.lat, 0],
+        diskResolution: 14,
+        radius: 0.8,
+        radiusUnits: 'meters',
+        extruded: true,
+        getElevation: (d) => policyAltitude(d),
+        getFillColor: (d) =>
+          d._isActive ? [255, 255, 255, 230] : [226, 232, 240, 120],
+        extensions: [new TerrainExtension()],
+        terrainDrawMode: 'offset',
+        updateTriggers: { getFillColor: activeIndex },
+      })
+    );
+
+    // Halo coloreado en la planta de la póliza. El activo se anima
+    // (sube desde el suelo a su altura) vía liftOffset.
+    layers.push(
+      new ColumnLayer({
+        id: 'policy-halos',
+        data: policies,
+        getPosition: (d, { index }) => {
+          const baseAlt = policyAltitude(d);
+          const z = index === activeIndex ? baseAlt + liftOffset : baseAlt;
+          return [d.lon, d.lat, z];
+        },
+        diskResolution: 26,
+        getElevation: (d) => {
+          if (d.product === 'autos') return 1.2;
+          if (d.subtype === 'nave') return 5;
+          if (d.subtype === 'comercio') return 3.2;
+          return 1.0;
+        },
+        getLineColor: [248, 250, 252, 255],
+        getRadius: (d) => {
+          if (d.subtype === 'nave') return 7.5;
+          if (d.subtype === 'comercio') return 4.2;
+          if (d.product === 'autos') return 2.2;
+          return 4.0;
+        },
+        radiusUnits: 'meters',
+        extruded: true,
+        getFillColor: (d, { index }) =>
+          colorRGBA(d.risk_category, index === activeIndex ? 230 : 100),
+        extensions: [new TerrainExtension()],
+        terrainDrawMode: 'offset',
+        updateTriggers: {
+          getPosition: [activeIndex, liftT],
+          getFillColor: activeIndex,
+        },
+      })
+    );
+
+    // Floor stack — discos blancos por planta del edificio (solo
+    // para productos con plantas reales).
+    const stackData = [];
+    policies.forEach((p, i) => {
+      if (p.product === 'autos' || p.subtype === 'nave' || p.subtype === 'comercio') return;
+      const total = buildingFloors(p);
+      for (let f = 1; f <= total; f++) {
+        stackData.push({ ...p, _i: i, _floor: f, _z: f * 3 });
+      }
+    });
+    layers.push(
+      new ColumnLayer({
+        id: 'policy-floor-stack',
+        data: stackData,
+        getPosition: (d) => [d.lon, d.lat, d._z - 0.1],
+        diskResolution: 14,
+        radius: 3,
+        radiusUnits: 'meters',
+        extruded: true,
+        getElevation: 0.2,
+        getFillColor: [248, 250, 252, 90],
+        extensions: [new TerrainExtension()],
+        terrainDrawMode: 'offset',
+      })
+    );
+
+    return layers;
+  }, [policies, activeIndex, liftT]);
+
+  // ── Render ───────────────────────────────────────────────────
+  if (!GOOGLE_3D_URL) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-bg-base p-6 text-center">
+        <div>
+          <div className="text-13 text-risk-high font-semibold mb-2">
+            Falta la API key de Google Maps Platform
+          </div>
+          <div className="text-12 text-text-secondary max-w-md mx-auto leading-relaxed">
+            Esta vista usa Google Photorealistic 3D Tiles (CARTO + deck.gl
+            stack). Crea un proyecto en console.cloud.google.com, activa la
+            <code className="font-mono mx-1">Map Tiles API</code>, genera
+            una API key y añádela como variable de entorno{' '}
+            <code className="font-mono">VITE_GOOGLE_MAPS_API_KEY</code> en
+            Vercel + tu .env.local.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0">
-      <div ref={containerRef} className="absolute inset-0" />
-
-      {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center bg-bg-base/80 pointer-events-none">
-          <div className="text-13 font-mono uppercase tracking-[0.18em] text-text-secondary animate-pulse">
-            Cargando escena 3D…
-          </div>
-        </div>
-      )}
+      <DeckGL
+        viewState={viewState}
+        controller={true}
+        layers={layers}
+        style={{ position: 'absolute', inset: 0 }}
+      />
 
       <CinematicPanel
         policy={policies[activeIndex]}
@@ -686,49 +369,23 @@ function CinematicPanel({ policy, index, total }) {
           Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}
         </span>
       </div>
-      <div
-        className="font-mono text-14 mb-0.5 tracking-tight"
-        style={{ color: '#F8FAFC' }}
-      >
+      <div className="font-mono text-14 mb-0.5 tracking-tight" style={{ color: '#F8FAFC' }}>
         {policy.id}
       </div>
-      {/* Tipo de inmueble · grande, serif italic */}
-      <div
-        className="font-serif italic text-15 leading-snug mb-0.5"
-        style={{ color: '#F8FAFC' }}
-      >
+      <div className="font-serif italic text-15 leading-snug mb-0.5" style={{ color: '#F8FAFC' }}>
         {description}
       </div>
-      {/* Ubicación específica (planta + edificio o calle si auto) */}
-      <div
-        className="text-12 leading-snug mb-1"
-        style={{ color: 'rgba(248,250,252,0.72)' }}
-      >
+      <div className="text-12 leading-snug mb-1" style={{ color: 'rgba(248,250,252,0.72)' }}>
         {location}
       </div>
-      {/* Metadata adicional · año, dirección aproximada */}
-      <div
-        className="text-10 font-mono uppercase tracking-wider mb-3"
-        style={{ color: 'rgba(248,250,252,0.45)' }}
-      >
+      <div className="text-10 font-mono uppercase tracking-wider mb-3" style={{ color: 'rgba(248,250,252,0.45)' }}>
         {year ? `Construido ${year} · ` : ''}
         {policy.lat?.toFixed(4)}, {policy.lon?.toFixed(4)}
       </div>
-      <div
-        className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t"
-        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-      >
-        <PanelMetric
-          label="P(flood)"
-          value={formatPercent(policy.risk_probability, 1)}
-          tint={tint}
-        />
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <PanelMetric label="P(flood)" value={formatPercent(policy.risk_probability, 1)} tint={tint} />
         <PanelMetric label="Asegurado" value={formatMoney(policy.insured_value)} />
-        <PanelMetric
-          label="Pérdida est."
-          value={formatMoney(policy.estimated_loss_dana)}
-          tint={tint}
-        />
+        <PanelMetric label="Pérdida est." value={formatMoney(policy.estimated_loss_dana)} tint={tint} />
         <PanelMetric label="Prima anual" value={formatMoney(policy.annual_premium)} />
       </div>
     </div>
@@ -738,33 +395,21 @@ function CinematicPanel({ policy, index, total }) {
 function PanelMetric({ label, value, tint }) {
   return (
     <div className="min-w-0">
-      <div
-        className="text-9 font-mono uppercase tracking-wider mb-0.5"
-        style={{ color: 'rgba(248,250,252,0.5)' }}
-      >
+      <div className="text-9 font-mono uppercase tracking-wider mb-0.5" style={{ color: 'rgba(248,250,252,0.5)' }}>
         {label}
       </div>
-      <div
-        className="font-mono text-13 truncate"
-        style={{ color: tint || '#F8FAFC', fontWeight: 600 }}
-      >
+      <div className="font-mono text-13 truncate" style={{ color: tint || '#F8FAFC', fontWeight: 600 }}>
         {value}
       </div>
     </div>
   );
 }
 
-// ─── MiniMap (SVG, sin cambios) ──────────────────────────────────
+// ─── MiniMap (sin cambios) ───────────────────────────────────────
 function MiniMap({ policies, activeIndex }) {
   if (!policies || policies.length === 0) return null;
-  const W = 168;
-  const H = 168;
-  const PAD = 14;
-
-  let minLon = Infinity,
-    minLat = Infinity,
-    maxLon = -Infinity,
-    maxLat = -Infinity;
+  const W = 168, H = 168, PAD = 14;
+  let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
   for (const p of policies) {
     if (p.lon < minLon) minLon = p.lon;
     if (p.lat < minLat) minLat = p.lat;
@@ -778,7 +423,6 @@ function MiniMap({ policies, activeIndex }) {
     const y = PAD + ((maxLat - lat) / latSpan) * (H - 2 * PAD);
     return [x, y];
   };
-
   const active = policies[activeIndex];
   const [ax, ay] = active ? project(active.lon, active.lat) : [W / 2, H / 2];
 
@@ -791,73 +435,26 @@ function MiniMap({ policies, activeIndex }) {
         boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
       }}
     >
-      <div
-        className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]"
-        style={{ color: 'rgba(248,250,252,0.55)' }}
-      >
+      <div className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
         Tour map · {activeIndex + 1}/{policies.length}
       </div>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
-        <line
-          x1={W / 2}
-          y1="0"
-          x2={W / 2}
-          y2={H}
-          stroke="rgba(255,255,255,0.04)"
-        />
-        <line
-          x1="0"
-          y1={H / 2}
-          x2={W}
-          y2={H / 2}
-          stroke="rgba(255,255,255,0.04)"
-        />
+        <line x1={W / 2} y1="0" x2={W / 2} y2={H} stroke="rgba(255,255,255,0.04)" />
+        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="rgba(255,255,255,0.04)" />
         {policies.map((p, i) => {
           if (i === activeIndex) return null;
           const [x, y] = project(p.lon, p.lat);
           return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={2.5}
-              fill={p._color || '#94A3B8'}
-              fillOpacity="0.85"
-            />
+            <circle key={i} cx={x} cy={y} r={2.5} fill={p._color || '#94A3B8'} fillOpacity="0.85" />
           );
         })}
         {active && (
           <g>
-            <circle
-              cx={ax}
-              cy={ay}
-              r="11"
-              fill="none"
-              stroke={active._color || '#FFFFFF'}
-              strokeWidth="1.5"
-              opacity="0.6"
-            >
-              <animate
-                attributeName="r"
-                values="8;14;8"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                values="0.7;0;0.7"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+            <circle cx={ax} cy={ay} r="11" fill="none" stroke={active._color || '#FFFFFF'} strokeWidth="1.5" opacity="0.6">
+              <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite" />
             </circle>
-            <circle
-              cx={ax}
-              cy={ay}
-              r="5"
-              fill={active._color || '#FFFFFF'}
-              stroke="#FFFFFF"
-              strokeWidth="2"
-            />
+            <circle cx={ax} cy={ay} r="5" fill={active._color || '#FFFFFF'} stroke="#FFFFFF" strokeWidth="2" />
           </g>
         )}
       </svg>
