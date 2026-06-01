@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -9,8 +9,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { TourMap } from '@/components/tour-map.jsx';
 import { TourDock } from '@/components/tour-dock.jsx';
+
+// Lazy-load del TourMap porque importa CesiumJS (~3 MB). Sólo se
+// descarga cuando el usuario navega realmente a /tour; el resto de
+// vistas (Overview, Maps, Portfolio, etc.) no cargan Cesium.
+const TourMap = React.lazy(() =>
+  import('@/components/tour-map.jsx').then((m) => ({ default: m.TourMap }))
+);
 
 // Mapeo categoría de riesgo → color del halo y de la fila del dock.
 // Coincide con la paleta del risk-surface raster (YlOrRd) para que un
@@ -201,10 +207,22 @@ export function PolicyTour3D() {
         </div>
       </div>
 
-      {/* Mapa 3D · llena el espacio disponible */}
+      {/* Mapa 3D · llena el espacio disponible. Suspense fallback es
+       *  el mismo loading state que usa el TourMap internamente para
+       *  inicializar Cesium — sensación visual consistente. */}
       <div className="flex-1 min-h-0 relative bg-bg-base">
         {tourPolicies.length > 0 ? (
-          <TourMap policies={tourPolicies} activeIndex={activeIndex} />
+          <Suspense
+            fallback={
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-13 font-mono uppercase tracking-[0.18em] text-text-secondary animate-pulse">
+                  Inicializando motor 3D…
+                </div>
+              </div>
+            }
+          >
+            <TourMap policies={tourPolicies} activeIndex={activeIndex} />
+          </Suspense>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-text-tertiary text-13">
             Sin pólizas que mostrar con los filtros actuales.

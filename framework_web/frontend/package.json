@@ -21,6 +21,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "ag-grid-community": "^35.3.0",
     "ag-grid-react": "^35.3.0",
+    "cesium": "^1.141.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "echarts": "^5.5.0",
@@ -30,7 +31,8 @@
     "maplibre-gl": "^5.24.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "vite-plugin-cesium": "^1.2.23"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.1",
@@ -44,7 +46,8 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "protobufjs"
     ]
   }
 }
