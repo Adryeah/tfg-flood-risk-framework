@@ -179,18 +179,24 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     });
     viewerRef.current = viewer;
 
-    // Estetica: cielo + niebla + atmósfera. Los flags de skyAtmosphere
-    // y skyBox vienen activos por defecto en Cesium; aquí los afinamos
-    // para que el horizonte se vea cinematográfico.
+    // Estética: forzamos DAYLIGHT permanente. Sin esto Cesium oscurece
+    // la imagery según la hora UTC del reloj → la escena salía en
+    // modo nocturno en cualquier zona donde fuera de noche localmente.
+    // Las empresas de cat-model (One Concern, JBA) hacen exactamente
+    // esto: bloquean la iluminación dinámica para que el demo se vea
+    // SIEMPRE bien.
+    viewer.scene.globe.enableLighting = false;
+    viewer.scene.globe.dynamicAtmosphereLighting = false;
+    viewer.scene.globe.showGroundAtmosphere = false;
     viewer.scene.skyAtmosphere.show = true;
-    viewer.scene.skyAtmosphere.hueShift = -0.02;
-    viewer.scene.skyAtmosphere.saturationShift = -0.1;
-    viewer.scene.skyAtmosphere.brightnessShift = -0.05;
     viewer.scene.fog.enabled = true;
-    viewer.scene.fog.density = 0.0001;
-    viewer.scene.globe.enableLighting = true;
-    viewer.scene.globe.dynamicAtmosphereLighting = true;
-    viewer.scene.globe.showGroundAtmosphere = true;
+    viewer.scene.fog.density = 0.00005;
+    // Iluminación direccional fija: sol al SE a 45° (luz mediterránea
+    // de media mañana). Da sombras suaves en los edificios sin que
+    // dependa del reloj.
+    viewer.scene.light = new Cesium.DirectionalLight({
+      direction: new Cesium.Cartesian3(-0.4, -0.7, -0.6),
+    });
 
     // Quitar el logo de Cesium del DOM (se mantiene en el credit
     // container, donde toca para cumplir la atribución).
@@ -416,30 +422,40 @@ function TourMapInner({ Cesium, policies, activeIndex }) {
     };
     liftAnimRef.current = requestAnimationFrame(tick);
 
-    // ── Camera flyTo (street-level cinematic) ───────────────────
-    // Cámara a escala humana: 45 m de altura sobre el suelo (≈ una
-    // grúa o un dron bajo), 55 m al sur de la póliza, mirando al
-    // norte con pitch -12° (casi horizontal — lee como "drone que
-    // se acerca al edificio" en vez de "vista cenital"). Heading
-    // rotado ligeramente por póliza para variedad cinematográfica.
+    // ── Camera flyTo (altura adaptativa por planta) ─────────────
+    //
+    // El truco que da el efecto "I'm Tony Stark mirando la planta
+    // exacta" es que la cámara SE ELEVA con la planta de la póliza:
+    //
+    //   · Planta baja / parking  → cámara a ~14 m, pitch -22° (drone)
+    //   · Piso intermedio (15 m) → cámara a ~22 m, pitch -16° (medio)
+    //   · Ático (30 m)            → cámara a ~38 m, pitch -10° (alta)
+    //
+    // La distancia horizontal aumenta también con la altura para que
+    // el edificio no se salga del frame en ángulos picados. Heading
+    // se rota un pelín por póliza para variedad cinematográfica.
+    const policyAlt = policyAltitude(p);
+    const camAlt = Math.max(policyAlt + 10, 14);
+    const camPitch = -Math.max(8, 22 - policyAlt * 0.5);
+    const camDist = 35 + policyAlt * 1.4;
+
     const headingDeg = -8 + ((activeIndex * 17) % 30) - 15;
     const hRad = Cesium.Math.toRadians(headingDeg);
-    // Offset al opuesto del heading: queremos estar DETRÁS de la
-    // cámara para que mire AL frente del edificio. ~55 m totales.
-    const offsetMeters = 55;
-    const dLat = -offsetMeters / 111111 * Math.cos(hRad);
-    const dLon = -offsetMeters / 111111 * Math.sin(hRad)
+    // Offset hacia atrás del heading para que la cámara MIRE al
+    // edificio desde detrás (heading apunta hacia el edificio).
+    const dLat = -camDist / 111111 * Math.cos(hRad);
+    const dLon = -camDist / 111111 * Math.sin(hRad)
       / Math.cos(Cesium.Math.toRadians(p.lat));
     const destination = Cesium.Cartesian3.fromDegrees(
       p.lon + dLon,
       p.lat + dLat,
-      45 // metros sobre el ellipsoide; Valencia ≈ 10 m sobre nivel del mar
+      camAlt
     );
     viewer.camera.flyTo({
       destination,
       orientation: {
         heading: hRad,
-        pitch: Cesium.Math.toRadians(-12),
+        pitch: Cesium.Math.toRadians(camPitch),
         roll: 0,
       },
       duration: 1.5,
