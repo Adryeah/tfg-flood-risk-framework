@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Map, useMap } from './Map.tsx';
+import { formatMoney, formatPercent } from '@/lib/format.js';
 
 const TERRAIN_TILES =
   'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
@@ -49,16 +50,183 @@ export function TourMap({ policies, activeIndex }) {
     <div className="absolute inset-0">
       <Map
         center={initialCenter}
-        zoom={16.5}
+        zoom={13.5}
         minZoom={9}
         maxZoom={19}
-        pitch={55}
-        bearing={-25}
+        pitch={50}
+        bearing={-20}
         maxPitch={75}
         className="h-full w-full"
       >
         <TourLayers policies={policies} activeIndex={activeIndex} />
       </Map>
+
+      {/* Panel cinematográfico flotante sobre el mapa con los datos de
+       *  la póliza activa. Replica el contenido del strip del dock
+       *  pero con tipografía editorial y posicionado bottom-left al
+       *  estilo "subtítulo de película". El strip del dock se sigue
+       *  viendo en mobile (donde el panel se oculta para no tapar
+       *  el mapa pequeño). */}
+      <CinematicPanel policy={policies[activeIndex]} index={activeIndex} total={policies.length} />
+
+      {/* Mini-mapa contextual "you are here" — SVG (no MapLibre extra
+       *  para no duplicar overhead). Da la sensación de tour orquestado
+       *  dentro de la cartera, no de salto aleatorio. Esquina superior
+       *  derecha, oculto en mobile. */}
+      <MiniMap policies={policies} activeIndex={activeIndex} />
+    </div>
+  );
+}
+
+// ─── Mini-mapa SVG · all policies + active highlighted ───────────
+function MiniMap({ policies, activeIndex }) {
+  if (!policies || policies.length === 0) return null;
+  const W = 168;
+  const H = 168;
+  const PAD = 14;
+
+  // Bbox de las pólizas
+  let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
+  for (const p of policies) {
+    if (p.lon < minLon) minLon = p.lon;
+    if (p.lat < minLat) minLat = p.lat;
+    if (p.lon > maxLon) maxLon = p.lon;
+    if (p.lat > maxLat) maxLat = p.lat;
+  }
+  // Si todas las pólizas están en el mismo punto evita división /0
+  const lonSpan = Math.max(maxLon - minLon, 0.001);
+  const latSpan = Math.max(maxLat - minLat, 0.001);
+  const project = (lon, lat) => {
+    const x = PAD + ((lon - minLon) / lonSpan) * (W - 2 * PAD);
+    const y = PAD + ((maxLat - lat) / latSpan) * (H - 2 * PAD);
+    return [x, y];
+  };
+
+  const active = policies[activeIndex];
+  const [ax, ay] = active ? project(active.lon, active.lat) : [W / 2, H / 2];
+
+  return (
+    <div
+      className="hidden md:block absolute top-3 right-3 z-[600] rounded-md backdrop-blur-md overflow-hidden"
+      style={{
+        background: 'rgba(15,23,42,0.78)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
+      }}
+    >
+      <div className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
+        Tour map · {activeIndex + 1}/{policies.length}
+      </div>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
+        {/* Background subtle grid lines */}
+        <line x1={W / 2} y1="0" x2={W / 2} y2={H} stroke="rgba(255,255,255,0.04)" />
+        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="rgba(255,255,255,0.04)" />
+
+        {/* Inactive dots */}
+        {policies.map((p, i) => {
+          if (i === activeIndex) return null;
+          const [x, y] = project(p.lon, p.lat);
+          return (
+            <circle
+              key={i}
+              cx={x}
+              cy={y}
+              r={2.5}
+              fill={p._color || '#94A3B8'}
+              fillOpacity="0.85"
+            />
+          );
+        })}
+
+        {/* Active dot with pulsing ring */}
+        {active && (
+          <g>
+            <circle cx={ax} cy={ay} r="11" fill="none" stroke={active._color || '#FFFFFF'} strokeWidth="1.5" opacity="0.6">
+              <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={ax} cy={ay} r="5" fill={active._color || '#FFFFFF'} stroke="#FFFFFF" strokeWidth="2" />
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+}
+
+// ─── Panel flotante con datos de la póliza activa ────────────────
+function CinematicPanel({ policy, index, total }) {
+  if (!policy) return null;
+  const PRODUCT_LABEL = {
+    particulares: 'Particulares',
+    pymes: 'Pymes',
+    autos: 'Autos',
+  };
+  const RISK_LABEL = {
+    low: 'Bajo',
+    moderate: 'Moderado',
+    high: 'Alto',
+    very_high: 'Muy alto',
+  };
+  const RISK_TINT = {
+    low: '#FBBF24',
+    moderate: '#F87171',
+    high: '#DC2626',
+    very_high: '#7F1D1D',
+  };
+  const tint = RISK_TINT[policy.risk_category] || '#94A3B8';
+  const planta =
+    policy.product === 'autos'
+      ? 'Parking · planta 0'
+      : policy.ground_floor
+        ? 'Planta baja'
+        : `Planta ${policy.floor_count || 1}.ª de ${(policy.floor_count || 1) + 1}`;
+  return (
+    <div
+      key={index} /* re-mount triggers fade-in animation cleanly */
+      className="hidden md:block absolute bottom-5 left-5 z-[600] w-[340px] rounded-md p-4 pt-3.5 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300"
+      style={{
+        background: 'rgba(15,23,42,0.78)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
+        color: '#F8FAFC',
+      }}
+    >
+      {/* Header: nº de póliza dentro del tour + categoría tinte */}
+      <div className="flex items-center justify-between mb-2 text-10 font-mono uppercase tracking-[0.16em]" style={{ color: 'rgba(248,250,252,0.55)' }}>
+        <span>Póliza {index + 1} de {total}</span>
+        <span style={{ color: tint }}>Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}</span>
+      </div>
+
+      {/* Policy ID grande en mono */}
+      <div className="font-mono text-14 mb-0.5 tracking-tight" style={{ color: '#F8FAFC' }}>
+        {policy.id}
+      </div>
+      {/* Producto + subtype + planta en serif italic, "subtítulo de cine" */}
+      <div className="font-serif italic text-13 mb-3 leading-snug" style={{ color: 'rgba(248,250,252,0.78)' }}>
+        {PRODUCT_LABEL[policy.product] || policy.product}
+        {policy.subtype ? ` · ${policy.subtype}` : ''} · {planta}
+      </div>
+
+      {/* Grid de 4 metrics */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <PanelMetric label="P(flood)" value={formatPercent(policy.risk_probability, 1)} tint={tint} />
+        <PanelMetric label="Asegurado" value={formatMoney(policy.insured_value)} />
+        <PanelMetric label="Pérdida est." value={formatMoney(policy.estimated_loss_dana)} tint={tint} />
+        <PanelMetric label="Prima anual" value={formatMoney(policy.annual_premium)} />
+      </div>
+    </div>
+  );
+}
+
+function PanelMetric({ label, value, tint }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-9 font-mono uppercase tracking-wider mb-0.5" style={{ color: 'rgba(248,250,252,0.5)' }}>
+        {label}
+      </div>
+      <div className="font-mono text-13 truncate" style={{ color: tint || '#F8FAFC', fontWeight: 600 }}>
+        {value}
+      </div>
     </div>
   );
 }

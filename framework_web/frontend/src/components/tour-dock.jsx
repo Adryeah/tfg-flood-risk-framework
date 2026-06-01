@@ -43,9 +43,13 @@ export function TourDock({
 
   return (
     <div className="shrink-0 bg-bg-surface border-t border-border-default">
-      {/* ─── Strip superior · datos de la póliza activa ─────────── */}
+      {/* ─── Strip superior · datos de la póliza activa ───────────
+       *  Visible SOLO en mobile/tablet. En md+ se duplicaría con el
+       *  panel cinematográfico flotante sobre el mapa (que es más
+       *  bonito). En sm- el panel se oculta para no tapar el poco
+       *  espacio del mapa, así que aquí mostramos los mismos datos. */}
       {active && (
-        <div className="px-3 sm:px-4 py-2.5 border-b border-border-default grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-5 gap-y-2 text-12">
+        <div className="md:hidden px-3 sm:px-4 py-2.5 border-b border-border-default grid grid-cols-2 sm:grid-cols-3 gap-x-5 gap-y-2 text-12">
           <DockMetric label="Póliza" value={active.id} mono />
           <DockMetric
             label="Producto"

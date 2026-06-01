@@ -152,15 +152,34 @@ export function PolicyTour3D() {
             ))}
           </SelectContent>
         </Select>
-        <button
-          onClick={() => setShowAll((s) => !s)}
-          className="text-10 font-mono uppercase tracking-wider px-2 py-1 rounded border border-border-default hover:bg-bg-hover transition-colors whitespace-nowrap"
-          title="Cambia entre las 20 pólizas de mayor riesgo o las primeras 100"
+        {/* Segmented control de tamaño del tour. Toggle entre Top-20
+         *  (default, demo concisa) y Top-100 (tour completo). El
+         *  número se ordena por riesgo descendente. */}
+        <div
+          className="inline-flex items-center border border-border-default rounded overflow-hidden h-8 text-10 font-mono uppercase tracking-wider shrink-0"
+          role="group"
+          aria-label="Tamaño del tour"
         >
-          {showAll ? 'Top 100' : 'Top 20'}
-        </button>
+          {[
+            { v: false, label: 'Top 20' },
+            { v: true, label: 'Top 100' },
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => setShowAll(opt.v)}
+              className={
+                'px-2 h-8 transition-colors ' +
+                (showAll === opt.v
+                  ? 'bg-corporate-navy text-white'
+                  : 'text-text-secondary hover:bg-bg-hover')
+              }
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <span className="text-11 font-mono text-text-tertiary tabular-nums hidden sm:inline">
-          {tourPolicies.length} de {portfolio.clients?.length || 0}
+          de {portfolio.clients?.length || 0} pólizas
         </span>
         <div className="sm:ml-auto flex items-center gap-1.5">
           {['particulares', 'pymes', 'autos'].map((p) => (
