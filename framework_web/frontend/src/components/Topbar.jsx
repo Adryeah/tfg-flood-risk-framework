@@ -12,6 +12,7 @@ const SECTION_TITLES = {
   '/portfolio': 'Portfolio Explorer',
   '/policy-map': 'Policy Map',
   '/exposure': 'Exposure Dashboard',
+  '/tour': '3D Policy Tour',
   '/validation': 'Model & Validation',
   '/transferability': 'Transferability',
   '/leakage': 'Leakage Audit',

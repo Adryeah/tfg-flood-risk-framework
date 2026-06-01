@@ -35,6 +35,7 @@ const EN_ES = {
   Transferability: 'Transferibilidad',
   'Leakage Audit': 'Auditoría de Fugas',
   'Data & Downloads': 'Datos y Descargas',
+  '3D Policy Tour': 'Tour 3D de Pólizas',
   // Sidebar — status
   'Checking backend…': 'Comprobando backend…',
   'Backend online · model loaded': 'Backend en línea · modelo cargado',
