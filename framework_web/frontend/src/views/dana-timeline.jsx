@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
+import { DanaSwipeCompare } from '../components/dana-swipe-compare.jsx';
 
 // ─── Hero stats ──────────────────────────────────────────────────
 // Cuatro números que cuentan la escala del evento. Ordenados de
@@ -170,68 +171,28 @@ export function DanaTimeline() {
        *  antes de la DANA (izquierda) y lo que confirmó EMSR773
        *  después (derecha). Ambos mapas usan el mismo bbox y zoom
        *  inicial para que el lector pueda comparar píxel a píxel. */}
+      {/* ─── COMPARACIÓN SWIPE · PREDICCIÓN ↔ GROUND TRUTH ───────────
+       *  Patrón NYTimes / Maxar / Planet Labs: un solo mapa
+       *  full-width con un divisor vertical arrastrable. A la izquierda
+       *  del divisor se revela la silueta EMSR773 (ground truth) sobre
+       *  el heatmap base; a la derecha solo queda el heatmap de la
+       *  predicción. El heatmap rojo es la referencia constante; la
+       *  capa cian del ground truth aparece/desaparece según el
+       *  arrastre. Más visual y dinámico que el side-by-side anterior
+       *  porque obliga al ojo a comparar píxel a píxel sin saltar entre
+       *  dos lienzos. */}
       <section>
         <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-3">
-          La comparación que hace el caso
+          La comparación que hace el caso · arrastra para ver
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-          <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-border-default flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <h3 className="font-serif text-15 text-text-primary tracking-tight">
-                  Predicción del modelo
-                </h3>
-                <span className="text-11 font-mono text-text-tertiary uppercase tracking-wider hidden sm:inline">
-                  pre-DANA
-                </span>
-              </div>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-brand-50 text-brand-700 shrink-0">
-                Random Forest v2
-              </span>
-            </div>
-            <RiskZoneMap
-              zone="valencia"
-              height="clamp(320px, 50vh, 460px)"
-              showOverlays={false}
-              showLegend
-              showZones={false}
-              includeTail={false}
-              enablePixelInspection={false}
-            />
-          </div>
-          <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-border-default flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <h3 className="font-serif text-15 text-text-primary tracking-tight">
-                  Lo que pasó realmente
-                </h3>
-                <span className="text-11 font-mono text-text-tertiary uppercase tracking-wider hidden sm:inline">
-                  ground truth
-                </span>
-              </div>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-high-bg text-risk-high shrink-0">
-                EMSR773
-              </span>
-            </div>
-            <RiskZoneMap
-              zone="valencia"
-              height="clamp(320px, 50vh, 460px)"
-              showOverlays={false}
-              showLegend={false}
-              showZones={false}
-              includeTail={false}
-              enablePixelInspection={false}
-              showGroundTruth
-            />
-          </div>
-        </div>
+        <DanaSwipeCompare zone="valencia" height={460} />
         <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
-          Ambos mapas cubren exactamente el mismo bbox (l'Horta Sud).
-          La superposición es geográficamente honesta: si las manchas
-          de la izquierda no caen sobre las áreas confirmadas a la
-          derecha, el modelo está fallando. Hazlo a mano: las dos
-          siluetas coinciden en los valles de Catarroja, Paiporta y
-          Albal.
+          Una sola superficie geográfica (l'Horta Sud), dos lecturas:
+          el heatmap rojo es lo que el modelo predijo antes de la DANA;
+          la capa cian es lo que Copernicus EMS confirmó dos días
+          después. Arrastra el divisor para revelar el ground truth
+          sobre el mapa de predicción — las dos siluetas se superponen
+          en los valles de Catarroja, Paiporta y Albal.
         </p>
       </section>
 

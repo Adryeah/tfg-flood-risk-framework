@@ -190,6 +190,34 @@
     background: transparent;
   }
 
+  /* ─── DANA Swipe Compare ─────────────────────────────────────────
+   * El comparador swipe estilo NYT/Maxar en /dana usa dos RiskZoneMap
+   * apiladas con clip-path. Los mapas son visuales — el usuario solo
+   * arrastra el divisor. Esto exige:
+   *   · pointer-events: none en las capas de mapa para que ni pan ni
+   *     zoom ni click-to-inspect ocurra.
+   *   · hide forzado de los controles MapLibre (zoom buttons, attrib).
+   *     El user no necesita zoom en esta vista, sería ruido visual.
+   *   · pointer-events: auto en el handle del divisor.
+   * ───────────────────────────────────────────────────────────────── */
+  .dana-swipe-container .swipe-layer {
+    pointer-events: none;
+  }
+  .dana-swipe-container .swipe-layer .maplibregl-ctrl,
+  .dana-swipe-container .swipe-layer .maplibregl-ctrl-group,
+  .dana-swipe-container .swipe-layer .maplibregl-ctrl-attrib {
+    display: none !important;
+  }
+  .dana-swipe-container .swipe-divider-handle {
+    pointer-events: auto;
+  }
+  /* Halo sutil en torno al handle al hover del contenedor — afford
+   * visual extra de que es interactivo. */
+  .dana-swipe-container:hover .swipe-divider-handle {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.18),
+      0 4px 6px -1px rgba(15, 27, 53, 0.20);
+  }
+
   /* ─── KPI hierarchy · TIER system ────────────────────────────────
    * Component side (exposure-kpi.jsx) emite `data-tier="1|2|3"` y la
    * presentación visual la maneja CSS. Esto permite que un cambio de
