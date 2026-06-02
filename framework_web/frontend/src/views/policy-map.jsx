@@ -42,7 +42,7 @@ import { formatMoney } from '@/lib/format.js';
 
 // ─── Product palette (consistent with Portfolio Explorer / Exposure) ──
 const PRODUCT_COLORS = {
-  particulares: '#2563EB', // brand-500 blue
+  particulares: '#3B82F6', // brand-500 blue
   pymes: '#D97706', // amber
   autos: '#7C3AED', // violet
 };
@@ -468,7 +468,7 @@ export function PolicyMap() {
                 clusterMaxZoom={13}
                 clusterColors={['#3B82F6', '#1D4ED8', '#1E3A8A']}
                 clusterThresholds={[40, 200]}
-                pointColor="#2563EB"
+                pointColor="#3B82F6"
                 onPointClick={(feature) => {
                   setSelectedClientId(feature.properties.id);
                 }}
@@ -687,7 +687,7 @@ function ClickToSelectPolicy({ clients, onSelect }) {
 // above-the-dock viewport.
 // ────────────────────────────────────────────────────────────
 const PRODUCT_BADGE_COLOR = {
-  particulares: '#2563EB',
+  particulares: '#3B82F6',
   pymes: '#D97706',
   autos: '#7C3AED',
 };

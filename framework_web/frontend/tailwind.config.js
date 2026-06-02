@@ -136,7 +136,7 @@ export default {
           'system-ui',
           'sans-serif',
         ],
-        mono: ['JetBrains Mono', 'Geist Mono', 'Menlo', 'monospace'],
+        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
         // IBM Plex Serif for editorial registers (methodology titles,
         // pull-quotes, hero typographic anchors). Replaces Newsreader
         // for a more institutional/enterprise feel per Zurich spec.

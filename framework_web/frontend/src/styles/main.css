@@ -111,7 +111,7 @@
      * inline by Sidebar.jsx). Falls back to brand-500 for any element
      * using [data-route].is-active outside the sectioned sidebar. */
     border-left-color: transparent !important;
-    box-shadow: inset 3px 0 0 0 var(--section-accent, #2563eb);
+    box-shadow: inset 3px 0 0 0 var(--section-accent, #3b82f6);
     font-weight: 500;
   }
   [data-route].is-active svg {
@@ -269,8 +269,10 @@
     }
   }
 
-  /* Change indicator pill — verde para positive, rojo para negative.
-   * El componente decide la semántica via prop isPositive. */
+  /* Change indicator pill — tres direcciones lógicas, no dos.
+   * El componente decide positive/negative via prop isPositive;
+   * value === 0 fuerza la dirección "neutral" sin importar
+   * isPositive (un delta de cero no es ni bueno ni malo). */
   .kpi-change[data-direction="positive"] {
     color: var(--change-positive);
     background: var(--change-positive-bg);
@@ -278,6 +280,10 @@
   .kpi-change[data-direction="negative"] {
     color: var(--change-negative);
     background: var(--change-negative-bg);
+  }
+  .kpi-change[data-direction="neutral"] {
+    color: var(--change-neutral);
+    background: rgba(156, 163, 175, 0.10);
   }
 
   /* AG Grid quartz theme — synced to Zurich design tokens so the

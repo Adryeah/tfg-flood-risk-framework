@@ -10,27 +10,32 @@
  *     xAxis: { type: 'value', ...chartAxis.value },
  *     yAxis: { type: 'category', data: names, ...chartAxis.category },
  *     tooltip: chartTooltip,
- *     series: [{ ...chartBar('#2563EB'), data }],
+ *     series: [{ ...chartBar('#3B82F6'), data }],
  *   });
  */
 
+// Paleta sincronizada con Flood Risk × Zurich Design System.
+// primary = accent-info (azul brillante para data series — el navy
+// del brand queda reservado para chrome estructural). amber/green
+// alineados con risk-medium / status-live. textPrimary/Secondary
+// pasan a neutral-900/600. rgbas pasan al tinte navy (15,27,53).
 export const CHART_COLORS = {
-  primary: '#2563EB',      // brand-500
-  primaryDeep: '#1E3A8A',  // emphasis
-  secondary: '#0E9F8E',    // teal accent
-  amber: '#D97706',
-  red: '#DC2626',
-  green: '#15803D',
-  axis: '#98A2B3',
-  axisLine: 'rgba(31,41,55,0.10)',
-  splitLine: 'rgba(31,41,55,0.06)',
-  tooltipBorder: 'rgba(31,41,55,0.10)',
-  tooltipBg: '#FAFBFC',
-  textPrimary: '#1F2937',
-  textSecondary: '#667085',
+  primary: '#3B82F6',      // accent-info — data series 1
+  primaryDeep: '#0F1B35',  // Zurich navy — énfasis / encabezados
+  secondary: '#10B981',    // emerald — data series 2 / OK
+  amber: '#F39C12',        // spec amber — warning
+  red: '#E74C3C',          // spec flood red — risk high
+  green: '#10B981',        // spec status-live green
+  axis: '#9CA3AF',         // neutral-400
+  axisLine: 'rgba(15,27,53,0.10)',
+  splitLine: 'rgba(15,27,53,0.06)',
+  tooltipBorder: 'rgba(15,27,53,0.10)',
+  tooltipBg: '#FFFFFF',
+  textPrimary: '#111827',  // neutral-900
+  textSecondary: '#4B5563', // neutral-600
   zone: {
-    valencia: '#1E3A8A',
-    algemesi: '#D97706',
+    valencia: '#0F1B35',   // Zurich navy
+    algemesi: '#F39C12',   // spec amber
   },
 };
 
@@ -48,7 +53,7 @@ export const chartAxis = {
     axisTick: { show: false },
     axisLabel: {
       color: CHART_COLORS.axis,
-      fontFamily: 'Geist, Inter, system-ui',
+      fontFamily: 'Inter, system-ui, sans-serif',
       fontSize: 11,
     },
   },
@@ -85,7 +90,7 @@ export const chartTooltip = {
     fontSize: 12,
     color: CHART_COLORS.textPrimary,
   },
-  extraCssText: 'box-shadow: 0 1px 3px rgba(15,23,42,0.08); border-radius: 4px;',
+  extraCssText: 'box-shadow: 0 4px 6px -1px rgba(15,27,53,0.08); border-radius: 6px;',
 };
 
 /**
@@ -144,8 +149,8 @@ export function chartLine(color = CHART_COLORS.primary) {
         x2: 0,
         y2: 1,
         colorStops: [
-          { offset: 0, color: 'rgba(37,99,235,0.18)' },
-          { offset: 1, color: 'rgba(37,99,235,0.02)' },
+          { offset: 0, color: 'rgba(59,130,246,0.18)' },
+          { offset: 1, color: 'rgba(59,130,246,0.02)' },
         ],
       },
     },

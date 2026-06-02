@@ -112,14 +112,30 @@ export function ExposureKpi({
         )}
       </div>
 
-      {/* Change indicator opcional · ▲ verde / ▼ rojo */}
+      {/* Change indicator opcional · ▲ verde / ▼ rojo / ◦ neutral
+       *
+       *  Tres direcciones lógicas, no dos:
+       *   · value > 0 + isPositive=true  → ▲ verde (delta favorable)
+       *   · value > 0 + isPositive=false → ▼ rojo  (delta desfavorable)
+       *   · value === 0                  → ◦ neutral grey ("flat")
+       *  Sin esto, un delta de cero rendía "▲ 0" o "▼ 0" — semánticamente
+       *  incorrecto. El caller decide la semántica positivo/negativo
+       *  (un EAL bajando es POSITIVO aunque value sea negativo). */}
       {change && typeof change.value === 'number' && (
         <div className="mt-1.5 inline-flex items-center gap-1">
           <span
             className="kpi-change inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-11 font-mono font-semibold tabular-nums"
-            data-direction={change.isPositive ? 'positive' : 'negative'}
+            data-direction={
+              change.value === 0
+                ? 'neutral'
+                : change.isPositive
+                  ? 'positive'
+                  : 'negative'
+            }
           >
-            <span aria-hidden="true">{change.isPositive ? '▲' : '▼'}</span>
+            <span aria-hidden="true">
+              {change.value === 0 ? '◦' : change.isPositive ? '▲' : '▼'}
+            </span>
             <span>
               {Math.abs(change.value).toLocaleString(undefined, {
                 maximumFractionDigits: 1,

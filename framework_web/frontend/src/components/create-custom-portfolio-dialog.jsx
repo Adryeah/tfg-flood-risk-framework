@@ -191,7 +191,7 @@ export function CreateCustomPortfolioDialog({ open, onOpenChange, onCreated }) {
             <div className="space-y-2">
               <MixRow
                 label="Particulares"
-                color="#2563EB"
+                color="#3B82F6"
                 value={mix.particulares}
                 onChange={(v) => setProduct('particulares', v)}
               />

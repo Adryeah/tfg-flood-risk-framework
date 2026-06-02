@@ -87,7 +87,7 @@ const RISK_BG = {
 };
 
 const PRODUCT_COLORS = {
-  particulares: '#2563EB',
+  particulares: '#3B82F6',
   pymes: '#D97706',
   autos: '#7C3AED',
 };
@@ -794,7 +794,7 @@ function RiskDonut({ distribution }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },

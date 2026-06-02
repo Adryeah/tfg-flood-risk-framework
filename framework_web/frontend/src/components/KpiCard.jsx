@@ -9,7 +9,7 @@ export function KpiCard({
   trend,
   subInfo,
   sparkline,
-  sparkColor = '#2563EB',
+  sparkColor = '#3B82F6',
   dotColor,
   info,
   severity,
@@ -80,8 +80,13 @@ export function KpiCard({
     });
   }, [sparkline, sparkColor]);
 
-  const severityColors = { info: '#2563EB', low: '#16A34A', medium: '#D97706', high: '#DC2626', critical: '#991B1B' };
-  const trendColors = { up: 'text-[#16A34A]', down: 'text-[#D97706]', neutral: 'text-text-tertiary' };
+  // Paleta alineada con Flood Risk × Zurich Design System — accent-info
+  // para informativo, paleta de risk semantics (risk-low/medium/high/
+  // critical) para los niveles de severidad. Antes hardcodeaba los
+  // greens/ambers/blues del sistema anterior y desentonaba con
+  // ExposureKpi.VARIANT_DOT.
+  const severityColors = { info: '#3B82F6', low: '#10B981', medium: '#F39C12', high: '#E74C3C', critical: '#DC2626' };
+  const trendColors = { up: 'text-[#10B981]', down: 'text-[#F39C12]', neutral: 'text-text-tertiary' };
   const trendArrows = { up: '▲', down: '▼', neutral: '·' };
 
   return (
@@ -89,7 +94,7 @@ export function KpiCard({
       className="bg-bg-surface border border-border-default rounded shadow-sm p-3.5 relative overflow-hidden transition-colors hover:border-border-strong animate-in fade-in slide-in-from-bottom-2 duration-500"
       style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
     >
-      {severity && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: severityColors[severity] || '#2563EB' }} />}
+      {severity && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: severityColors[severity] || '#3B82F6' }} />}
 
       <div className="flex items-start justify-between gap-2">
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">{label}</span>

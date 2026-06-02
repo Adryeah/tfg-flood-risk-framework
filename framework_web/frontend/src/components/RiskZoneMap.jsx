@@ -696,7 +696,7 @@ function PixelInspectionContent({ inspection }) {
         <div className="mt-2 text-12 text-text-secondary inline-flex items-center gap-2">
           <span
             className="inline-block w-2 h-2 rounded-full"
-            style={{ background: '#2563EB', animation: 'pulse 1.4s ease-in-out infinite' }}
+            style={{ background: '#3B82F6', animation: 'pulse 1.4s ease-in-out infinite' }}
           />
           Inspecting model…
         </div>

@@ -215,7 +215,7 @@ export function Overview() {
           trend="up"
           subInfo={`5-fold spatial CV · ±${(m.auc_std ?? 0).toFixed(3)}`}
           sparkline={SPARK.auc}
-          sparkColor="#2563EB"
+          sparkColor="#3B82F6"
           severity="info"
           objective="Maximizar — capacidad de ranking del modelo."
           animationDelay={0}
@@ -246,7 +246,7 @@ export function Overview() {
           unit="M"
           subInfo="10m × 10m · 750 km²"
           sparkline={SPARK.pixels}
-          sparkColor="#2563EB"
+          sparkColor="#3B82F6"
           severity="info"
           objective="Contexto — escala del grid analizado."
           animationDelay={140}

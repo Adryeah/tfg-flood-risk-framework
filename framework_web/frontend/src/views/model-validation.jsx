@@ -540,7 +540,7 @@ function ROCChart({ auc, stdAuc }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -550,7 +550,7 @@ function ROCChart({ auc, stdAuc }) {
         textStyle: {
           fontSize: 11,
           color: '#52525B',
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
         },
         type: 'scroll',
         icon: 'roundRect',
@@ -696,7 +696,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
       },
       {
         value: [1, 0, matrix.tp],
-        itemStyle: { color: '#2563EB' },
+        itemStyle: { color: '#3B82F6' },
         cellType: 'TP',
         pct: pct(matrix.tp),
       },
@@ -722,7 +722,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -871,7 +871,7 @@ function FeatureImportanceChart({ features }) {
       `;
       const body = doc
         ? `
-        <div style="max-width:300px;font-family:'Geist',system-ui,sans-serif;font-size:12px;color:#52525B;line-height:1.5;">
+        <div style="max-width:300px;font-family:'Inter',system-ui,sans-serif;font-size:12px;color:#4B5563;line-height:1.5;">
           ${safe(doc.description)}
         </div>
         <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(15,23,42,0.06);font-family:'JetBrains Mono',monospace;font-size:10px;color:#98A2B3;text-transform:uppercase;letter-spacing:0.06em;">
@@ -894,7 +894,7 @@ function FeatureImportanceChart({ features }) {
         padding: [8, 10],
         extraCssText: 'box-shadow: 0 2px 4px rgba(15,23,42,0.08);',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -1087,7 +1087,7 @@ function BufferMetricsChart({ bufferMetrics }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -1098,7 +1098,7 @@ function BufferMetricsChart({ bufferMetrics }) {
         textStyle: {
           fontSize: 11,
           color: '#52525B',
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
         },
         icon: 'roundRect',
       },
@@ -1128,13 +1128,13 @@ function BufferMetricsChart({ bufferMetrics }) {
           name: 'F1',
           type: 'bar',
           data: bufferMetrics.map((b) => b.f1),
-          itemStyle: { color: '#2563EB', borderRadius: [3, 3, 0, 0] },
+          itemStyle: { color: '#3B82F6', borderRadius: [3, 3, 0, 0] },
         },
         {
           name: 'Precision',
           type: 'bar',
           data: bufferMetrics.map((b) => b.precision),
-          itemStyle: { color: '#0E9F8E', borderRadius: [3, 3, 0, 0] },
+          itemStyle: { color: '#10B981', borderRadius: [3, 3, 0, 0] },
         },
         {
           name: 'Recall',

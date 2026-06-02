@@ -167,7 +167,7 @@ export function Comparison() {
         itemWidth: 10,
         itemHeight: 10,
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 11,
           color: '#52525B',
         },
@@ -182,7 +182,7 @@ export function Comparison() {
         padding: [8, 10],
         extraCssText: 'box-shadow: 0 2px 4px rgba(15,23,42,0.08);',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },

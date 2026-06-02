@@ -84,7 +84,7 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
   --font-serif: 'IBM Plex Serif', Georgia, Cambria, serif;
-  --font-mono: 'JetBrains Mono', 'Geist Mono', Menlo, monospace;
+  --font-mono: 'JetBrains Mono', Menlo, monospace;
 
   /* ── Spacing (spec section 3) ────────────────────────────────────
    * Tailwind already has a 4px-unit scale; we expose a few common

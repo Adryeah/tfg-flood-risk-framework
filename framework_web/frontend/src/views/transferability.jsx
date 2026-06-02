@@ -281,7 +281,7 @@ function FeatureDriftChart({ features, highlightFeature = null }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -391,7 +391,7 @@ function ImportanceComparisonChart({ data }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -402,7 +402,7 @@ function ImportanceComparisonChart({ data }) {
         textStyle: {
           fontSize: 11,
           color: '#52525B',
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
         },
         icon: 'roundRect',
       },

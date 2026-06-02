@@ -414,7 +414,7 @@ function RiskDonut({ distribution }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -425,7 +425,7 @@ function RiskDonut({ distribution }) {
         itemWidth: 8,
         itemHeight: 8,
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 11,
           color: '#52525B',
         },
@@ -492,10 +492,10 @@ function ExposureByTypeChart({ clients }) {
     auto: 'Autos',
   };
   const PRODUCT_COLOR = {
-    particulares: '#2563EB',
+    particulares: '#3B82F6',
     pymes: '#D97706',
     autos: '#7C3AED',
-    residential: '#2563EB',
+    residential: '#3B82F6',
     commercial: '#D97706',
     industrial: '#475467',
     auto: '#7C3AED',
@@ -514,7 +514,7 @@ function ExposureByTypeChart({ clients }) {
         axisPointer: { type: 'shadow' },
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
-        textStyle: { fontFamily: 'Geist, Inter, system-ui', fontSize: 12, color: '#1F2937' },
+        textStyle: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: '#1F2937' },
         valueFormatter: (v) => `€${(v / 1e6).toFixed(1)}M`,
       },
       xAxis: {
@@ -536,7 +536,7 @@ function ExposureByTypeChart({ clients }) {
         axisTick: { show: false },
         axisLabel: {
           color: '#475467',
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
         },
       },
@@ -610,7 +610,7 @@ function GeographicMap({ clients }) {
           clusterMaxZoom={13}
           clusterColors={['#3B82F6', '#1D4ED8', '#1E3A8A']}
           clusterThresholds={[20, 100]}
-          pointColor="#2563EB"
+          pointColor="#3B82F6"
         />
       </Map>
     </div>
@@ -694,7 +694,7 @@ function LossExceedanceCurve({ clients }) {
         backgroundColor: '#FAFBFC',
         borderColor: 'rgba(15,23,42,0.12)',
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -835,7 +835,7 @@ function LossBreakdownChart({ clients }) {
         borderWidth: 1,
         padding: [8, 10],
         textStyle: {
-          fontFamily: 'Geist, Inter, system-ui',
+          fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
           color: '#1F2937',
         },
@@ -849,7 +849,7 @@ function LossBreakdownChart({ clients }) {
         itemWidth: 8,
         itemHeight: 8,
         icon: 'roundRect',
-        textStyle: { fontFamily: 'Geist, Inter, system-ui', fontSize: 11, color: '#52525B' },
+        textStyle: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11, color: '#52525B' },
         data: ['Low', 'Moderate', 'High', 'Very high'],
       },
       xAxis: {
@@ -869,7 +869,7 @@ function LossBreakdownChart({ clients }) {
         data: ['DANA loss'],
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#475467', fontFamily: 'Geist, Inter, system-ui', fontSize: 11 },
+        axisLabel: { color: '#475467', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 11 },
       },
       series: [
         {
