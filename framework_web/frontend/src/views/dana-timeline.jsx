@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { DanaSwipeCompare } from '../components/dana-swipe-compare.jsx';
+import { RevealSection } from '../components/reveal-section.jsx';
 import { useInView, useCountUp } from '../lib/animations.js';
 
 // ─── Hero stats ──────────────────────────────────────────────────
@@ -481,24 +482,6 @@ function PhaseItem({ phase, idx }) {
         {phase.body}
       </p>
     </li>
-  );
-}
-
-// ─── Wrapper · reveal-on-scroll para secciones grandes ────────────
-function RevealSection({ children, delay = 0 }) {
-  const [ref, inView] = useInView({ threshold: 0.1 });
-  return (
-    <section
-      ref={ref}
-      className="transition-all duration-700 ease-out"
-      style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? 'translateY(0)' : 'translateY(16px)',
-        transitionDelay: `${delay}ms`,
-      }}
-    >
-      {children}
-    </section>
   );
 }
 

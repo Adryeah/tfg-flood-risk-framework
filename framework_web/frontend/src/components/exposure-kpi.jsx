@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useInView, useCountUp } from '@/lib/animations.js';
 
 /**
  * KPI tile con sistema de jerarquía TIER (1 | 2 | 3) usado en
@@ -58,6 +59,19 @@ export function ExposureKpi({
    * left-to-right.
    */
   animationDelay = 0,
+  /**
+   * Count-up opcional. Cuando se pasa `numeric` (number) y `format`
+   * (función v→string), la card ignora el prop `value` string y anima
+   * desde 0 hasta `numeric` con ease-out cuártico cuando la card
+   * entra al viewport. Stagger inicial = animationDelay.
+   *
+   *   <ExposureKpi numeric={32.1} format={(v) => `€${v.toFixed(1)}`} unit="M" .../>
+   *
+   * Sin numeric/format, sigue mostrando el string `value` directo
+   * (compatibilidad backwards con los callers que ya formatean).
+   */
+  numeric = null,
+  format = null,
 }) {
   const dot = VARIANT_DOT[variant] || VARIANT_DOT.default;
 
@@ -69,19 +83,34 @@ export function ExposureKpi({
         ? 'text-18 leading-none'
         : 'text-22 leading-none';
 
+  // Count-up opt-in: requiere AMBOS numeric (target) + format (formatter).
+  // Trigger via IntersectionObserver — la card en KPI bars puede estar
+  // below-the-fold y queremos que la animación dispare cuando se vea.
+  const animateCountUp =
+    typeof numeric === 'number' && typeof format === 'function';
+  const [inViewRef, inView] = useInView({ threshold: 0.3 });
+  const animatedValue = useCountUp(animateCountUp ? numeric : 0, {
+    active: animateCountUp && inView,
+    duration: 1100,
+    startDelay: animationDelay,
+  });
+  const displayValue = animateCountUp ? format(animatedValue) : value;
+
   return (
     <div
+      ref={inViewRef}
       className={cn(
         // Base · .kpi-card es el hook CSS que aplica tier-specific
         // border/bg/shadow/span vía main.css. Aquí solo padding +
         // transition + animation.
         'kpi-card group relative px-4 py-3.5 transition-all duration-200',
-        'animate-in fade-in slide-in-from-bottom-2 duration-500'
+        'animate-in fade-in slide-in-from-bottom-2'
       )}
       data-tier={tier}
       data-variant={variant}
       style={{
         animationDelay: `${animationDelay}ms`,
+        animationDuration: '500ms',
         animationFillMode: 'backwards',
       }}
     >
@@ -105,7 +134,7 @@ export function ExposureKpi({
             'font-semibold font-mono text-text-primary tabular-nums tracking-tight'
           )}
         >
-          {value}
+          {displayValue}
         </span>
         {unit && (
           <span className="text-12 text-text-secondary font-mono">{unit}</span>

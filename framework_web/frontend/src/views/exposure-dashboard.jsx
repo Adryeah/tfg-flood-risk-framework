@@ -294,7 +294,8 @@ function HeroKpis({ portfolio, exposure }) {
       <ExposureKpi
         tier={1}
         label="Total insured value"
-        value={`€${(tiv / 1e6).toFixed(1)}`}
+        numeric={tiv / 1e6}
+        format={(v) => `€${v.toFixed(1)}`}
         unit="M"
         sub={`${totalCount.toLocaleString()} ${t('policies in scope')}`}
         variant="info"
@@ -304,7 +305,8 @@ function HeroKpis({ portfolio, exposure }) {
       <ExposureKpi
         tier={2}
         label="EAL · annual"
-        value={`€${(eal / 1000).toFixed(0)}`}
+        numeric={eal / 1000}
+        format={(v) => `€${v.toFixed(0)}`}
         unit="K"
         sub={`${t('Probability-weighted')} · €${(vaR / 1e6).toFixed(1)}M ${t('VaR')}`}
         variant="warning"
@@ -314,7 +316,8 @@ function HeroKpis({ portfolio, exposure }) {
       <ExposureKpi
         tier={1}
         label="PML · DANA scenario"
-        value={`€${(pml / 1e6).toFixed(1)}`}
+        numeric={pml / 1e6}
+        format={(v) => `€${v.toFixed(1)}`}
         unit="M"
         sub="Single-event loss if a DANA hits today"
         variant="risk"
@@ -324,7 +327,8 @@ function HeroKpis({ portfolio, exposure }) {
       <ExposureKpi
         tier={3}
         label="Affected policies"
-        value={highCount.toLocaleString()}
+        numeric={highCount}
+        format={(v) => Math.round(v).toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
         sub={`€${(highValue / 1e6).toFixed(1)}M ${t('high-risk exposure')}`}
         variant="risk"
@@ -374,7 +378,12 @@ function MethodologyFooter() {
 // ────────────────────────────────────────────────────────────────
 function Widget({ title, badge, hint, cite, children, className = '' }) {
   return (
-    <Card className={'overflow-visible flex flex-col ' + className}>
+    <Card
+      className={
+        'overflow-visible flex flex-col transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 ' +
+        className
+      }
+    >
       <CardHeader className="py-2.5 px-4 border-b border-border-default">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">

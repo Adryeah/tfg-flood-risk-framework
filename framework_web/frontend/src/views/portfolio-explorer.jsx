@@ -723,7 +723,8 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         tier={1}
         label="Portfolio TIV"
-        value={fmtMoney(tiv)}
+        numeric={tiv}
+        format={(v) => fmtMoney(v)}
         sub={`${totalCount.toLocaleString()} ${t('active')} · ${filteredCount.toLocaleString()} ${t('shown')}`}
         variant="info"
         objective="Contexto — base de exposición total de la cartera."
@@ -732,7 +733,8 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         tier={2}
         label="EAL · annual"
-        value={fmtMoney(eal)}
+        numeric={eal}
+        format={(v) => fmtMoney(v)}
         sub="Expected annual loss"
         variant="warning"
         objective="Minimizar — pérdida esperada en un año medio."
@@ -741,7 +743,8 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         tier={1}
         label="PML · DANA scenario"
-        value={fmtMoney(pml)}
+        numeric={pml}
+        format={(v) => fmtMoney(v)}
         sub="If a DANA hits today"
         variant="risk"
         objective="Vigilar — peor caso single-event para capital."
@@ -750,7 +753,8 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         tier={2}
         label="High-risk exposure"
-        value={fmtMoney(highValue)}
+        numeric={highValue}
+        format={(v) => fmtMoney(v)}
         sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
         variant="risk"
         objective="Reducir — concentración en píxeles de alto riesgo."
@@ -759,7 +763,8 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         tier={3}
         label="Affected policies"
-        value={highCount.toLocaleString()}
+        numeric={highCount}
+        format={(v) => Math.round(v).toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
         sub={`${t('Value at risk')} ${fmtMoney(vaR)}`}
         variant="risk"

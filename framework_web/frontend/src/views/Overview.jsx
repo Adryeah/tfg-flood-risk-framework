@@ -4,6 +4,8 @@ import * as echarts from 'echarts';
 import { KpiCard } from '../components/KpiCard.jsx';
 import { InfoTooltip } from '../components/InfoTooltip.jsx';
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
+import { RevealSection } from '../components/reveal-section.jsx';
+import { LoadErrorState } from '../components/load-error-state.jsx';
 import { api } from '../lib/api.js';
 // Money + percent helpers compartidos en src/lib/format.js. Importamos
 // formatMoneySpaced (símbolo detrás, espacio) bajo el alias formatEur
@@ -103,14 +105,7 @@ export function Overview() {
     (exposure?.distribution_by_category?.very_high || 0);
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <h2 className="text-20 font-semibold text-text-primary mb-2">
-          Failed to load briefing data
-        </h2>
-        <p className="text-14 text-text-secondary">{error}</p>
-      </div>
-    );
+    return <LoadErrorState message={error} />;
   }
 
   return (
@@ -120,8 +115,9 @@ export function Overview() {
        *  ESTO antes de mostrar dashboards. Pensado para un visitante
        *  en frío (tribunal, Ricard, José) que llega al landing sin
        *  saber qué cat-model está mirando. Después viene el Daily
-       *  Briefing operativo de siempre. */}
-      <section className="border-b border-border-default pb-5 mb-1">
+       *  Briefing operativo de siempre. Mount animation (no IO)
+       *  porque está siempre above-the-fold. */}
+      <section className="border-b border-border-default pb-5 mb-1 animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono font-semibold uppercase tracking-[0.18em] text-text-tertiary mb-2">
           TFG · Universitat Autònoma de Barcelona · 2026
         </div>
@@ -339,8 +335,11 @@ export function Overview() {
         </div>
       </div>
 
-      {/* Map + study zones */}
-      <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
+      {/* Map + study zones — reveal al scrollear hasta él */}
+      <RevealSection
+        as="div"
+        className="bg-bg-surface border border-border-default rounded-md shadow-sm overflow-hidden transition-shadow duration-200 hover:shadow-md"
+      >
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
           <div className="flex items-center gap-1.5 min-w-0">
             <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">
@@ -356,10 +355,10 @@ export function Overview() {
           </span>
         </div>
         <RiskZoneMap zone="both" height={520} mode3d />
-      </div>
+      </RevealSection>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+      {/* Charts row con reveal stagger */}
+      <RevealSection as="div" className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div className="lg:col-span-4">
           <ChartCard
             title="Exposed TIV by municipality"
@@ -396,7 +395,7 @@ export function Overview() {
             <SarChart />
           </ChartCard>
         </div>
-      </div>
+      </RevealSection>
     </div>
   );
 }
@@ -407,7 +406,7 @@ export function Overview() {
 // haciendo de "eyebrow" — mono caps tracked-out, alineado a la derecha.
 function ChartCard({ title, badge, info, children }) {
   return (
-    <div className="bg-bg-surface border border-border-default rounded shadow-sm flex flex-col overflow-visible h-full">
+    <div className="bg-bg-surface border border-border-default rounded-md shadow-sm flex flex-col overflow-visible h-full transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
         <div className="flex items-center gap-1.5 min-w-0">
           <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">{title}</h3>

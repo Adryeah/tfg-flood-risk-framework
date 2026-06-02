@@ -91,10 +91,19 @@ export function KpiCard({
 
   return (
     <div
-      className="bg-bg-surface border border-border-default rounded shadow-sm p-3.5 relative overflow-hidden transition-colors hover:border-border-strong animate-in fade-in slide-in-from-bottom-2 duration-500"
-      style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
+      className="group bg-bg-surface border border-border-default rounded-md shadow-sm p-3.5 relative overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:border-brand-500/30 animate-in fade-in slide-in-from-bottom-2"
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        animationDuration: '500ms',
+        animationFillMode: 'backwards',
+      }}
     >
-      {severity && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: severityColors[severity] || '#3B82F6' }} />}
+      {severity && (
+        <span
+          className="absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-300 ease-out group-hover:w-[4px]"
+          style={{ backgroundColor: severityColors[severity] || '#3B82F6' }}
+        />
+      )}
 
       <div className="flex items-start justify-between gap-2">
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">{label}</span>
