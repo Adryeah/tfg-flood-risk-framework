@@ -12,7 +12,7 @@ import { api } from '../lib/api';
 const SIDEBAR_SECTIONS = [
   {
     label: 'ANALYSIS',
-    accent: '#2563EB', // brand-500
+    accent: '#3B82F6', // accent-info — stays bright against the navy sidebar
     items: [
       { id: 'overview', label: 'Overview', icon: 'layout-dashboard', path: '/' },
       { id: 'dana', label: 'DANA · 29 Oct', icon: 'cloud-rain', path: '/dana' },
@@ -23,7 +23,7 @@ const SIDEBAR_SECTIONS = [
   },
   {
     label: 'PORTFOLIO',
-    accent: '#D97706', // amber 600
+    accent: '#F39C12', // risk-medium amber per Zurich spec
     items: [
       { id: 'portfolio', label: 'Portfolio Explorer', icon: 'briefcase', path: '/portfolio' },
       { id: 'policy-map', label: 'Policy Map', icon: 'map', path: '/policy-map' },
@@ -35,7 +35,7 @@ const SIDEBAR_SECTIONS = [
   },
   {
     label: 'METHODOLOGY',
-    accent: '#15803D', // green 700
+    accent: '#10B981', // risk-low / status-live green per Zurich spec
     items: [
       { id: 'validation', label: 'Model & Validation', icon: 'shield-check', path: '/validation' },
       { id: 'transferability', label: 'Transferability', icon: 'flask-conical', path: '/transferability' },

@@ -55,63 +55,92 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
 
-        // ── Project tokens (existing) ──────────────────────────────
-        // Workspace surfaces — Palantir / Bloomberg / Datadog feel.
-        // Layered greys rather than pure white dominance.
-        'bg-base': '#F3F5F7', // main canvas
-        'bg-surface': '#FAFBFC', // card body
-        'bg-subtle': '#E9EDF2', // secondary surface / chip / inactive header
-        'bg-hover': '#EEF1F5', // soft hover
-        // Dark sidebar band (institutional ops console)
-        'sidebar-bg': '#1E2B4A',
-        'sidebar-hover': '#27365A',
-        'sidebar-active': '#2F4170',
-        // Text
-        'text-primary': '#1F2937',
-        'text-secondary': '#667085',
-        'text-tertiary': '#98A2B3',
-        'text-inverse': '#F8FAFC',
-        // Borders — soft, mostly-transparent so cards "integrate" rather than float
-        'border-default': 'rgba(0,0,0,0.06)',
-        'border-strong': 'rgba(0,0,0,0.10)',
-        'border-focus': '#1F2937',
-        // Brand — institutional analytical blue
+        // ── Project tokens · Flood Risk × Zurich Design System ─────
+        // Migrated from the Palantir-grey palette to the Zurich
+        // enterprise spec (Authority navy + clean whites). Token
+        // names stay identical so JSX doesn't move.
+        'bg-base': '#F9FAFB', // main canvas — neutral-50
+        'bg-surface': '#FFFFFF', // card body — pure white now
+        'bg-subtle': '#F3F4F6', // chip / inactive header — neutral-100
+        'bg-hover': '#F3F4F6', // soft hover — neutral-100
+        'bg-elevated': '#FFFFFF',
+        // Dark sidebar band · Zurich Blue (Authority)
+        'sidebar-bg': '#0F1B35',
+        'sidebar-hover': '#1A2A4A',
+        'sidebar-active': '#243759',
+        // Text · neutral-900 / 600 / 400
+        'text-primary': '#111827',
+        'text-secondary': '#4B5563',
+        'text-tertiary': '#9CA3AF',
+        'text-muted': '#6B7280',
+        'text-inverse': '#F9FAFB',
+        // Borders — solid neutral-200 (more delineation than the
+        // previous transparent blacks; cards now read as crisp tiles)
+        'border-default': '#E5E7EB',
+        'border-strong': '#D1D5DB',
+        'border-subtle': 'rgba(15,27,53,0.06)',
+        'border-focus': '#0F1B35',
+        // Brand · Zurich navy primary
         brand: {
-          50: '#EFF4FB',
-          100: '#DCE6F5',
-          500: '#2563EB',
-          700: '#1D4ED8',
-          900: '#1E2B4A',
+          50: '#EEF1F8',
+          100: '#D4DCEC',
+          500: '#0F1B35', // primary CTA, nav-active, KPI value
+          700: '#0A1428',
+          900: '#060D1C',
         },
-        // Risk semantics — muted enterprise tones (no neon)
+        // Interactive accent — links, focus rings, data-viz series 1.
+        // Stays bright so the navy primary doesn't dominate everything.
+        accent: {
+          info: '#3B82F6',
+          live: '#10B981',
+          warning: '#F59E0B',
+          error: '#EF4444',
+        },
+        // Corporate accent aliases (used directly by some views as
+        // semantic shortcuts).
+        'corporate-navy': '#0F1B35',
+        'corporate-navy-light': '#EEF1F8',
+        // Risk semantics — Zurich enterprise tones per spec
         risk: {
-          low: '#16A34A',
+          low: '#10B981',
           'low-bg': '#ECFDF5',
-          medium: '#D97706',
+          'low-soft': '#A8D5BA',
+          medium: '#F39C12',
           'medium-bg': '#FFFBEB',
-          high: '#DC2626',
+          high: '#E74C3C',
           'high-bg': '#FEF2F2',
-          critical: '#991B1B',
+          critical: '#DC2626',
+          'critical-bg': '#FEE2E2',
         },
-        // Data viz palette
+        // Data viz palette — series 1 is interactive blue (not navy)
+        // so the most frequent series reads as a vivid data point.
         data: {
-          1: '#2563EB',
-          2: '#0E9F8E',
-          3: '#D97706',
+          1: '#3B82F6',
+          2: '#10B981',
+          3: '#F39C12',
           4: '#7C3AED',
           5: '#DB2777',
           6: '#4F46E5',
           7: '#15803D',
-          8: '#E11D48',
+          8: '#E74C3C',
         },
       },
       fontFamily: {
-        sans: ['Geist', 'system-ui', 'sans-serif'],
+        // Inter for body + UI. Designed for screen rendering at small
+        // sizes; the corporate-default sans for enterprise products.
+        sans: [
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'system-ui',
+          'sans-serif',
+        ],
         mono: ['JetBrains Mono', 'Geist Mono', 'Menlo', 'monospace'],
-        // Editorial serif — used on Methodology section titles + pull
-        // quotes to distinguish the academic register from the ops
-        // dashboard register. See frontend-design skill on type pairing.
-        serif: ['Newsreader', 'Georgia', 'Cambria', 'serif'],
+        // IBM Plex Serif for editorial registers (methodology titles,
+        // pull-quotes, hero typographic anchors). Replaces Newsreader
+        // for a more institutional/enterprise feel per Zurich spec.
+        serif: ['IBM Plex Serif', 'Georgia', 'Cambria', 'serif'],
       },
       fontSize: {
         10: ['10px', { lineHeight: '1.45' }],
@@ -132,10 +161,13 @@ export default {
         4.5: '18px',
       },
       borderRadius: {
-        sm: '3px',
-        DEFAULT: '4px',
-        md: '5px',
-        lg: '6px',
+        // Bumped per Zurich spec — cards/buttons read as 6-8 px so
+        // the platform feels less "ops-terminal" and more enterprise.
+        sm: '4px',
+        DEFAULT: '6px',
+        md: '6px',
+        lg: '8px',
+        xl: '10px',
       },
       // ── Animations consumed by shadcn primitives (Dialog, Sheet,
       // Tooltip, Tabs). Provided via tailwindcss-animate plugin below;
@@ -156,12 +188,14 @@ export default {
         'accordion-up': 'accordion-up 200ms cubic-bezier(0.23, 1, 0.32, 1)',
       },
       boxShadow: {
-        // Tighter, layered shadows so cards sit on the surface, not float above
-        sm: '0 1px 1px rgba(15,23,42,0.04), 0 0 0 1px rgba(15,23,42,0.04)',
+        // Zurich spec · more lift than the previous tight pairs. The
+        // rgba uses navy (15, 27, 53) so the cast tint integrates with
+        // the brand rather than reading as cold grey shadow.
+        sm: '0 1px 2px rgba(15,27,53,0.05), 0 0 0 1px rgba(15,27,53,0.04)',
         DEFAULT:
-          '0 1px 2px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05)',
-        md: '0 2px 4px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.05)',
-        lg: '0 6px 16px rgba(15,23,42,0.10), 0 0 0 1px rgba(15,23,42,0.04)',
+          '0 4px 6px -1px rgba(15,27,53,0.05), 0 0 0 1px rgba(15,27,53,0.04)',
+        md: '0 10px 15px -3px rgba(15,27,53,0.08), 0 0 0 1px rgba(15,27,53,0.04)',
+        lg: '0 20px 25px -5px rgba(15,27,53,0.10), 0 0 0 1px rgba(15,27,53,0.04)',
       },
     },
   },

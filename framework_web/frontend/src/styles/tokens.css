@@ -1,90 +1,165 @@
-:root {
-  /* Workspace surfaces */
-  --bg-base: #f3f5f7;
-  --bg-surface: #fafbfc;
-  --bg-subtle: #e9edf2;
-  --bg-hover: #eef1f5;
+/* ─────────────────────────────────────────────────────────────────────
+ * FLOOD RISK × ZURICH DESIGN SYSTEM · Enterprise Edition
+ *
+ * Visual-only token layer. Components consume these vars (or the
+ * Tailwind equivalents in tailwind.config.js) so a token tweak ripples
+ * through the entire platform without touching JSX.
+ *
+ * Source of truth: design-system spec passed by stakeholder (Apr 2026).
+ * Mapping rationale next to each block.
+ * ───────────────────────────────────────────────────────────────────── */
 
-  /* Institutional dark sidebar band */
-  --sidebar-bg: #1e2b4a;
-  --sidebar-hover: #27365a;
-  --sidebar-active: #2f4170;
+:root {
+  /* ── Workspace surfaces ───────────────────────────────────────────
+   * Lighter, cleaner whites. The previous F3F5F7 base read as too
+   * warm/grey; Zurich's enterprise spec uses neutral-50 #F9FAFB. */
+  --bg-base: #f9fafb;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-elevated: #ffffff;
+
+  /* ── Institutional dark sidebar (Zurich Blue · #0F1B35) ──────────
+   * Deeper, more saturated navy than the previous #1E2B4A. Carries
+   * "Authority" register per design spec section 1. */
+  --sidebar-bg: #0f1b35;
+  --sidebar-hover: #1a2a4a;
+  --sidebar-active: #243759;
   --sidebar-text: #d6def0;
   --sidebar-text-muted: #8b97b3;
 
-  /* Text */
-  --text-primary: #1f2937;
-  --text-secondary: #667085;
-  --text-tertiary: #98a2b3;
-  --text-inverse: #f8fafc;
+  /* ── Text ─────────────────────────────────────────────────────────
+   * Neutral-900 / 600 / 400 from spec. Slightly more contrast than
+   * the previous #1F2937 family. */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-inverse: #f9fafb;
 
-  /* Borders — soft, transparent for layered surfaces */
-  --border-default: rgba(0, 0, 0, 0.06);
-  --border-strong: rgba(0, 0, 0, 0.10);
+  /* ── Borders — slightly tighter than before so cards read as
+   * "delineated" rather than dissolved into the background. */
+  --border-default: #e5e7eb;
+  --border-strong: #d1d5db;
+  --border-subtle: rgba(15, 27, 53, 0.06);
 
-  /* Brand + risk */
-  --brand-500: #2563eb;
-  --brand-700: #1d4ed8;
-  --risk-low: #16a34a;
-  --risk-medium: #d97706;
-  --risk-high: #dc2626;
+  /* ── Brand · primary navy (Zurich Authority) ─────────────────────
+   * Primary CTA / nav-active / KPI value colour. Per spec section 4
+   * Buttons → Primary uses --primary-navy as background. */
+  --brand-50: #eef1f8;
+  --brand-100: #d4dcec;
+  --brand-500: #0f1b35;
+  --brand-700: #0a1428;
+  --brand-900: #060d1c;
 
-  /* Typography */
-  --font-sans: 'Geist', system-ui, sans-serif;
+  /* ── Interactive accent · status-info blue ───────────────────────
+   * For links, data-viz primary series, focus glow. Kept distinct
+   * from navy so charts/links don't read as "dead" navy slabs. */
+  --accent-info: #3b82f6;
+
+  /* ── Risk semantics (spec section 1 · semantic colors) ───────────
+   * Critical (#DC2626) → very_high category in models
+   * High     (#E74C3C) → high
+   * Moderate (#F39C12) → moderate
+   * Low      (#A8D5BA) → low (softer green so it reads as "safe") */
+  --risk-critical: #dc2626;
+  --risk-high: #e74c3c;
+  --risk-medium: #f39c12;
+  --risk-low: #10b981;
+  --risk-low-soft: #a8d5ba;
+
+  /* ── Status colours ──────────────────────────────────────────────
+   * Live / warning / error / info — used by topbar pills, sidebar
+   * health dot, banners. */
+  --status-live: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+
+  /* ── Typography (spec section 2 · font stack) ────────────────────
+   * Inter for body + UI (the corporate-default sans-serif designed
+   * for screen rendering at small sizes). IBM Plex Serif for
+   * displays and editorial headers — replaces Newsreader. The mono
+   * stays JetBrains Mono. */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
+  --font-serif: 'IBM Plex Serif', Georgia, Cambria, serif;
   --font-mono: 'JetBrains Mono', 'Geist Mono', Menlo, monospace;
 
-  /* Layered shadows that sit on the workspace */
-  --shadow-sm: 0 1px 1px rgba(15, 23, 42, 0.04),
-    0 0 0 1px rgba(15, 23, 42, 0.04);
-  --shadow-default: 0 1px 2px rgba(15, 23, 42, 0.06),
-    0 0 0 1px rgba(15, 23, 42, 0.05);
+  /* ── Spacing (spec section 3) ────────────────────────────────────
+   * Tailwind already has a 4px-unit scale; we expose a few common
+   * values as CSS vars so plain-CSS surfaces (AG-Grid theme, scroll
+   * patterns, MapLibre controls) can stay in lockstep. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 
-  /* ──────────────────────────────────────────────────────────
-   * shadcn/ui tokens — mapped to OUR existing palette so any
-   * shadcn component (Button, Card, Dialog, etc.) reads as part
-   * of the same design system rather than a default zinc theme.
-   *
-   * Format: H S% L% (no `hsl()` wrapper — shadcn expects raw
-   * triplets so it can compose with `hsl(var(--xxx) / <alpha>)`).
-   * HSL values rounded from the hex pairs above.
-   *
-   * Mapping rationale:
-   *   background  ← bg-base #F3F5F7
-   *   foreground  ← text-primary #1F2937
-   *   card        ← bg-surface #FAFBFC
-   *   primary     ← brand-500 #2563EB
-   *   secondary   ← bg-subtle #E9EDF2 (chip / inactive surfaces)
-   *   muted       ← bg-subtle  + muted-fg ← text-secondary #667085
-   *   accent      ← bg-hover  + accent-fg ← text-primary
-   *   destructive ← risk-high #DC2626
-   *   border      ← #ECEEF1 (solid equivalent of border-default α06)
-   *   ring        ← brand-500 (focus ring)
-   *   radius      ← 0.25rem (4 px, matches our `rounded` token)
-   */
-  --background: 210 14% 96%;
-  --foreground: 215 28% 17%;
-  --card: 210 17% 98%;
-  --card-foreground: 215 28% 17%;
-  --popover: 210 17% 98%;
-  --popover-foreground: 215 28% 17%;
-  --primary: 217 83% 53%;
+  /* ── Shadows (spec section 1 · surface tokens) ───────────────────
+   * More lift than the previous tight pairs. Each shadow uses the
+   * Zurich-navy rgba so the cast tint integrates with the brand
+   * rather than reading as cold grey. */
+  --shadow-sm: 0 1px 2px rgba(15, 27, 53, 0.05),
+    0 0 0 1px rgba(15, 27, 53, 0.04);
+  --shadow-default: 0 4px 6px -1px rgba(15, 27, 53, 0.05),
+    0 0 0 1px rgba(15, 27, 53, 0.04);
+  --shadow-md: 0 10px 15px -3px rgba(15, 27, 53, 0.08),
+    0 0 0 1px rgba(15, 27, 53, 0.04);
+  --shadow-lg: 0 20px 25px -5px rgba(15, 27, 53, 0.10),
+    0 0 0 1px rgba(15, 27, 53, 0.04);
+
+  /* ── Transitions (spec section 5) ────────────────────────────────
+   * Three speeds. Components reference --transition-fast / -medium
+   * / -slow so motion timing stays consistent across the platform. */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-medium: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── shadcn/ui tokens — remapped to the new Zurich palette ───────
+   *   background  ← bg-base #F9FAFB
+   *   foreground  ← text-primary #111827
+   *   card        ← bg-surface #FFFFFF (pure white now)
+   *   primary     ← brand-500 #0F1B35 (Zurich navy — was bright blue)
+   *   secondary   ← bg-subtle #F3F4F6
+   *   muted       ← bg-subtle  + muted-fg ← text-secondary #4B5563
+   *   destructive ← risk-critical #DC2626
+   *   border      ← #E5E7EB (now solid, not transparent)
+   *   ring        ← accent-info #3B82F6 (focus ring stays bright so
+   *                 the navy primary doesn't disappear into the
+   *                 button it sits inside)
+   *   radius      ← 0.375rem (6 px, matches spec card/button radius) */
+  --background: 220 14% 96%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 222 56% 13%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 213 19% 93%;
-  --secondary-foreground: 215 28% 17%;
-  --muted: 213 19% 93%;
-  --muted-foreground: 220 13% 46%;
-  --accent: 213 22% 95%;
-  --accent-foreground: 215 28% 17%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 215 14% 34%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 222 47% 11%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 216 12% 94%;
-  --input: 216 12% 94%;
-  --ring: 217 83% 53%;
-  --radius: 0.25rem;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 217 91% 60%;
+  --radius: 0.375rem;
 
-  /* Optional chart palette tokens (some shadcn charts/recipes
-   * read these); points to our existing data-viz colours. */
-  --chart-1: 217 83% 53%;
+  /* ── Chart palette (data-viz series) ─────────────────────────────
+   * First series is interactive blue (not navy) so the most
+   * frequent series reads as a vivid data point against the white
+   * surface. */
+  --chart-1: 217 91% 60%;
   --chart-2: 175 84% 32%;
   --chart-3: 30 89% 44%;
   --chart-4: 261 75% 56%;

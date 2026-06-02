@@ -4,7 +4,10 @@
 
 @layer base {
   body {
-    font-feature-settings: 'cv11', 'ss01';
+    /* Inter ships with cv11 (1-storey a), ss01 (alternate g, R, etc.).
+     * Enable both for the "humanist sans" look used by Stripe, Linear,
+     * Notion — matches the enterprise register of the Zurich spec. */
+    font-feature-settings: 'cv11', 'ss01', 'tnum';
   }
 
   .font-mono {
@@ -18,6 +21,30 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-tertiary);
+  }
+
+  /* Spec section 8 · Accessibility — always-visible focus indicator
+   * with 2 px outline + 2 px offset. Applied to all interactive
+   * elements; components can opt-out by removing :focus-visible.
+   *
+   * Ring colour uses the bright accent-info blue (not navy) so the
+   * focus halo pops over both light and dark backgrounds. */
+  :focus-visible {
+    outline: 2px solid var(--accent-info, #3b82f6);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Spec section 8 — respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -93,7 +120,7 @@
 
   .leaflet-container, .maplibregl-map {
     font-family: var(--font-sans);
-    background: #dde4ec;
+    background: #e5e7eb;
   }
 
   /* MapLibre controls override moved OUTSIDE @layer components below — see
@@ -106,7 +133,7 @@
     background-color: var(--bg-base);
     background-image: radial-gradient(
       circle at 1px 1px,
-      rgba(30, 41, 59, 0.06) 1px,
+      rgba(15, 27, 53, 0.05) 1px,
       transparent 0
     );
     background-size: 18px 18px;
@@ -115,8 +142,8 @@
   .pattern-animated {
     background-color: var(--bg-base);
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(30, 41, 59, 0.08) 1px, transparent 0),
-      linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, transparent 50%, rgba(220, 38, 38, 0.03) 100%);
+      radial-gradient(circle at 1px 1px, rgba(15, 27, 53, 0.07) 1px, transparent 0),
+      linear-gradient(135deg, rgba(15, 27, 53, 0.025) 0%, transparent 50%, rgba(220, 38, 38, 0.025) 100%);
     background-size: 18px 18px, 100% 100%;
     animation: bgShift 20s ease-in-out infinite;
   }
@@ -149,13 +176,13 @@
     height: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(30, 41, 59, 0.18);
+    background: rgba(15, 27, 53, 0.18);
     border-radius: 5px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(30, 41, 59, 0.28);
+    background: rgba(15, 27, 53, 0.32);
     background-clip: padding-box;
     border: 2px solid transparent;
   }
@@ -163,22 +190,22 @@
     background: transparent;
   }
 
-  /* AG Grid quartz theme — pulls our token values into the grid so it
-   * doesn't read as a 3rd-party widget glued on top. */
+  /* AG Grid quartz theme — synced to Zurich design tokens so the
+   * grid reads as part of the platform rather than a 3rd-party widget. */
   .ag-theme-quartz,
   .ag-theme-quartz-tight {
-    --ag-font-family: 'Geist', system-ui, sans-serif;
+    --ag-font-family: 'Inter', system-ui, sans-serif;
     --ag-font-size: 12px;
-    --ag-foreground-color: #1f2937;
-    --ag-background-color: #fafbfc;
-    --ag-header-foreground-color: #475467;
-    --ag-header-background-color: #e9edf2;
-    --ag-odd-row-background-color: #fafbfc;
-    --ag-even-row-background-color: #f7f8fa;
-    --ag-row-hover-color: #eef1f5;
-    --ag-selected-row-background-color: #dde6f5;
-    --ag-border-color: rgba(15, 23, 42, 0.06);
-    --ag-row-border-color: rgba(15, 23, 42, 0.04);
+    --ag-foreground-color: #111827;
+    --ag-background-color: #ffffff;
+    --ag-header-foreground-color: #4b5563;
+    --ag-header-background-color: #f3f4f6;
+    --ag-odd-row-background-color: #ffffff;
+    --ag-even-row-background-color: #f9fafb;
+    --ag-row-hover-color: #f3f4f6;
+    --ag-selected-row-background-color: #eef1f8;
+    --ag-border-color: #e5e7eb;
+    --ag-row-border-color: rgba(15, 27, 53, 0.04);
     --ag-cell-horizontal-padding: 12px;
     --ag-row-height: 32px;
     --ag-header-height: 32px;
@@ -213,9 +240,9 @@ body .maplibregl-ctrl,
 body .maplibregl-ctrl-group {
   background-color: #FFFFFF !important;
   background: #FFFFFF !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  border-radius: 4px !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10) !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(15, 27, 53, 0.10) !important;
   overflow: hidden !important;
   opacity: 1 !important;
 }
@@ -223,18 +250,18 @@ body .maplibregl-ctrl-group > button,
 body .maplibregl-ctrl-group button {
   background-color: #FFFFFF !important;
   background: #FFFFFF !important;
-  color: #1F2937 !important;
+  color: #111827 !important;
   border: 0 !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-bottom: 1px solid rgba(15, 27, 53, 0.06) !important;
   width: 30px !important;
   height: 30px !important;
   opacity: 1 !important;
 }
 body .maplibregl-ctrl-group > button:hover,
 body .maplibregl-ctrl-group button:hover {
-  background-color: #EEF1F5 !important;
-  background: #EEF1F5 !important;
-  color: #1F2937 !important;
+  background-color: #F3F4F6 !important;
+  background: #F3F4F6 !important;
+  color: #111827 !important;
 }
 body .maplibregl-ctrl-group > button:last-child,
 body .maplibregl-ctrl-group button:last-child {
@@ -254,5 +281,5 @@ body .maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon {
  * Force opaque-white pill so it doesn't blend into a dark basemap. */
 body .maplibregl-ctrl-attrib {
   background-color: rgba(255, 255, 255, 0.85);
-  color: #1F2937;
+  color: #111827;
 }
