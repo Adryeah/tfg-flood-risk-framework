@@ -320,7 +320,7 @@ export function PolicyMap() {
   return (
     <div className="flex flex-col min-h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-3.5rem)] gap-2 p-3 sm:p-4 pb-3">
       {/* Header — slim single line so the map gets maximum vertical room. */}
-      <div className="flex items-center justify-between gap-4 shrink-0 flex-wrap">
+      <div className="flex items-center justify-between gap-4 shrink-0 flex-wrap animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-18 font-semibold text-text-primary tracking-tight">
             Policy Map

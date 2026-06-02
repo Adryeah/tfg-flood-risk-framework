@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { InfoTooltip } from '../components/InfoTooltip.jsx';
 import { PixelInfoBody } from '../components/PixelInfoBody.jsx';
+import { LoadErrorState } from '../components/load-error-state.jsx';
 import { api } from '../lib/api.js';
 import { ZONES } from '../lib/constants.js';
 
@@ -35,6 +36,10 @@ export function ValenciaMap() {
     };
   }, []);
 
+  if (error && !metrics) {
+    return <LoadErrorState message={error} />;
+  }
+
   const m = metrics?.model_metrics || {};
   const buf100 = (metrics?.buffer_metrics || []).find((b) => b.buffer_m === 100);
   const recall100 = buf100?.recall ?? null;
@@ -57,7 +62,7 @@ export function ValenciaMap() {
        *  subtitle). Coincide con el patrón de model-validation.jsx para
        *  que las páginas top-nav se sientan parte de la misma "publicación"
        *  en lugar de cards de SaaS dashboard idénticas. */}
-      <header>
+      <header className="animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
           Operations · Zone 01 · Training
         </div>

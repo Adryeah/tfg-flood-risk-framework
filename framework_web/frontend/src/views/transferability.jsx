@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { MethodologySources } from '@/components/methodology-sources';
 import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '@/lib/api.js';
+import { useInView, useCountUp } from '@/lib/animations.js';
 import { useHashParams } from '@/lib/hash-params.js';
 
 // Curated sources for the Transferability view. The Evidently AI entry
@@ -130,33 +131,11 @@ export function Transferability() {
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-3">
           AUC ROC · transferencia geográfica
         </div>
-        <div className="flex items-baseline gap-5 flex-wrap">
-          <div>
-            <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
-              Valencia · entrenamiento
-            </div>
-            <div className="font-mono text-[72px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
-              {aucValencia.toFixed(3)}
-            </div>
-          </div>
-          <ArrowRight
-            className="w-10 h-10 text-text-tertiary self-center"
-            strokeWidth={1.25}
-          />
-          <div>
-            <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
-              Algemesí · extrapolación
-            </div>
-            <div className="font-mono text-[72px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
-              {aucAlgemesi.toFixed(3)}
-            </div>
-          </div>
-          <div className="self-end pb-2">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-risk-medium-bg text-risk-medium text-13 font-mono font-semibold tabular-nums">
-              Δ {aucDrop.toFixed(3)}
-            </span>
-          </div>
-        </div>
+        <TransferHero
+          aucValencia={aucValencia}
+          aucAlgemesi={aucAlgemesi}
+          aucDrop={aucDrop}
+        />
       </div>
 
       {/* ─── KEY FINDING · vertical-rule pull quote ─── */}
@@ -464,4 +443,54 @@ function ImportanceComparisonChart({ data }) {
   }, [data]);
 
   return <div ref={ref} style={{ height: 440 }} />;
+}
+
+// ─── Hero transferencia con dos AUC counting up ──────────────────
+// Bloomberg-stat-panel: 0.922 → 0.817 con flecha entre ambos y Δ chip
+// flotando abajo. Las dos cifras animan en sincronía cuando la
+// sección entra al viewport — refuerza la sensación de "salto entre
+// dos zonas geográficas".
+function TransferHero({ aucValencia, aucAlgemesi, aucDrop }) {
+  const [ref, inView] = useInView({ threshold: 0.4 });
+  const v = useCountUp(aucValencia, { active: inView, duration: 1500 });
+  const a = useCountUp(aucAlgemesi, {
+    active: inView,
+    duration: 1500,
+    startDelay: 200,
+  });
+  const d = useCountUp(Math.abs(aucDrop), {
+    active: inView,
+    duration: 1500,
+    startDelay: 400,
+  });
+  return (
+    <div ref={ref} className="flex items-baseline gap-5 flex-wrap">
+      <div>
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+          Valencia · entrenamiento
+        </div>
+        <div className="font-mono text-[72px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
+          {v.toFixed(3)}
+        </div>
+      </div>
+      <ArrowRight
+        className="w-10 h-10 text-text-tertiary self-center"
+        strokeWidth={1.25}
+      />
+      <div>
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+          Algemesí · extrapolación
+        </div>
+        <div className="font-mono text-[72px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
+          {a.toFixed(3)}
+        </div>
+      </div>
+      <div className="self-end pb-2">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-risk-medium-bg text-risk-medium text-13 font-mono font-semibold tabular-nums">
+          Δ {(aucDrop < 0 ? '-' : '')}
+          {d.toFixed(3)}
+        </span>
+      </div>
+    </div>
+  );
 }

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import CodeBlock from '@/components/code-block';
 import Timeline from '@/components/timeline';
 import { MethodologySources } from '@/components/methodology-sources';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '@/lib/api.js';
 
 // Regulatory + governance references that legitimise this audit page
@@ -75,6 +76,7 @@ const CASE_FRAMEWORK = 'Solvency II · EU AI Act';
 export function LeakageAudit() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -84,19 +86,26 @@ export function LeakageAudit() {
         if (!mounted) return;
         setData(d);
       })
-      .catch((err) => console.error('Leakage audit load failed', err))
+      .catch((err) => {
+        if (!mounted) return;
+        setLoadError(err?.message || 'No se pudo cargar la auditoría de fugas');
+      })
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
     };
   }, []);
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
         <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     );
+  }
+
+  if (loadError || !data) {
+    return <LoadErrorState message={loadError} />;
   }
 
   const bugLocation =

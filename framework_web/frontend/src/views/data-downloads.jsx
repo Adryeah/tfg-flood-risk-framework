@@ -134,7 +134,7 @@ export function DataDownloads() {
   return (
     <div className="max-w-[1120px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-12 space-y-6">
       {/* ─── HEADER · editorial register ────────────────────────── */}
-      <header className="border-b border-border-default pb-5">
+      <header className="border-b border-border-default pb-5 animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
           Reproducibility · Open data
         </div>
@@ -172,7 +172,7 @@ export function DataDownloads() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-3">
           {/* BibTeX */}
-          <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
+          <div className="bg-bg-surface border border-border-default rounded-md shadow-sm overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
             <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-border-default">
               <div className="flex items-center gap-2 min-w-0">
                 <BookOpen className="w-4 h-4 text-text-secondary shrink-0" strokeWidth={1.75} />
@@ -202,7 +202,7 @@ export function DataDownloads() {
           </div>
 
           {/* Repo + reproducción */}
-          <div className="bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden">
+          <div className="bg-bg-surface border border-border-default rounded-md shadow-sm overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-default">
               <GitBranch className="w-4 h-4 text-text-secondary" strokeWidth={1.75} />
               <h3 className="font-serif text-15 text-text-primary tracking-tight">

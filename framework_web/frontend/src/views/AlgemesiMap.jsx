@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { PixelInfoBody } from '../components/PixelInfoBody.jsx';
 import { InfoHint } from '@/components/info-hint';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '../lib/api.js';
 import { ZONES } from '../lib/constants.js';
 
@@ -114,6 +115,10 @@ export function AlgemesiMap() {
     };
   }, []);
 
+  if (error && !metrics) {
+    return <LoadErrorState message={error} />;
+  }
+
   const m = metrics?.model_metrics || {};
   const vm = valenciaMetrics?.model_metrics || {};
   const isCustom = Math.abs(threshold - ZONES.algemesi.threshold) > 1e-6;
@@ -156,7 +161,7 @@ export function AlgemesiMap() {
        *  pero con eyebrow "Zone 02 · Extrapolation" y acento amber
        *  (risk-medium) en el badge para marcar visualmente que esta es
        *  la zona NO entrenada. */}
-      <header>
+      <header className="animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
           Operations · Zone 02 · Extrapolation
         </div>

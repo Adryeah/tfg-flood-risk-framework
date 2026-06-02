@@ -16,7 +16,9 @@ import MetricTile from '@/components/metric-tile';
 import { InfoHint } from '@/components/info-hint';
 import { MethodologySources } from '@/components/methodology-sources';
 import { LoadErrorState } from '@/components/load-error-state.jsx';
+import { RevealSection } from '@/components/reveal-section.jsx';
 import { api } from '@/lib/api.js';
+import { useInView, useCountUp } from '@/lib/animations.js';
 import { FEATURE_DOCS, CATEGORY_META } from '@/lib/feature-docs.js';
 
 const THRESHOLD_OPERATIONAL = 0.614;
@@ -143,12 +145,11 @@ export function ModelValidation() {
       </div>
 
       {/* ─── HERO · dominant AUC + 3 stacked secondaries.
-       *  Replaces the 4-equal-tile grid that read "AI dashboard". The
-       *  AUC is the headline (it's what the tribunal will quote); the
-       *  others are supporting evidence. Asymmetry is intentional
-       *  (frontend-design skill §spatial composition). ─── */}
+       *  Replaces the 4-equal-tile grid that read "AI dashboard". El
+       *  AUC headline anima desde 0 → m.auc_mean al entrar viewport
+       *  (1.6s ease-out cuártico). ─── */}
       <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-5 mb-8 pb-6 border-b border-border-default">
-        {/* Big numerical anchor */}
+        {/* Big numerical anchor con count-up */}
         <div className="relative">
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
@@ -158,14 +159,7 @@ export function ModelValidation() {
               {`Area under the Receiver Operating Characteristic curve. Measures how well the model ranks a random positive (flooded pixel) above a random negative. 1.0 = perfect ranking, 0.5 = random chance. The "± value" is the standard deviation across the 5 spatial folds.`}
             </InfoHint>
           </div>
-          <div className="flex items-baseline gap-3">
-            <span className="font-mono text-[80px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
-              {m.auc_mean.toFixed(3)}
-            </span>
-            <span className="font-mono text-18 text-text-tertiary tabular-nums">
-              ± {m.auc_std.toFixed(3)}
-            </span>
-          </div>
+          <AucHero auc={m.auc_mean} std={m.auc_std} />
           <p className="font-serif italic text-14 text-text-secondary mt-3 max-w-md leading-snug">
             Random Forest v2 trained on 14 features over Sentinel-1 SAR
             backscatter pre/post DANA Valencia 2024, validated against
@@ -1154,4 +1148,26 @@ function BufferMetricsChart({ bufferMetrics }) {
   }, [bufferMetrics]);
 
   return <div ref={ref} style={{ height: 280 }} />;
+}
+
+// ─── Hero AUC con count-up al entrar viewport ────────────────────
+// 80 px display que anima 0 → auc_mean en 1.6s ease-out cuártico.
+// El std (±) se mantiene estático porque es una desviación, no un
+// hito narrativo.
+function AucHero({ auc, std }) {
+  const [ref, inView] = useInView({ threshold: 0.4 });
+  const animated = useCountUp(auc, {
+    active: inView,
+    duration: 1600,
+  });
+  return (
+    <div ref={ref} className="flex items-baseline gap-3">
+      <span className="font-mono text-[80px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
+        {animated.toFixed(3)}
+      </span>
+      <span className="font-mono text-18 text-text-tertiary tabular-nums">
+        ± {std.toFixed(3)}
+      </span>
+    </div>
+  );
 }

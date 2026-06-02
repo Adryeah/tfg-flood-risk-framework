@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { InfoHint } from '@/components/info-hint';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '../lib/api.js';
 
 // ─── Per-metric documentation ────────────────────────────────────
@@ -99,6 +100,7 @@ export function Comparison() {
   const [valMetrics, setValMetrics] = useState(null);
   const [algMetrics, setAlgMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const chartRef = useRef(null);
 
   useEffect(() => {
@@ -113,8 +115,9 @@ export function Comparison() {
         setValMetrics(vm);
         setAlgMetrics(am);
         setLoading(false);
-      } catch {
+      } catch (err) {
         if (cancelled) return;
+        setLoadError(err?.message || 'No se pudieron cargar las métricas de comparación');
         setLoading(false);
       }
     })();
@@ -317,6 +320,10 @@ export function Comparison() {
       deltaKind: 'numeric',
     },
   ];
+
+  if (loadError) {
+    return <LoadErrorState message={loadError} />;
+  }
 
   return (
     <div className="space-y-4">
