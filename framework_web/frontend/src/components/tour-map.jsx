@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { Tile3DLayer } from '@deck.gl/geo-layers';
 import { ScatterplotLayer, ColumnLayer } from '@deck.gl/layers';
+import { ScenegraphLayer } from '@deck.gl/mesh-layers';
 import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import { FlyToInterpolator } from '@deck.gl/core';
 import { Tiles3DLoader } from '@loaders.gl/3d-tiles';
+import { GLTFLoader } from '@loaders.gl/gltf';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -92,6 +94,25 @@ function riskRGBA(category, alpha = 240) {
 
 function bearingFor(idx) {
   return 35 + ((idx * 17) % 70) - 35;
+}
+
+// ─── GLB asset URLs ─────────────────────────────────────────────
+// Modelos PBR auto-contenidos del repositorio Khronos glTF Sample
+// Assets. Self-contained binary (textures embebidas) → un solo fetch
+// + CORS abierto desde raw.githubusercontent.com.
+//
+// ToyCar es una digitalización fotogramétrica real de un Cadillac de
+// juguete (Microsoft Maquette). En geometría tiny (~0.06 m de largo);
+// escalamos ~80x para ocupar ~5 m en mapa → tamaño realista de turismo.
+const CAR_GLB_URL =
+  'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb';
+
+// Yaw determinista por póliza: coches "aparcados" en orientaciones
+// distintas para que el conjunto no parezca un copy-paste. 360°
+// porque autos pueden ir en cualquier dirección.
+function carYawFor(p, idx) {
+  const seed = (idx * 53 + (p.lat * 1e4) | 0) >>> 0;
+  return seed % 360;
 }
 
 // ─── TourMap principal ──────────────────────────────────────────
@@ -299,19 +320,71 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
       })
     );
 
+    // ─── Coches · GLB real (ScenegraphLayer + ToyCar) ───────────
+    // Sustituye al halo cilíndrico genérico que teníamos para autos.
+    // Modelo PBR del repo Khronos, cargado vía GLTFLoader, alineado
+    // al suelo real vía TerrainExtension('offset'). sizeScale 80x
+    // porque ToyCar mide ~5 cm en model space → ~4 m en mapa. El
+    // tint del riesgo se aplica vía getColor (modula la BaseColor del
+    // PBR). El activo se tinta blanco y se eleva con liftOffset.
+    const carsData = policies
+      .map((p, i) => ({ ...p, _i: i }))
+      .filter((p) => p.product === 'autos');
+    if (carsData.length) {
+      layers.push(
+        new ScenegraphLayer({
+          id: 'policy-cars-gltf',
+          data: carsData,
+          scenegraph: CAR_GLB_URL,
+          loaders: [GLTFLoader],
+          _lighting: 'pbr',
+          getPosition: (d) => {
+            const z = d._i === activeIndex ? 0.4 + liftOffset : 0.4;
+            return [d.lon, d.lat, z];
+          },
+          getOrientation: (d) => [0, carYawFor(d, d._i), 90],
+          getColor: (d) => {
+            if (d._i === activeIndex) return [255, 255, 255, 255];
+            if (d._i === hoverIdx) return [...BLUE_HOVER];
+            return [...BLUE_BASE.slice(0, 3), 220];
+          },
+          sizeScale: 80,
+          sizeMinPixels: 6,
+          sizeMaxPixels: 90,
+          extensions: [new TerrainExtension()],
+          terrainDrawMode: 'offset',
+          pickable: true,
+          onClick: (info) => {
+            if (info.object && onSelectPolicy) onSelectPolicy(info.object._i);
+          },
+          onHover: (info) => {
+            setHoverIdx(info.object ? info.object._i : -1);
+          },
+          updateTriggers: {
+            getPosition: [activeIndex, liftT],
+            getColor: [activeIndex, hoverIdx],
+          },
+        })
+      );
+    }
+
     // ─── Halos ───────────────────────────────────────────────────
+    // Solo no-autos: los coches ya tienen su propio GLB arriba. Los
+    // halos siguen sirviendo para apartamentos, locales y naves.
+    const haloData = policies
+      .map((p, i) => ({ ...p, _i: i }))
+      .filter((p) => p.product !== 'autos');
     layers.push(
       new ColumnLayer({
         id: 'policy-halos',
-        data: policies,
-        getPosition: (d, { index }) => {
+        data: haloData,
+        getPosition: (d) => {
           const baseAlt = policyAltitude(d);
-          const z = index === activeIndex ? baseAlt + liftOffset : baseAlt;
+          const z = d._i === activeIndex ? baseAlt + liftOffset : baseAlt;
           return [d.lon, d.lat, z];
         },
         diskResolution: 26,
         getElevation: (d) => {
-          if (d.product === 'autos') return 1.2;
           if (d.subtype === 'nave') return 5;
           if (d.subtype === 'comercio') return 3.2;
           return 1.0;
@@ -319,14 +392,13 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         getRadius: (d) => {
           if (d.subtype === 'nave') return 7.5;
           if (d.subtype === 'comercio') return 4.2;
-          if (d.product === 'autos') return 2.2;
           return 4.0;
         },
         radiusUnits: 'meters',
         extruded: true,
-        getFillColor: (d, { index }) => {
-          if (index === activeIndex) return riskRGBA(d.risk_category, 230);
-          if (index === hoverIdx) return [...BLUE_HOVER.slice(0, 3), 180];
+        getFillColor: (d) => {
+          if (d._i === activeIndex) return riskRGBA(d.risk_category, 230);
+          if (d._i === hoverIdx) return [...BLUE_HOVER.slice(0, 3), 180];
           return [...BLUE_BASE.slice(0, 3), 90];
         },
         extensions: [new TerrainExtension()],
