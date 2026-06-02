@@ -28,7 +28,9 @@ const SIDEBAR_SECTIONS = [
       { id: 'portfolio', label: 'Portfolio Explorer', icon: 'briefcase', path: '/portfolio' },
       { id: 'policy-map', label: 'Policy Map', icon: 'map', path: '/policy-map' },
       { id: 'exposure', label: 'Exposure Dashboard', icon: 'bar-chart-3', path: '/exposure' },
-      { id: 'tour', label: '3D Policy Tour', icon: 'play-circle', path: '/tour' },
+      // 3D Policy Tour temporalmente oculto del sidebar — código vivo en
+      // /tour por URL directa, pendiente de iteración visual.
+      // { id: 'tour', label: '3D Policy Tour', icon: 'play-circle', path: '/tour' },
     ],
   },
   {
