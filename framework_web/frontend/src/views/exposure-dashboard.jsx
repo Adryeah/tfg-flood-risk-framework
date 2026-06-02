@@ -21,6 +21,7 @@ import { ExposureKpi } from '@/components/exposure-kpi.jsx';
 import { InfoHint } from '@/components/info-hint.jsx';
 import { api } from '@/lib/api.js';
 import { ZONES } from '@/lib/constants.js';
+import { t, useLang } from '@/lib/i18n.js';
 
 const RISK_COLORS = {
   low: '#16A34A',
@@ -267,6 +268,9 @@ export function ExposureDashboard() {
 // one product. Variants drive the left-edge accent rail colour.
 // ────────────────────────────────────────────────────────────────
 function HeroKpis({ portfolio, exposure }) {
+  // Suscribe a cambios de idioma para que los t() de abajo se
+  // re-evalúen cuando el usuario hace toggle EN ⇄ ES.
+  useLang();
   const tiv = portfolio.total_insured_value || 0;
   const eal = exposure.expected_total_loss || 0;
   const pml = exposure.estimated_total_loss_dana || 0;
@@ -291,7 +295,7 @@ function HeroKpis({ portfolio, exposure }) {
         label="Total insured value"
         value={`€${(tiv / 1e6).toFixed(1)}`}
         unit="M"
-        sub={`${totalCount.toLocaleString()} policies in scope`}
+        sub={`${totalCount.toLocaleString()} ${t('policies in scope')}`}
         variant="info"
         objective="Contexto — capital total bajo análisis."
         animationDelay={0}
@@ -300,7 +304,7 @@ function HeroKpis({ portfolio, exposure }) {
         label="EAL · annual"
         value={`€${(eal / 1000).toFixed(0)}`}
         unit="K"
-        sub={`Probability-weighted · €${(vaR / 1e6).toFixed(1)}M VaR`}
+        sub={`${t('Probability-weighted')} · €${(vaR / 1e6).toFixed(1)}M ${t('VaR')}`}
         variant="warning"
         objective="Minimizar — base de prima técnica anual."
         animationDelay={80}
@@ -318,7 +322,7 @@ function HeroKpis({ portfolio, exposure }) {
         label="Affected policies"
         value={highCount.toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
-        sub={`€${(highValue / 1e6).toFixed(1)}M high-risk exposure`}
+        sub={`€${(highValue / 1e6).toFixed(1)}M ${t('high-risk exposure')}`}
         variant="risk"
         objective="Identificar — pólizas a revisar manualmente."
         animationDelay={240}

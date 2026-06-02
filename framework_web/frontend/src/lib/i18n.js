@@ -12,6 +12,7 @@
  * The router calls applyTranslations() after each view render so navigated-
  * to views inherit the current language.
  */
+import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'frfw.lang';
 
@@ -857,6 +858,20 @@ const EN_ES = {
   'Risk position': 'Posición en el rango',
   'Copiar ficha': 'Copiar ficha',
   'Ficha copiada': 'Ficha copiada',
+
+  // ── Fragmentos para t() en KPI subs (string interpolations) ──
+  // Usados desde sub={`${X} ${t('policies in scope')}`} y similares.
+  // No los pongas como text nodes completos — el walker NO los pillará
+  // porque van mezclados con valores numéricos dinámicos.
+  'policies in scope': 'pólizas en alcance',
+  'active': 'activas',
+  'shown': 'mostradas',
+  'of TIV': 'del TIV',
+  'Value at risk': 'Valor en riesgo',
+  'Probability-weighted': 'Ponderado por probabilidad',
+  'VaR': 'VaR',
+  'high-risk exposure': 'exposición de alto riesgo',
+  Cartera: 'Cartera',
 };
 
 const ES_EN = Object.fromEntries(
@@ -890,6 +905,43 @@ export function setLang(lang) {
       console.warn('i18n listener failed', err);
     }
   });
+}
+
+/**
+ * Instant-lookup helper for use INSIDE JSX template strings. The DOM
+ * walker only handles text nodes whose entire trimmed content matches
+ * a dictionary key — interpolations like `${X} policies in scope`
+ * render as a single text node ("13,847 policies in scope") that the
+ * walker can't find. `t()` lets us reach into the static fragments:
+ *
+ *   sub={`${count} ${t('policies in scope')}`}
+ *
+ * Returns the input unchanged in EN, the translation in ES (or the
+ * input if the key isn't in the dict — fail-open, never throws).
+ */
+export function t(en) {
+  if (!en) return en;
+  if (getLang() === 'en') return en;
+  return EN_ES[en] || en;
+}
+
+/**
+ * React hook · subscribe to lang changes so the component re-renders
+ * when the user toggles EN ⇄ ES. Needed only in views that call t()
+ * inside JSX template strings — the DOM walker handles plain text
+ * nodes without this. Returns the current lang for convenience.
+ *
+ *   function Foo() {
+ *     useLang();
+ *     return <div>{`${count} ${t('policies in scope')}`}</div>;
+ *   }
+ */
+export function useLang() {
+  const [lang, setLocalLang] = useState(getLang);
+  useEffect(() => {
+    return onLangChange((next) => setLocalLang(next));
+  }, []);
+  return lang;
 }
 
 export function onLangChange(fn) {

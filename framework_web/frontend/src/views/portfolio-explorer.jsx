@@ -25,6 +25,7 @@ import { CreateCustomPortfolioDialog } from '@/components/create-custom-portfoli
 
 import { api } from '@/lib/api.js';
 import { useHashParams } from '@/lib/hash-params.js';
+import { t, useLang } from '@/lib/i18n.js';
 // Money formatter compartido — alias local fmtMoney para no tocar las
 // callsites. Switch a M en el threshold de redondeo (999_500) → antes
 // valores tipo €999_999 se mostraban como "€1000K" en lugar de "€1M".
@@ -697,6 +698,7 @@ export function PortfolioExplorer() {
 // preserva sólo para el sub-label "X of Y shown" del primer KPI.
 // ────────────────────────────────────────────────────────────────
 function KpiBar({ exposure, filteredClients, totalCount }) {
+  useLang(); // re-render en toggle EN ⇄ ES para los t() de abajo
   const tiv = exposure.total_insured_value || 0;
   const vaR = exposure.value_at_risk || 0;
   const pml = exposure.estimated_total_loss_dana || 0;
@@ -721,7 +723,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         label="Portfolio TIV"
         value={fmtMoney(tiv)}
-        sub={`${totalCount.toLocaleString()} active · ${filteredCount.toLocaleString()} shown`}
+        sub={`${totalCount.toLocaleString()} ${t('active')} · ${filteredCount.toLocaleString()} ${t('shown')}`}
         variant="info"
         objective="Contexto — base de exposición total de la cartera."
         animationDelay={0}
@@ -745,7 +747,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       <ExposureKpi
         label="High-risk exposure"
         value={fmtMoney(highValue)}
-        sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% of TIV`}
+        sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
         variant="risk"
         objective="Reducir — concentración en píxeles de alto riesgo."
         animationDelay={240}
@@ -754,7 +756,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         label="Affected policies"
         value={highCount.toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
-        sub={`Value at risk ${fmtMoney(vaR)}`}
+        sub={`${t('Value at risk')} ${fmtMoney(vaR)}`}
         variant="risk"
         objective="Identificar — pólizas críticas para underwriting."
         animationDelay={320}

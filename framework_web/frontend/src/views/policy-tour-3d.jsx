@@ -160,7 +160,7 @@ export function PolicyTour3D() {
         </div>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger className="w-[200px] sm:w-[240px] h-8 text-12">
-            <SelectValue placeholder="Cartera" />
+            <SelectValue placeholder="Select portfolio" />
           </SelectTrigger>
           <SelectContent>
             {portfolios.map((p) => (
