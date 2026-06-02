@@ -7,37 +7,51 @@ import {
   BookOpen,
 } from 'lucide-react';
 
-import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { DanaSwipeCompare } from '../components/dana-swipe-compare.jsx';
+import { useInView, useCountUp } from '../lib/animations.js';
 
 // ─── Hero stats ──────────────────────────────────────────────────
-// Cuatro números que cuentan la escala del evento. Ordenados de
-// causa (lluvia) a efecto (afectados). El recurso visual deliberado:
-// número grande mono + sub-label serif italic.
+// Cuatro números que cuentan la escala del evento. `numericValue` es
+// lo que se anima (count-up de 0 → target); `displayPrefix/Suffix`
+// son los add-ons que rodean al número (signo, coma decimal, etc.).
 const HERO_STATS = [
-  { value: '400', unit: 'mm', label: 'precipitación en 8 horas (zona crítica)' },
-  { value: '199', unit: 'km²', label: 'área inundada confirmada por EMSR773' },
-  { value: '90', unit: 'mil', label: 'residentes directamente afectados' },
-  { value: '14', unit: '+2', label: 'municipios DANA (Valencia) + Algemesí · Alzira' },
+  {
+    numericValue: 400,
+    unit: 'mm',
+    label: 'precipitación en 8 horas (zona crítica)',
+  },
+  {
+    numericValue: 199,
+    unit: 'km²',
+    label: 'área inundada confirmada por EMSR773',
+  },
+  {
+    numericValue: 90,
+    unit: 'mil',
+    label: 'residentes directamente afectados',
+  },
+  {
+    numericValue: 14,
+    unit: '+2',
+    label: 'municipios DANA (Valencia) + Algemesí · Alzira',
+  },
 ];
 
 // ─── Timeline phases ─────────────────────────────────────────────
-// Cinco bloques que componen el "antes / durante / después":
-// 1. Pre-DANA (S1 adquirida una semana antes — la única ventana
-//    cerrada antes del evento). Esta es la imagen que alimentó al
-//    modelo. NADA del evento está en el training set.
-// 2. La predicción del modelo (entrenado solo con baseline).
-// 3. El día del evento (29 oct, 18:00 h, ~400 mm/8h).
-// 4. Adquisición post-DANA (31 oct) — la primera observación SAR del
-//    daño + activación EMS.
-// 5. Validación contra EMSR773 (qué predijimos vs qué pasó).
+// Cinco bloques antes / durante / después con paleta Zurich aplicada
+// a cada acento. El recorrido cromático cuenta el arco narrativo:
+// gris frío (observación dormida) → azul (predicción) → rojo (evento)
+// → rojo oscuro (daño) → verde (validación). `weight` controla la
+// densidad visual: la fase 3 (la DANA) lleva weight='heavy' que dobla
+// el border del icono y la mete en serif más grande.
 const PHASES = [
   {
     date: '19 octubre 2024',
     time: '18:12 UTC',
     title: 'Última pasada Sentinel-1 antes del evento',
     icon: Satellite,
-    accent: '#475569',
+    accent: '#4B5563', // neutral-600 — observación rutinaria
+    weight: 'normal',
     body: (
       <>
         El satélite Sentinel-1A captura la zona en órbita ascendente.
@@ -52,7 +66,8 @@ const PHASES = [
     time: 'baseline 2022–2024',
     title: 'Lo que nuestro modelo había predicho',
     icon: MapIcon,
-    accent: '#7C3AED',
+    accent: '#3B82F6', // accent-info — predicción / analítica
+    weight: 'normal',
     body: (
       <>
         Entrenado con 28 escenas baseline (sin nunca ver las dos del
@@ -68,7 +83,8 @@ const PHASES = [
     time: '~18:00 hora local',
     title: 'La DANA',
     icon: CloudRain,
-    accent: '#DC2626',
+    accent: '#E74C3C', // risk-high flood red — el evento
+    weight: 'heavy', // este es el corazón del relato
     body: (
       <>
         Un sistema convectivo profundo, alimentado por la entrada de
@@ -84,7 +100,8 @@ const PHASES = [
     time: '18:12 UTC',
     title: 'Sentinel-1 captura el daño',
     icon: AlertOctagon,
-    accent: '#991B1B',
+    accent: '#DC2626', // risk-critical — daño confirmado
+    weight: 'normal',
     body: (
       <>
         Dos días después del evento, la siguiente pasada SAR observa la
@@ -101,7 +118,8 @@ const PHASES = [
     time: 'ground truth oficial',
     title: 'EMSR773 vs nuestro modelo',
     icon: BookOpen,
-    accent: '#15803D',
+    accent: '#10B981', // risk-low / status-live — validación
+    weight: 'normal',
     body: (
       <>
         La delineación de Copernicus EMS identifica{' '}
@@ -118,14 +136,15 @@ const PHASES = [
 
 export function DanaTimeline() {
   return (
-    <div className="max-w-[1200px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-12 space-y-8">
+    <div className="max-w-[1200px] mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-16 space-y-10">
       {/* ─── HEADER · editorial register, denso narrativo ─────────── */}
-      <header className="border-b border-border-default pb-5">
-        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
+      <header className="border-b border-border-default pb-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-2">
           Case study · The day that triggered this project
         </div>
-        <h1 className="font-serif text-28 sm:text-32 leading-none text-text-primary tracking-tight">
-          DANA <span className="italic">·</span> 29 octubre 2024
+        <h1 className="font-serif text-28 sm:text-32 leading-[1.05] text-text-primary tracking-tight">
+          DANA <span className="italic text-text-tertiary mx-1">·</span>{' '}
+          29 octubre 2024
         </h1>
         <p className="font-serif italic text-14 sm:text-15 text-text-secondary mt-3 max-w-3xl leading-snug">
           La depresión aislada en niveles altos descargó sobre Valencia
@@ -137,53 +156,27 @@ export function DanaTimeline() {
         </p>
       </header>
 
-      {/* ─── HERO STATS ──────────────────────────────────────────────
-       *  Cuatro tarjetas con la magnitud del evento. Tipografía mono
-       *  grande para el número, serif italic para el sub-label. No
-       *  uso el patrón hero-metric SaaS porque cada tarjeta tiene
-       *  igual peso visual (la cantidad cuenta una sola historia). */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {HERO_STATS.map((s) => (
-          <div
-            key={s.label}
-            className="bg-bg-surface border border-border-default rounded shadow-sm px-4 py-4"
-          >
-            <div className="flex items-baseline gap-1.5 mb-1.5">
-              <span
-                className="font-mono font-semibold tabular-nums text-text-primary"
-                style={{ fontSize: '32px', lineHeight: 1 }}
-              >
-                {s.value}
-              </span>
-              <span className="text-13 font-mono text-text-secondary">
-                {s.unit}
-              </span>
-            </div>
-            <p className="font-serif italic text-12 text-text-secondary leading-snug">
-              {s.label}
-            </p>
-          </div>
-        ))}
-      </section>
+      {/* ─── HERO STATS · count-up + stagger + hover lift ────────────
+       *  Cuatro tarjetas con la magnitud del evento. Cada número
+       *  cuenta desde 0 hasta target en 1.2s ease-out cuártico cuando
+       *  la sección entra en viewport. Stagger 120 ms entre cards.
+       *  Hover: 1.5 px translateY + shadow elevation + accent
+       *  navy en el border. */}
+      <HeroStatsGrid />
 
-      {/* ─── SIDE-BY-SIDE · predicción vs ground truth ────────────────
-       *  El corazón narrativo: lo que el modelo había marcado en rojo
-       *  antes de la DANA (izquierda) y lo que confirmó EMSR773
-       *  después (derecha). Ambos mapas usan el mismo bbox y zoom
-       *  inicial para que el lector pueda comparar píxel a píxel. */}
-      {/* ─── COMPARACIÓN SWIPE · PREDICCIÓN ↔ GROUND TRUTH ───────────
-       *  Patrón NYTimes / Maxar / Planet Labs: un solo mapa
-       *  full-width con un divisor vertical arrastrable. A la izquierda
-       *  del divisor se revela la silueta EMSR773 (ground truth) sobre
-       *  el heatmap base; a la derecha solo queda el heatmap de la
-       *  predicción. El heatmap rojo es la referencia constante; la
-       *  capa cian del ground truth aparece/desaparece según el
-       *  arrastre. Más visual y dinámico que el side-by-side anterior
-       *  porque obliga al ojo a comparar píxel a píxel sin saltar entre
-       *  dos lienzos. */}
-      <section>
-        <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-3">
-          La comparación que hace el caso · arrastra para ver
+      {/* ─── COMPARACIÓN SWIPE · PREDICCIÓN ↔ GROUND TRUTH ────────── */}
+      <RevealSection delay={0}>
+        <div className="flex items-baseline gap-3 mb-3">
+          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+            La comparación que hace el caso
+          </div>
+          <div
+            className="h-px flex-1 max-w-[120px]"
+            style={{ background: 'var(--border-default)' }}
+          />
+          <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary">
+            arrastra para ver
+          </div>
         </div>
         <DanaSwipeCompare zone="valencia" height={460} />
         <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
@@ -194,172 +187,318 @@ export function DanaTimeline() {
           sobre el mapa de predicción — las dos siluetas se superponen
           en los valles de Catarroja, Paiporta y Albal.
         </p>
-      </section>
+      </RevealSection>
 
-      {/* ─── EL VEREDICTO NUMÉRICO · RECALL DEL MODELO ───────────────
-       *  La comparación visual de arriba ya muestra que las dos
-       *  siluetas coinciden; aquí lo cuantificamos con la métrica
-       *  operativa más relevante: Recall buffered a 100 m. Tres
-       *  capas de información en una sola card:
-       *    1. Big mono number con el 95.8% (verde recall, dorado AUC)
-       *    2. Barra horizontal verde/gris con la cuota capturada vs
-       *       no detectada en km².
-       *    3. Strip inferior con recall píxel-exacto, AUC, F1 como
-       *       contexto secundario. */}
-      <section>
-        <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-3">
-          El veredicto numérico · cómo de bien acertó el modelo
+      {/* ─── EL VEREDICTO NUMÉRICO ──────────────────────────────────── */}
+      <RecallVerdict />
+
+      {/* ─── TIMELINE · 5 fases con reveal-on-scroll ─────────────────
+       *  Cada fase se desvela cuando entra al viewport (no en mount,
+       *  para que el lector "descubra" el bloque al avanzar). La
+       *  fase 3 (la DANA) lleva weight='heavy' → icono con border doble
+       *  y título un punto más grande, marcando el clímax narrativo. */}
+      <RevealSection delay={0}>
+        <div className="flex items-baseline gap-3 mb-5">
+          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+            Reconstrucción cronológica
+          </div>
+          <div
+            className="h-px flex-1 max-w-[80px]"
+            style={{ background: 'var(--border-default)' }}
+          />
         </div>
-        <div className="bg-bg-surface border border-border-default rounded shadow-sm p-5 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 items-center">
-            {/* Big recall number */}
-            <div>
-              <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-2">
-                Recall · tolerancia 100 m
-              </div>
-              <div className="flex items-baseline gap-2 mb-3">
-                <span
-                  className="font-mono font-semibold tabular-nums"
-                  style={{ fontSize: 52, lineHeight: 1, color: '#15803D' }}
-                >
-                  95.8%
-                </span>
-                <span className="text-12 font-mono text-text-tertiary">
-                  cobertura
-                </span>
-              </div>
-              <p className="font-serif italic text-13 text-text-secondary leading-snug">
-                De cada 100 píxeles que se inundaron realmente, el modelo
-                había marcado 96 como riesgo alto en su predicción
-                pre-DANA. Sin haber visto nunca el evento.
-              </p>
+        <ol className="relative space-y-7 pl-7 sm:pl-9 border-l border-border-default">
+          {PHASES.map((phase, idx) => (
+            <PhaseItem key={phase.title} phase={phase} idx={idx} />
+          ))}
+        </ol>
+      </RevealSection>
+
+      {/* ─── CLOSING NOTE · pull-quote final ────────────────────────
+       *  Tesis del caso, glifo de cita sutil al inicio + serif
+       *  centrado prose-width + em-dashes reales. */}
+      <RevealSection delay={0}>
+        <div className="max-w-[68ch] mx-auto pt-2 pl-5 sm:pl-7 relative">
+          {/* Glifo de cita decorativo, fina raya navy a la izquierda */}
+          <div
+            className="absolute left-0 top-2 bottom-2 w-[2px]"
+            style={{ background: 'var(--brand-500)' }}
+            aria-hidden="true"
+          />
+          <p className="font-serif text-16 sm:text-17 text-text-primary leading-relaxed">
+            La DANA de Valencia ocurrió. Lo que este TFG demuestra es
+            que <em>podría haberse anticipado</em>{' '}
+            <span className="text-text-tertiary">—</span> no en hora
+            cero como una alerta meteorológica, sino con días o semanas
+            de antelación como mapa de exposición{' '}
+            <span className="text-text-tertiary">—</span> con datos
+            públicos, un ordenador personal y rigor metodológico. No
+            hace falta un proveedor comercial de cat-models para
+            construir esa señal.
+          </p>
+          <p className="font-serif italic text-13 text-text-secondary mt-4">
+            Memoria del TFG, Capítulo 7 · <em>Discusión</em>.
+          </p>
+        </div>
+      </RevealSection>
+    </div>
+  );
+}
+
+// ─── Hero stats grid ─────────────────────────────────────────────
+function HeroStatsGrid() {
+  const [ref, inView] = useInView({ threshold: 0.3 });
+  return (
+    <section
+      ref={ref}
+      className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+    >
+      {HERO_STATS.map((s, idx) => (
+        <HeroStatCard key={s.label} stat={s} idx={idx} active={inView} />
+      ))}
+    </section>
+  );
+}
+
+function HeroStatCard({ stat, idx, active }) {
+  // Stagger: cada card arranca el count-up 140 ms después de la anterior.
+  // 1100ms de duración para que el primer número termine antes de que el
+  // último arranque demasiado tarde (1100 + 3*140 = 1520 ms total).
+  const animated = useCountUp(stat.numericValue, {
+    active,
+    duration: 1100,
+    startDelay: idx * 140,
+  });
+  const display = Math.round(animated).toLocaleString('es-ES');
+
+  return (
+    <div
+      className="group relative bg-bg-surface border border-border-default rounded-md shadow-sm px-4 py-4 transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:border-brand-500/40 animate-in fade-in slide-in-from-bottom-3"
+      style={{
+        animationDelay: `${idx * 80}ms`,
+        animationDuration: '700ms',
+        animationFillMode: 'backwards',
+      }}
+    >
+      {/* Hairline navy accent — solo visible al hover. Lee como "esto
+       *  es interactivo" sin requerir un click target. */}
+      <div
+        className="absolute top-0 left-0 h-[2px] bg-brand-500 transition-all duration-300 ease-out group-hover:w-12"
+        style={{ width: '20px' }}
+        aria-hidden="true"
+      />
+      <div className="flex items-baseline gap-1.5 mb-1.5">
+        <span
+          className="font-mono font-semibold tabular-nums text-text-primary"
+          style={{ fontSize: '32px', lineHeight: 1 }}
+        >
+          {display}
+        </span>
+        <span className="text-13 font-mono text-text-secondary">
+          {stat.unit}
+        </span>
+      </div>
+      <p className="font-serif italic text-12 text-text-secondary leading-snug">
+        {stat.label}
+      </p>
+    </div>
+  );
+}
+
+// ─── Recall verdict ───────────────────────────────────────────────
+// Big 95.8% cuenta desde 0 + barra de progreso anima fill + KPIs
+// secundarios cuentan también con stagger ligero. Todo se dispara
+// cuando la sección entra al viewport.
+function RecallVerdict() {
+  const [ref, inView] = useInView({ threshold: 0.25 });
+  const recall = useCountUp(95.8, { active: inView, duration: 1400 });
+  const pixelRecall = useCountUp(77.7, { active: inView, duration: 1400, startDelay: 200 });
+  const auc = useCountUp(0.922, { active: inView, duration: 1400, startDelay: 300 });
+  const f1 = useCountUp(0.485, { active: inView, duration: 1400, startDelay: 400 });
+  const captured = useCountUp(190.7, { active: inView, duration: 1400, startDelay: 100 });
+  const missed = useCountUp(8.3, { active: inView, duration: 1400, startDelay: 100 });
+
+  return (
+    <section ref={ref}>
+      <div className="flex items-baseline gap-3 mb-3">
+        <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
+          El veredicto numérico
+        </div>
+        <div
+          className="h-px flex-1 max-w-[120px]"
+          style={{ background: 'var(--border-default)' }}
+        />
+        <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary">
+          cómo de bien acertó el modelo
+        </div>
+      </div>
+
+      <div className="bg-bg-surface border border-border-default rounded-md shadow-sm p-5 sm:p-6 transition-shadow duration-200 hover:shadow-md">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 items-center">
+          {/* Big recall number con count-up */}
+          <div>
+            <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-2">
+              Recall · tolerancia 100 m
+            </div>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span
+                className="font-mono font-semibold tabular-nums"
+                style={{ fontSize: 52, lineHeight: 1, color: '#10B981' }}
+              >
+                {recall.toFixed(1)}%
+              </span>
+              <span className="text-12 font-mono text-text-tertiary">
+                cobertura
+              </span>
+            </div>
+            <p className="font-serif italic text-13 text-text-secondary leading-snug">
+              De cada 100 píxeles que se inundaron realmente, el modelo
+              había marcado 96 como riesgo alto en su predicción
+              pre-DANA. Sin haber visto nunca el evento.
+            </p>
+          </div>
+
+          {/* Barra de cobertura animada + KPIs secundarios */}
+          <div>
+            <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary mb-1.5">
+              Área inundada según EMSR773
+            </div>
+            <div className="h-3 bg-bg-subtle rounded-sm overflow-hidden flex relative">
+              {/* Fill verde — width animada de 0 → 95.8% */}
+              <div
+                className="h-full transition-[width] duration-[1400ms] ease-out"
+                style={{
+                  width: inView ? '95.8%' : '0%',
+                  background: 'linear-gradient(90deg, #0F766E 0%, #10B981 100%)',
+                }}
+                title="Detectados por el modelo"
+              />
+              {/* Fill gris — width animada de 0 → 4.2% (entra al final) */}
+              <div
+                className="h-full transition-[width] duration-[1400ms] ease-out"
+                style={{
+                  width: inView ? '4.2%' : '0%',
+                  background: '#9CA3AF',
+                  transitionDelay: '300ms',
+                }}
+                title="No detectados (zona estructural)"
+              />
+            </div>
+            <div className="mt-1.5 flex justify-between text-11 font-mono tabular-nums">
+              <span style={{ color: '#10B981' }}>
+                ≈ {captured.toFixed(1)} km² capturados
+              </span>
+              <span className="text-text-tertiary">
+                ≈ {missed.toFixed(1)} km² no detectados
+              </span>
             </div>
 
-            {/* Barra de cobertura + KPIs secundarios */}
-            <div>
-              <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary mb-1.5">
-                Área inundada según EMSR773
-              </div>
-              <div className="h-3 bg-bg-subtle rounded-sm overflow-hidden flex">
-                <div
-                  style={{
-                    width: '95.8%',
-                    background: 'linear-gradient(90deg, #15803D 0%, #16A34A 100%)',
-                  }}
-                  title="Detectados por el modelo"
-                />
-                <div
-                  style={{ width: '4.2%', background: '#94A3B8' }}
-                  title="No detectados (zona estructural)"
-                />
-              </div>
-              <div className="mt-1.5 flex justify-between text-11 font-mono">
-                <span style={{ color: '#15803D' }}>
-                  ≈ 190.7 km² capturados
-                </span>
-                <span className="text-text-tertiary">
-                  ≈ 8.3 km² no detectados
-                </span>
-              </div>
-
-              {/* KPIs secundarios */}
-              <div className="mt-4 pt-3 border-t border-border-default grid grid-cols-3 gap-3">
-                <SecondaryKpi
-                  label="Recall · píxel-exacto"
-                  value="77.7%"
-                  note="Sin tolerancia espacial"
-                />
-                <SecondaryKpi
-                  label="AUC ROC"
-                  value="0.922"
-                  note="Capacidad de ranking"
-                />
-                <SecondaryKpi
-                  label="F1 · operacional"
-                  value="0.485"
-                  note="Threshold 0.614"
-                />
-              </div>
+            {/* KPIs secundarios con count-up */}
+            <div className="mt-4 pt-3 border-t border-border-default grid grid-cols-3 gap-3">
+              <SecondaryKpi
+                label="Recall · píxel-exacto"
+                value={`${pixelRecall.toFixed(1)}%`}
+                note="Sin tolerancia espacial"
+              />
+              <SecondaryKpi
+                label="AUC ROC"
+                value={auc.toFixed(3)}
+                note="Capacidad de ranking"
+              />
+              <SecondaryKpi
+                label="F1 · operacional"
+                value={f1.toFixed(3)}
+                note="Threshold 0.614"
+              />
             </div>
           </div>
         </div>
-        <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
-          Las dos siluetas de los mapas de arriba no son anecdóticas:
-          el modelo había anticipado el <strong>95.8% de la geografía
-          del evento real</strong> a tolerancia de manzana (100 m). El
-          4.2% no detectado corresponde casi en su totalidad a píxeles
-          aislados — artefactos de la rasterización del shapefile
-          EMSR773 — no a errores estructurales del modelo. Detalle
-          metodológico completo en el capítulo 5 de la memoria.
-        </p>
-      </section>
+      </div>
+      <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
+        Las dos siluetas de los mapas de arriba no son anecdóticas:
+        el modelo había anticipado el <strong>95.8% de la geografía
+        del evento real</strong> a tolerancia de manzana (100 m). El
+        4.2% no detectado corresponde casi en su totalidad a píxeles
+        aislados — artefactos de la rasterización del shapefile
+        EMSR773 — no a errores estructurales del modelo. Detalle
+        metodológico completo en el capítulo 5 de la memoria.
+      </p>
+    </section>
+  );
+}
 
-      {/* ─── TIMELINE · 5 fases ──────────────────────────────────────
-       *  Estructura editorial: línea vertical fina + bloques de fecha
-       *  + título + prosa serif. Cada fase tiene icono y acento de
-       *  color. Lee como página de revista, no como log de eventos. */}
-      <section>
-        <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mb-3">
-          Reconstrucción cronológica
-        </div>
-        <ol className="relative space-y-6 pl-7 sm:pl-9 border-l border-border-default">
-          {PHASES.map((phase, idx) => {
-            const Icon = phase.icon;
-            return (
-              <li key={phase.title} className="relative">
-                {/* Dot + icon */}
-                <span
-                  className="absolute -left-[34px] sm:-left-[42px] top-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-bg-surface border-2"
-                  style={{ borderColor: phase.accent }}
-                >
-                  <Icon
-                    className="w-3.5 h-3.5"
-                    style={{ color: phase.accent }}
-                    strokeWidth={2}
-                  />
-                </span>
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
-                  <span
-                    className="text-10 font-mono font-semibold uppercase tracking-[0.14em]"
-                    style={{ color: phase.accent }}
-                  >
-                    {phase.date}
-                  </span>
-                  <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
-                    {phase.time}
-                  </span>
-                </div>
-                <h3 className="font-serif text-18 sm:text-20 text-text-primary tracking-tight leading-tight mb-2">
-                  {phase.title}
-                </h3>
-                <p className="text-13 text-text-secondary leading-relaxed max-w-3xl">
-                  {phase.body}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+// ─── Phase item con reveal individual al entrar viewport ──────────
+function PhaseItem({ phase, idx }) {
+  const [ref, inView] = useInView({ threshold: 0.4 });
+  const Icon = phase.icon;
+  const heavy = phase.weight === 'heavy';
+  return (
+    <li
+      ref={ref}
+      className="relative transition-all duration-700 ease-out"
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? 'translateY(0)' : 'translateY(12px)',
+      }}
+    >
+      {/* Dot + icon — borderWidth doble cuando weight='heavy' marca el clímax */}
+      <span
+        className="absolute -left-[34px] sm:-left-[42px] top-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-bg-surface transition-transform duration-200 ease-out"
+        style={{
+          border: `${heavy ? 3 : 2}px solid ${phase.accent}`,
+          boxShadow: heavy
+            ? `0 0 0 4px rgba(231, 76, 60, 0.10)` // halo rojo para la fase DANA
+            : 'none',
+          transform: inView ? 'scale(1)' : 'scale(0.6)',
+          transitionDelay: '150ms',
+        }}
+      >
+        <Icon
+          className="w-3.5 h-3.5"
+          style={{ color: phase.accent }}
+          strokeWidth={2}
+        />
+      </span>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
+        <span
+          className="text-10 font-mono font-semibold uppercase tracking-[0.14em]"
+          style={{ color: phase.accent }}
+        >
+          {phase.date}
+        </span>
+        <span className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
+          {phase.time}
+        </span>
+      </div>
+      <h3
+        className={`font-serif text-text-primary tracking-tight leading-tight mb-2 ${
+          heavy ? 'text-20 sm:text-22' : 'text-18 sm:text-20'
+        }`}
+      >
+        {phase.title}
+      </h3>
+      <p className="text-13 text-text-secondary leading-relaxed max-w-3xl">
+        {phase.body}
+      </p>
+    </li>
+  );
+}
 
-      {/* ─── CLOSING NOTE ────────────────────────────────────────────
-       *  Pull-quote final con la tesis del caso. Sin "callout box"
-       *  con borde lateral (banned). Solo glifo de cita + serif
-       *  centrado, prose-width. */}
-      <section className="max-w-[68ch] mx-auto pt-2 text-center sm:text-left">
-        <p className="font-serif text-16 sm:text-17 text-text-primary leading-relaxed">
-          La DANA de Valencia ocurrió. Lo que este TFG demuestra es
-          que <em>podría haberse anticipado</em> ---no en hora cero
-          como una alerta meteorológica, sino con días o semanas de
-          antelación como mapa de exposición--- con datos públicos,
-          un ordenador personal y rigor metodológico. No hace falta
-          un proveedor comercial de cat-models para construir esa
-          señal.
-        </p>
-        <p className="font-serif italic text-13 text-text-secondary mt-4">
-          Memoria del TFG, Capítulo 7 · <em>Discusión</em>.
-        </p>
-      </section>
-    </div>
+// ─── Wrapper · reveal-on-scroll para secciones grandes ────────────
+function RevealSection({ children, delay = 0 }) {
+  const [ref, inView] = useInView({ threshold: 0.1 });
+  return (
+    <section
+      ref={ref}
+      className="transition-all duration-700 ease-out"
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? 'translateY(0)' : 'translateY(16px)',
+        transitionDelay: `${delay}ms`,
+      }}
+    >
+      {children}
+    </section>
   );
 }
 
