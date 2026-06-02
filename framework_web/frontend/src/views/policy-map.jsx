@@ -392,6 +392,38 @@ export function PolicyMap() {
             <Loader2 className="w-5 h-5 animate-spin text-text-tertiary" />
           </div>
         )}
+
+        {/* Empty-state overlay: la cartera tiene pólizas pero los filtros
+         *  activos las han dejado todas fuera. Sin este aviso, el mapa
+         *  aparece vacío y el dock dice "No policy selected." → parece
+         *  que la cartera entera está vacía. */}
+        {!loading &&
+          portfolio?.clients?.length > 0 &&
+          orderedClients.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center z-[20] pointer-events-none">
+              <div className="bg-bg-surface/95 backdrop-blur-sm border border-border-default rounded shadow-md px-5 py-4 max-w-sm text-center pointer-events-auto">
+                <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-1.5">
+                  Sin resultados
+                </div>
+                <div className="font-serif italic text-15 text-text-primary leading-snug mb-1.5">
+                  Ninguna póliza pasa los filtros activos
+                </div>
+                <p className="text-12 text-text-secondary leading-snug mb-3">
+                  La cartera tiene {portfolio.clients.length} pólizas, pero
+                  el filtro <em>Product</em> deja todas fuera. Ajusta el
+                  filtro o vuelve a <em>All</em>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setProductFilter('all')}
+                  className="text-11 font-mono uppercase tracking-wider px-2.5 py-1 rounded border border-border-default text-text-primary hover:bg-bg-hover transition-colors"
+                >
+                  Mostrar todas
+                </button>
+              </div>
+            </div>
+          )}
+
         <MapCanvas
           // Center the camera on the combined Valencia + Algemesí bbox so
           // the initial paint already shows the full portfolio extent (the

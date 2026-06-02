@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { TourDock } from '@/components/tour-dock.jsx';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 
 // Lazy-load del TourMap porque importa CesiumJS (~3 MB). Sólo se
 // descarga cuando el usuario navega realmente a /tour; el resto de
@@ -41,6 +42,7 @@ export function PolicyTour3D() {
     autos: true,
   });
   const [speed, setSpeed] = useState(1);
+  const [loadError, setLoadError] = useState(null);
 
   // 1) Index de carteras
   useEffect(() => {
@@ -51,7 +53,10 @@ export function PolicyTour3D() {
         if (!mounted) return;
         setPortfolios(res?.portfolios || []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!mounted) return;
+        setLoadError(err?.message || 'No se pudo cargar el índice de carteras');
+      });
     return () => {
       mounted = false;
     };
@@ -68,7 +73,10 @@ export function PolicyTour3D() {
         setPortfolio(p);
         setActiveIndex(0);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!mounted) return;
+        setLoadError(err?.message || 'No se pudo cargar la cartera seleccionada');
+      });
     return () => {
       mounted = false;
     };
@@ -130,6 +138,10 @@ export function PolicyTour3D() {
   useEffect(() => {
     setActiveIndex(0);
   }, [productFilter, showAll, selectedId]);
+
+  if (loadError) {
+    return <LoadErrorState message={loadError} />;
+  }
 
   if (!portfolio) {
     return (

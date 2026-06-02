@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 import { MethodologySources } from '@/components/methodology-sources';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '@/lib/api.js';
 import { useHashParams } from '@/lib/hash-params.js';
 
@@ -53,6 +54,7 @@ const SOURCES = [
 export function Transferability() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   // Cross-link target from Modelo y Validación. When the user clicks
   // "drift →" next to a feature in the glossary, we land here with
   // ?feature=<name>; the drift chart highlights that bar.
@@ -67,7 +69,10 @@ export function Transferability() {
         if (!mounted) return;
         setData(d);
       })
-      .catch((err) => console.error('Transferability load failed', err))
+      .catch((err) => {
+        if (!mounted) return;
+        setLoadError(err?.message || 'No se pudieron cargar los datos de transferabilidad');
+      })
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
@@ -81,12 +86,16 @@ export function Transferability() {
   const aucAlgemesi = data?.auc_algemesi ?? 0.817;
   const aucDrop = aucAlgemesi - aucValencia;
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
         <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     );
+  }
+
+  if (loadError || !data) {
+    return <LoadErrorState message={loadError} />;
   }
 
   return (

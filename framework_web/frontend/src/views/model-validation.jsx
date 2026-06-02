@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import MetricTile from '@/components/metric-tile';
 import { InfoHint } from '@/components/info-hint';
 import { MethodologySources } from '@/components/methodology-sources';
+import { LoadErrorState } from '@/components/load-error-state.jsx';
 import { api } from '@/lib/api.js';
 import { FEATURE_DOCS, CATEGORY_META } from '@/lib/feature-docs.js';
 
@@ -79,6 +80,7 @@ const SOURCES = [
 export function ModelValidation() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -88,19 +90,26 @@ export function ModelValidation() {
         if (!mounted) return;
         setMetrics(data);
       })
-      .catch((err) => console.error('Model & Validation load failed', err))
+      .catch((err) => {
+        if (!mounted) return;
+        setLoadError(err?.message || 'No se pudieron cargar las métricas');
+      })
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
     };
   }, []);
 
-  if (loading || !metrics) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
         <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     );
+  }
+
+  if (loadError || !metrics) {
+    return <LoadErrorState message={loadError} />;
   }
 
   const m = metrics.model_metrics;
