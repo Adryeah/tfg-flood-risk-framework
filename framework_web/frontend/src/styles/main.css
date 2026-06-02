@@ -190,6 +190,96 @@
     background: transparent;
   }
 
+  /* ─── KPI hierarchy · TIER system ────────────────────────────────
+   * Component side (exposure-kpi.jsx) emite `data-tier="1|2|3"` y la
+   * presentación visual la maneja CSS. Esto permite que un cambio de
+   * tier en un consumer ripple por toda la card sin tocar el JSX.
+   *
+   * Layout:
+   *   TIER 1 → grid-column: span 2 (anchor, ocupa dos columnas)
+   *   TIER 2 → ancho normal
+   *   TIER 3 → ancho normal, opacidad ligeramente reducida
+   *
+   * Estética:
+   *   TIER 1 → navy border + subtle white→navy-tint gradient +
+   *            sombra profunda + radius lg. Reads como "headline".
+   *   TIER 2 → borde standard + sombra default. Reads como "ops".
+   *   TIER 3 → borde sutil + sombra small + opacidad 0.92. Reads
+   *            como "drill-down secundario".
+   *
+   * Hover (spec section 5):
+   *   transform translateY(-2px) + sombra incrementada.
+   *   Transición 200ms cubic-bezier(0.4,0,0.2,1).
+   * ───────────────────────────────────────────────────────────────── */
+  .kpi-card {
+    border-radius: 8px;
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* TIER 1 · anchor */
+  .kpi-card[data-tier="1"] {
+    grid-column: span 2;
+    border: 1px solid var(--kpi-tier1-border);
+    background: var(--kpi-tier1-bg);
+    box-shadow: var(--kpi-tier1-shadow);
+  }
+  .kpi-card[data-tier="1"]:hover {
+    box-shadow: var(--kpi-tier1-shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  /* TIER 2 · operational (default) */
+  .kpi-card[data-tier="2"] {
+    border-color: var(--kpi-tier2-border);
+    background: var(--kpi-tier2-bg);
+    box-shadow: var(--kpi-tier2-shadow);
+  }
+  .kpi-card[data-tier="2"]:hover {
+    box-shadow: var(--kpi-tier2-shadow-hover);
+  }
+
+  /* TIER 3 · drill-down */
+  .kpi-card[data-tier="3"] {
+    border-color: var(--kpi-tier3-border);
+    background: var(--kpi-tier3-bg);
+    box-shadow: var(--kpi-tier3-shadow);
+    opacity: var(--kpi-tier3-opacity);
+  }
+  .kpi-card[data-tier="3"]:hover {
+    box-shadow: var(--kpi-tier3-shadow-hover);
+    opacity: 1;
+  }
+
+  /* Responsive: en mobile (< 768 px), un TIER 1 ya no puede
+   * permitirse 2 columnas → degradar a 1 columna full-width. El KPI
+   * sigue siendo prominent vía gradient + border, solo cambia la
+   * span. */
+  @media (max-width: 767px) {
+    .kpi-card[data-tier="1"] {
+      grid-column: span 1;
+    }
+  }
+
+  /* Change indicator pill — verde para positive, rojo para negative.
+   * El componente decide la semántica via prop isPositive. */
+  .kpi-change[data-direction="positive"] {
+    color: var(--change-positive);
+    background: var(--change-positive-bg);
+  }
+  .kpi-change[data-direction="negative"] {
+    color: var(--change-negative);
+    background: var(--change-negative-bg);
+  }
+
   /* AG Grid quartz theme — synced to Zurich design tokens so the
    * grid reads as part of the platform rather than a 3rd-party widget. */
   .ag-theme-quartz,

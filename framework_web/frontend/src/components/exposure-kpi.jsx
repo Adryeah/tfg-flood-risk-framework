@@ -2,26 +2,37 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Editorial KPI tile used across Portfolio Explorer + Exposure Dashboard.
+ * KPI tile con sistema de jerarquía TIER (1 | 2 | 3) usado en
+ * Portfolio Explorer y Exposure Dashboard.
  *
- * Design intent (per `frontend-design` + `minimalist-ui` skills):
- *  - No card chrome. The previous version was a rounded box with a left
- *    variant rail — classic AI-dashboard default. Now it's stacked
- *    typography: tracked-out mono label, large mono number, italic
- *    serif "objective" line at the bottom.
- *  - Variant encoded as a tiny dot next to the label, not a full rail.
- *  - Optional `objective`: a one-line "what we want from this number"
- *    (maximise / minimise / monitor) set in serif italic so it reads
- *    as scholia, not chrome.
- *  - Entry animation: fade + slide-up from bottom over 500 ms. Stagger
- *    via the `animationDelay` prop when rendering in a row.
+ * SISTEMA TIER (spec Zurich · KPI hierarchy)
+ *  · TIER 1 — anchor metric. Borde navy, gradient background, sombra
+ *    profunda, big number text-32. Ocupa 2 columnas en el grid (vía
+ *    .kpi-card[data-tier="1"] { grid-column: span 2 } en main.css).
+ *    Para los dos números que el stakeholder mira primero (TIV, PML).
+ *  · TIER 2 — operational metric. Borde sutil, sombra estándar,
+ *    number text-22. Ancho normal (1 columna). EAL, exposición de
+ *    riesgo alto.
+ *  · TIER 3 — drill-down. Sombra mínima, opacidad ligeramente
+ *    reducida, number text-18. Para conteos secundarios.
+ *
+ * CHANGE INDICATOR
+ *  · Opcional `change={{ value: 12.3, isPositive: true, format: '%' }}`
+ *  · Pinta ▲ o ▼ + valor + unidad en verde (positive) o rojo
+ *    (negative), bajo el número principal. La semántica
+ *    "positivo = bueno" la decide el caller, no la card (un EAL
+ *    bajando ES positivo aunque el delta sea negativo).
+ *
+ * El componente sigue siendo controlled-by-props: todas las
+ * variantes son visuales (data-attributes + Tailwind classes). No
+ * añade lógica nueva.
  */
 const VARIANT_DOT = {
-  default: '#94A3B8',
-  info: '#2563EB',
-  warning: '#D97706',
-  risk: '#DC2626',
-  success: '#16A34A',
+  default: '#9CA3AF',
+  info: '#3B82F6',
+  warning: '#F39C12',
+  risk: '#E74C3C',
+  success: '#10B981',
 };
 
 export function ExposureKpi({
@@ -30,29 +41,51 @@ export function ExposureKpi({
   unit,
   sub,
   variant = 'default',
-  /** Optional one-line objective in italic serif (e.g. "Maximizar — ranking"). */
+  /** Jerarquía visual: 1 = anchor (span 2), 2 = standard, 3 = drill-down. */
+  tier = 2,
+  /**
+   * Indicador delta. Forma: { value: number, isPositive: boolean,
+   * format?: string }. `format` es lo que se imprime después del
+   * número (ej. '%' o 'pts'). Si no se pasa, no se renderiza
+   * indicador.
+   */
+  change = null,
+  /** Optional one-line objective en serif italic (margin annotation). */
   objective = null,
   /**
-   * Optional entry-animation delay in ms. Pass `idx * 80` from the parent
-   * grid so a row of 5 KPIs reveals left-to-right rather than all at once.
+   * Entry-animation delay en ms para staggered reveals. Pasa
+   * `idx * 80` desde el grid padre para que la fila se desvele
+   * left-to-right.
    */
   animationDelay = 0,
 }) {
   const dot = VARIANT_DOT[variant] || VARIANT_DOT.default;
 
+  // Tamaño del número principal escala con tier — anchor más grande.
+  const valueSizeClass =
+    tier === 1
+      ? 'text-32 leading-none'
+      : tier === 3
+        ? 'text-18 leading-none'
+        : 'text-22 leading-none';
+
   return (
     <div
       className={cn(
-        // No card border / radius / shadow. Just internal padding and a
-        // hover background shift so the tile responds without dressing
-        // up as a button.
-        'group relative px-4 py-3 transition-colors',
-        'hover:bg-bg-subtle/40',
+        // Base · .kpi-card es el hook CSS que aplica tier-specific
+        // border/bg/shadow/span vía main.css. Aquí solo padding +
+        // transition + animation.
+        'kpi-card group relative px-4 py-3.5 transition-all duration-200',
         'animate-in fade-in slide-in-from-bottom-2 duration-500'
       )}
-      style={{ animationDelay: `${animationDelay}ms`, animationFillMode: 'backwards' }}
+      data-tier={tier}
+      data-variant={variant}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        animationFillMode: 'backwards',
+      }}
     >
-      {/* Label row: dot + tracked-out uppercase mono caps */}
+      {/* Label row: dot variant + tracked-out uppercase mono caps */}
       <div className="flex items-center gap-1.5">
         <span
           className="inline-block w-1.5 h-1.5 rounded-full"
@@ -64,15 +97,43 @@ export function ExposureKpi({
         </span>
       </div>
 
-      {/* Big numerical anchor */}
+      {/* Big numerical anchor — el tamaño cambia por tier */}
       <div className="flex items-baseline gap-1.5 mt-2">
-        <span className="text-22 font-semibold font-mono text-text-primary leading-none tabular-nums tracking-tight">
+        <span
+          className={cn(
+            valueSizeClass,
+            'font-semibold font-mono text-text-primary tabular-nums tracking-tight'
+          )}
+        >
           {value}
         </span>
         {unit && (
           <span className="text-12 text-text-secondary font-mono">{unit}</span>
         )}
       </div>
+
+      {/* Change indicator opcional · ▲ verde / ▼ rojo */}
+      {change && typeof change.value === 'number' && (
+        <div className="mt-1.5 inline-flex items-center gap-1">
+          <span
+            className="kpi-change inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-11 font-mono font-semibold tabular-nums"
+            data-direction={change.isPositive ? 'positive' : 'negative'}
+          >
+            <span aria-hidden="true">{change.isPositive ? '▲' : '▼'}</span>
+            <span>
+              {Math.abs(change.value).toLocaleString(undefined, {
+                maximumFractionDigits: 1,
+              })}
+              {change.format || ''}
+            </span>
+          </span>
+          {change.label && (
+            <span className="text-10 font-mono text-text-tertiary uppercase tracking-wider">
+              {change.label}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Sub caption */}
       {sub && (
@@ -81,9 +142,10 @@ export function ExposureKpi({
         </div>
       )}
 
-      {/* Goal / objective — italic serif, short. Reads as a paper margin
-       *  annotation, NOT a tooltip ("hover to see goal" was the AI tell). */}
-      {objective && (
+      {/* Goal / objective — italic serif, short. Reads as paper-margin
+       *  annotation. Reservado para TIER 1 y TIER 2; TIER 3 lo omite
+       *  para mantener la densidad compacta. */}
+      {objective && tier !== 3 && (
         <>
           <div
             className="h-px mt-2 mb-1.5"

@@ -719,8 +719,9 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
   }, [filteredClients]);
 
   return (
-    <div className="shrink-0 grid grid-cols-[repeat(5,minmax(0,1fr))_220px] gap-2">
+    <div className="shrink-0 grid grid-cols-[repeat(7,minmax(0,1fr))_220px] gap-3">
       <ExposureKpi
+        tier={1}
         label="Portfolio TIV"
         value={fmtMoney(tiv)}
         sub={`${totalCount.toLocaleString()} ${t('active')} · ${filteredCount.toLocaleString()} ${t('shown')}`}
@@ -729,6 +730,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         animationDelay={0}
       />
       <ExposureKpi
+        tier={2}
         label="EAL · annual"
         value={fmtMoney(eal)}
         sub="Expected annual loss"
@@ -737,6 +739,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         animationDelay={80}
       />
       <ExposureKpi
+        tier={1}
         label="PML · DANA scenario"
         value={fmtMoney(pml)}
         sub="If a DANA hits today"
@@ -745,6 +748,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         animationDelay={160}
       />
       <ExposureKpi
+        tier={2}
         label="High-risk exposure"
         value={fmtMoney(highValue)}
         sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
@@ -753,12 +757,12 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         animationDelay={240}
       />
       <ExposureKpi
+        tier={3}
         label="Affected policies"
         value={highCount.toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
         sub={`${t('Value at risk')} ${fmtMoney(vaR)}`}
         variant="risk"
-        objective="Identificar — pólizas críticas para underwriting."
         animationDelay={320}
       />
       <Card className="overflow-hidden">

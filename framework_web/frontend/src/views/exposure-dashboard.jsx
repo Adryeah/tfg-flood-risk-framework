@@ -290,8 +290,9 @@ function HeroKpis({ portfolio, exposure }) {
   }, [portfolio]);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
       <ExposureKpi
+        tier={1}
         label="Total insured value"
         value={`€${(tiv / 1e6).toFixed(1)}`}
         unit="M"
@@ -301,6 +302,7 @@ function HeroKpis({ portfolio, exposure }) {
         animationDelay={0}
       />
       <ExposureKpi
+        tier={2}
         label="EAL · annual"
         value={`€${(eal / 1000).toFixed(0)}`}
         unit="K"
@@ -310,6 +312,7 @@ function HeroKpis({ portfolio, exposure }) {
         animationDelay={80}
       />
       <ExposureKpi
+        tier={1}
         label="PML · DANA scenario"
         value={`€${(pml / 1e6).toFixed(1)}`}
         unit="M"
@@ -319,12 +322,12 @@ function HeroKpis({ portfolio, exposure }) {
         animationDelay={160}
       />
       <ExposureKpi
+        tier={3}
         label="Affected policies"
         value={highCount.toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
         sub={`€${(highValue / 1e6).toFixed(1)}M ${t('high-risk exposure')}`}
         variant="risk"
-        objective="Identificar — pólizas a revisar manualmente."
         animationDelay={240}
       />
     </div>

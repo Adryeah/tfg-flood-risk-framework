@@ -164,4 +164,45 @@
   --chart-3: 30 89% 44%;
   --chart-4: 261 75% 56%;
   --chart-5: 330 84% 50%;
+
+  /* ── KPI hierarchy (TIER system · 3 niveles de prominencia) ─────
+   * TIER 1 = anchor (TIV, PML). Navy border + gradient + deep shadow.
+   *          Reads as "the two numbers Ricard checks first".
+   * TIER 2 = operational (EAL, High-risk). Variant-colored accent
+   *          border + standard shadow. Standard prominence.
+   * TIER 3 = drill-down (Affected count). Subtle gray border, opacity
+   *          reduced, compact density.
+   * Layout: TIER 1 gets grid-column: span 2 in the KPI bar to give
+   * it visual weight; TIER 2/3 occupy 1 column each. */
+  --kpi-tier1-border: var(--brand-500);
+  --kpi-tier1-bg: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    rgba(238, 241, 248, 0.7) 100%
+  );
+  --kpi-tier1-shadow: 0 10px 15px -3px rgba(15, 27, 53, 0.08),
+    0 0 0 1px rgba(15, 27, 53, 0.06);
+  --kpi-tier1-shadow-hover: 0 20px 25px -5px rgba(15, 27, 53, 0.12),
+    0 0 0 1px rgba(15, 27, 53, 0.10);
+
+  --kpi-tier2-border: var(--border-default);
+  --kpi-tier2-bg: var(--bg-surface);
+  --kpi-tier2-shadow: var(--shadow-default);
+  --kpi-tier2-shadow-hover: var(--shadow-md);
+
+  --kpi-tier3-border: var(--border-default);
+  --kpi-tier3-bg: var(--bg-surface);
+  --kpi-tier3-shadow: var(--shadow-sm);
+  --kpi-tier3-shadow-hover: var(--shadow-default);
+  --kpi-tier3-opacity: 0.92;
+
+  /* ── Change indicators ──────────────────────────────────────────
+   * Used by the optional `change` prop on KPI cards. Green for
+   * favorable movement, red for unfavorable. Glyphs ▲ / ▼ rendered
+   * in the same color as the delta value. */
+  --change-positive: #10b981;
+  --change-positive-bg: rgba(16, 185, 129, 0.10);
+  --change-negative: #dc2626;
+  --change-negative-bg: rgba(220, 38, 38, 0.10);
+  --change-neutral: var(--text-tertiary);
 }
