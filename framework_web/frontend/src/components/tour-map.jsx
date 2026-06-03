@@ -61,29 +61,30 @@ function markerShape(p) {
   if (p.product === 'autos') {
     return { type: 'vehicle', diskResolution: 8, radius: 2.5, elevation: 0.4 };
   }
+  const totalFloors = buildingFloors(p);
+  const buildingHeight = totalFloors * 3;
   if (p.subtype === 'nave') {
-    return { type: 'warehouse', diskResolution: 4, radius: 8, elevation: 5 };
+    return { type: 'warehouse', diskResolution: 4, radius: 8, elevation: 5, buildingHeight: 5 };
   }
   if (p.subtype === 'comercio') {
-    return { type: 'retail', diskResolution: 4, radius: 5, elevation: 3.2 };
+    return { type: 'retail', diskResolution: 4, radius: 5, elevation: 3.2, buildingHeight: 3.2 };
   }
   const f = policyFloorIdx(p);
-  if (f >= 7) {
-    return { type: 'tower', diskResolution: 12, radius: 1.5, elevation: f * 3 };
+  if (p.ground_floor) {
+    return { type: 'ground_unit', diskResolution: 14, radius: 3, elevation: 1.5, buildingHeight, dotHeight: 1.5 };
   }
-  if (f >= 4) {
-    return { type: 'midrise', diskResolution: 14, radius: 3, elevation: f * 3 };
+  if (f >= totalFloors) {
+    return { type: 'top_unit', diskResolution: 14, radius: 3, elevation: 3, buildingHeight, dotHeight: buildingHeight + 1.5 };
   }
-  if (f >= 1) {
-    return { type: 'lowrise', diskResolution: 14, radius: 3.5, elevation: f * 3 };
-  }
-  return { type: 'ground', diskResolution: 14, radius: 4, elevation: 1.2 };
+  return { type: 'mid_unit', diskResolution: 14, radius: 3, elevation: 3, buildingHeight, dotHeight: f * 3 + 1.5 };
 }
+
+const BUILDING_COLOR = [180, 190, 200, 120];
 
 function markerColor(p, isActive, isHover) {
   if (isActive) return riskRGBA(p.risk_category, 250);
   if (isHover) return [...BLUE_HOVER];
-  return riskRGBA(p.risk_category, 160);
+  return riskRGBA(p.risk_category, 180);
 }
 
 const CAR_GLB_URL =
@@ -263,19 +264,34 @@ function TourMapInner({ policies, onSelectPolicy }) {
     const semanticLayers = [];
     for (const p of buildingData) {
       const shape = markerShape(p);
-      const baseAlt = shape.elevation;
-      const z = p._isActive ? baseAlt + liftOffset : baseAlt;
 
       semanticLayers.push(
         new ColumnLayer({
-          id: `marker-${p._i}`,
+          id: `building-${p._i}`,
           data: [p],
           getPosition: [p.lon, p.lat, 0],
-          diskResolution: shape.diskResolution,
-          radius: shape.radius,
+          diskResolution: 14,
+          radius: 3,
           radiusUnits: 'meters',
           extruded: true,
-          getElevation: shape.elevation,
+          getElevation: shape.buildingHeight,
+          getFillColor: BUILDING_COLOR,
+          extensions: [new TerrainExtension()],
+          terrainDrawMode: 'offset',
+          pickable: false,
+        })
+      );
+
+      semanticLayers.push(
+        new ColumnLayer({
+          id: `unit-${p._i}`,
+          data: [p],
+          getPosition: [p.lon, p.lat, 0],
+          diskResolution: 14,
+          radius: 3,
+          radiusUnits: 'meters',
+          extruded: true,
+          getElevation: shape.dotHeight,
           getFillColor: markerColor(p, p._isActive, p._isHover),
           extensions: [new TerrainExtension()],
           terrainDrawMode: 'offset',
@@ -292,8 +308,8 @@ function TourMapInner({ policies, onSelectPolicy }) {
           new ScatterplotLayer({
             id: `beacon-${p._i}`,
             data: [p],
-            getPosition: [p.lon, p.lat, z + 1],
-            getRadius: 0.6,
+            getPosition: [p.lon, p.lat, shape.dotHeight + 1.5],
+            getRadius: 1.2,
             radiusUnits: 'meters',
             getFillColor: [...dotColor.slice(0, 3), 255],
             extensions: [new TerrainExtension()],
