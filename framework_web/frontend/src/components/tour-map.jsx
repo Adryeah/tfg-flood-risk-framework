@@ -57,6 +57,35 @@ function bearingFor(idx) {
   return 35 + ((idx * 17) % 70) - 35;
 }
 
+function markerShape(p) {
+  if (p.product === 'autos') {
+    return { type: 'vehicle', diskResolution: 8, radius: 2.5, elevation: 0.4 };
+  }
+  if (p.subtype === 'nave') {
+    return { type: 'warehouse', diskResolution: 4, radius: 8, elevation: 5 };
+  }
+  if (p.subtype === 'comercio') {
+    return { type: 'retail', diskResolution: 4, radius: 5, elevation: 3.2 };
+  }
+  const f = policyFloorIdx(p);
+  if (f >= 7) {
+    return { type: 'tower', diskResolution: 12, radius: 1.5, elevation: f * 3 };
+  }
+  if (f >= 4) {
+    return { type: 'midrise', diskResolution: 14, radius: 3, elevation: f * 3 };
+  }
+  if (f >= 1) {
+    return { type: 'lowrise', diskResolution: 14, radius: 3.5, elevation: f * 3 };
+  }
+  return { type: 'ground', diskResolution: 14, radius: 4, elevation: 1.2 };
+}
+
+function markerColor(p, isActive, isHover) {
+  if (isActive) return riskRGBA(p.risk_category, 250);
+  if (isHover) return [...BLUE_HOVER];
+  return riskRGBA(p.risk_category, 160);
+}
+
 const CAR_GLB_URL =
   'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb';
 
@@ -227,32 +256,54 @@ function TourMapInner({ policies, onSelectPolicy }) {
       })
     );
 
-    const beamData = policies
+    const buildingData = policies
       .map((p, i) => ({ ...p, _i: i, _isActive: i === activePolicyIdx, _isHover: i === hoverIdx }))
-      .filter(
-        (d) =>
-          d.product !== 'autos' && d.subtype !== 'nave' && d.subtype !== 'comercio'
+      .filter((d) => d.product !== 'autos');
+
+    const semanticLayers = [];
+    for (const p of buildingData) {
+      const shape = markerShape(p);
+      const baseAlt = shape.elevation;
+      const z = p._isActive ? baseAlt + liftOffset : baseAlt;
+
+      semanticLayers.push(
+        new ColumnLayer({
+          id: `marker-${p._i}`,
+          data: [p],
+          getPosition: [p.lon, p.lat, 0],
+          diskResolution: shape.diskResolution,
+          radius: shape.radius,
+          radiusUnits: 'meters',
+          extruded: true,
+          getElevation: shape.elevation,
+          getFillColor: markerColor(p, p._isActive, p._isHover),
+          extensions: [new TerrainExtension()],
+          terrainDrawMode: 'offset',
+          pickable: true,
+          onClick: () => setActiveIndex(p._i),
+          onHover: (info) => setHoverIdx(info.object ? p._i : -1),
+          updateTriggers: { getFillColor: [activePolicyIdx, hoverIdx] },
+        })
       );
-    layers.push(
-      new ColumnLayer({
-        id: 'policy-beams',
-        data: beamData,
-        getPosition: (d) => [d.lon, d.lat, 0],
-        diskResolution: 14,
-        radius: 0.7,
-        radiusUnits: 'meters',
-        extruded: true,
-        getElevation: (d) => policyAltitude(d),
-        getFillColor: (d) => {
-          if (d._isActive) return [255, 255, 255, 230];
-          if (d._isHover) return [...BLUE_HOVER];
-          return [...BLUE_BASE.slice(0, 3), 90];
-        },
-        extensions: [new TerrainExtension()],
-        terrainDrawMode: 'offset',
-        updateTriggers: { getFillColor: [activePolicyIdx, hoverIdx] },
-      })
-    );
+
+      if (p._isActive) {
+        const dotColor = markerColor(p, true, false);
+        semanticLayers.push(
+          new ScatterplotLayer({
+            id: `beacon-${p._i}`,
+            data: [p],
+            getPosition: [p.lon, p.lat, z + 1],
+            getRadius: 0.6,
+            radiusUnits: 'meters',
+            getFillColor: [...dotColor.slice(0, 3), 255],
+            extensions: [new TerrainExtension()],
+            terrainDrawMode: 'offset',
+            pickable: false,
+          })
+        );
+      }
+    }
+    layers.push(...semanticLayers);
 
     const carsData = policies
       .map((p, i) => ({ ...p, _i: i }))
@@ -294,70 +345,6 @@ function TourMapInner({ policies, onSelectPolicy }) {
         })
       );
     }
-
-    const haloData = policies
-      .map((p, i) => ({ ...p, _i: i }))
-      .filter((p) => p.product !== 'autos');
-    layers.push(
-      new ColumnLayer({
-        id: 'policy-halos',
-        data: haloData,
-        getPosition: (d) => {
-          const baseAlt = policyAltitude(d);
-          const z = d._i === activePolicyIdx ? baseAlt + liftOffset : baseAlt;
-          return [d.lon, d.lat, z];
-        },
-        diskResolution: 26,
-        getElevation: (d) => {
-          if (d.subtype === 'nave') return 5;
-          if (d.subtype === 'comercio') return 3.2;
-          return 1.0;
-        },
-        getRadius: (d) => {
-          if (d.subtype === 'nave') return 7.5;
-          if (d.subtype === 'comercio') return 4.2;
-          return 4.0;
-        },
-        radiusUnits: 'meters',
-        extruded: true,
-        getFillColor: (d) => {
-          if (d._i === activePolicyIdx) return riskRGBA(d.risk_category, 230);
-          if (d._i === hoverIdx) return [...BLUE_HOVER.slice(0, 3), 180];
-          return [...BLUE_BASE.slice(0, 3), 90];
-        },
-        extensions: [new TerrainExtension()],
-        terrainDrawMode: 'offset',
-        updateTriggers: {
-          getPosition: [activePolicyIdx, liftT],
-          getFillColor: [activePolicyIdx, hoverIdx],
-        },
-      })
-    );
-
-    const stackData = [];
-    policies.forEach((p, i) => {
-      if (p.product === 'autos' || p.subtype === 'nave' || p.subtype === 'comercio')
-        return;
-      const total = buildingFloors(p);
-      for (let f = 1; f <= total; f++) {
-        stackData.push({ ...p, _i: i, _floor: f, _z: f * 3 });
-      }
-    });
-    layers.push(
-      new ColumnLayer({
-        id: 'policy-floor-stack',
-        data: stackData,
-        getPosition: (d) => [d.lon, d.lat, d._z - 0.1],
-        diskResolution: 14,
-        radius: 3,
-        radiusUnits: 'meters',
-        extruded: true,
-        getElevation: 0.2,
-        getFillColor: [248, 250, 252, 85],
-        extensions: [new TerrainExtension()],
-        terrainDrawMode: 'offset',
-      })
-    );
 
     return layers;
   }, [policies, activePolicyIdx, liftT, pulseT, hoverIdx, onSelectPolicy, setActiveIndex, incidentTime]);
