@@ -174,3 +174,51 @@ ratio VV/VH distingue agua abierta de vegetación inundada. Usar ambas como feat
 - NO train_test_split aleatorio — GroupKFold
 - NO invertir calibración y speckle
 - NO datos internos de Zurich Insurance
+
+## UNDERWRITER CONSOLE · /tour
+Consola de inteligencia de cartera en `framework_web/frontend/src/` inspirada en el lenguaje visual de Palantir/Bloomberg adaptada a insurance underwriting.
+
+### Vocabulario
+Términos militares en inglés usados como jerga técnica con tooltips que traducen a términos underwriter. Ejemplo: "TARGET" = póliza monitorizada, "ASSET" = póliza, "MONITORED" = bajo supervisión activa.
+
+### Stack
+- deck.gl 9.3.2 + Tile3DLayer (Google Photorealistic 3D Tiles o OpenFreeMap como fallback)
+- MapLibre para basemap (sin Google key = OpenFreeMap Liberty)
+- CSS filter postprocessing para modos visuales (thermal/night/archive)
+- React Context para estado centralizado (mode, hud, activeIndex, speed, incidentTime)
+
+### Modos visuales
+| Modo | Filtro CSS | Uso |
+|------|-----------|-----|
+| photo | none | Fly-through normal |
+| thermal | saturate(2.2) sepia(0.8) hue-rotate(-10deg) | Mapa de calor de riesgo |
+| night | saturate(0) brightness(0.85) | NVG monocromo verde |
+| archive | contrast(1.15) brightness(0.92) | Dossier / evidence |
+
+### Arquitectura
+```
+src/
+├── components/tour/
+│   ├── hud-overlay.jsx      # Orquestador de paneles HUD
+│   ├── target-registry.jsx # Panel izquierdo: ID·€TIV·P(flood)
+│   ├── mode-bank.jsx       # F1-F5 shortcuts + useKeyboardModeSwitcher
+│   ├── tactical-minimap.jsx # Minimap con grid WGS84 + N arrow
+│   ├── status-strip.jsx    # Bottom bar: assets/monitored/mode/speed
+│   ├── incident-timeline.jsx # Scrubber 19 oct → 31 oct con play/pause
+│   ├── center-reticle.jsx  # Retícula SVG que cambia por modo
+│   └── help-overlay.jsx    # Keyboard shortcuts (?) help
+└── lib/tour/
+    ├── tour-state.jsx      # Context provider + reducer (mode, hud, etc)
+    ├── deck-effects.js    # getShaderCssFilter(mode)
+    ├── shader-thermal.js  # GLSL pseudocolor JET (no usado aún)
+    ├── shader-night.js     # GLSL green boost (no usado aún)
+    ├── shader-archive.js  # GLSL scanlines + viñeta (no usado aún)
+    ├── incident-replay.js # DANA_TIMELINE, MODEL_METRICS, polygon helpers
+    └── trace-layer.js     # PathLayer factory para trace geodésico
+```
+
+### Teclas
+- ← → : Navegar pólizas
+-Space : Play/Pause
+- F1-F5 : Cambiar modo visual
+- ? : Help overlay

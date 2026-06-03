@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import DeckGL from '@deck.gl/react';
 import { Tile3DLayer } from '@deck.gl/geo-layers';
-import { ScatterplotLayer, ColumnLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, ColumnLayer, PolygonLayer } from '@deck.gl/layers';
+import { getIncidentPolygonScale, getIncidentOpacity, MODEL_METRICS } from '@/lib/tour/incident-replay.js';
 import { ScenegraphLayer } from '@deck.gl/mesh-layers';
 import { _TerrainExtension as TerrainExtension } from '@deck.gl/extensions';
 import { FlyToInterpolator } from '@deck.gl/core';
@@ -11,18 +12,12 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { formatMoney, formatPercent } from '@/lib/format.js';
+import { TourStateProvider, useTourState, useTourActions } from '@/lib/tour/tour-state.jsx';
+import { HudOverlay } from '@/components/tour/hud-overlay.jsx';
+import { CenterReticle } from '@/components/tour/center-reticle.jsx';
+import { useKeyboardModeSwitcher } from '@/components/tour/mode-bank.jsx';
+import { getShaderCssFilter } from '@/lib/tour/deck-effects.js';
 
-// ─── Setup gratuito por defecto, premium con API key ──────────────
-//
-// Modo GRATIS (sin ninguna key):
-//   Basemap: OpenFreeMap Liberty (vector tiles, sin clave)
-//   Edificios 3D: extrusión OSM via fill-extrusion del propio estilo
-//   Pólizas: marcadores deck.gl encima
-//
-// Modo PREMIUM (con VITE_GOOGLE_MAPS_API_KEY):
-//   Basemap: Google Photorealistic 3D Tiles (Tile3DLayer)
-//   Edificios: fotogramétricos reales
-//   Pólizas: igual encima
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const HAS_GOOGLE = Boolean(GOOGLE_KEY);
 const GOOGLE_3D_URL = HAS_GOOGLE
@@ -30,7 +25,6 @@ const GOOGLE_3D_URL = HAS_GOOGLE
   : null;
 const FREE_BASEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
-// ─── Z-axis logic ───────────────────────────────────────────────
 function policyFloorIdx(p) {
   if (p.product === 'autos') return 0;
   if (p.ground_floor) return 0;
@@ -47,41 +41,8 @@ function policyAltitude(p) {
   return f === 0 ? 1.2 : f * 3;
 }
 
-// ─── Descripción rica ──────────────────────────────────────────
-function describePolicy(p) {
-  const SUBTYPE_LABEL = {
-    chalet: 'Chalet unifamiliar',
-    casa: 'Vivienda unifamiliar',
-    piso_alto: 'Vivienda en altura',
-    piso_bajo: 'Vivienda en planta baja',
-    piso: 'Vivienda',
-    comercio: 'Local comercial',
-    oficina: 'Oficina',
-    nave: 'Nave industrial',
-    coche: 'Vehículo · turismo',
-    moto: 'Vehículo · motocicleta',
-    furgoneta: 'Vehículo · furgoneta',
-  };
-  return SUBTYPE_LABEL[p.subtype] || p.subtype || p.product;
-}
-function locationText(p) {
-  if (p.product === 'autos') return 'Aparcamiento a pie de calle';
-  if (p.subtype === 'nave') return 'Local industrial · planta baja';
-  if (p.subtype === 'comercio') return 'Local a pie de calle · planta baja';
-  if (p.ground_floor) {
-    const n = p.floor_count || 1;
-    return n > 1 ? `Planta baja · edificio de ${n} alturas` : 'Planta baja';
-  }
-  const f = p.floor_count || 1;
-  return `Planta ${f}.ª · ático del edificio (${f + 1} plantas)`;
-}
-
-// ─── Paleta · azul para no-activos, color de riesgo para activos
-// El cambio del enfoque visual: el color de riesgo se reserva para
-// LA póliza que estás inspeccionando ahora; el resto son data points
-// azules que invitan a click. Estilo Bloomberg "every dot is data".
-const BLUE_BASE = [56, 189, 248, 200]; // sky-400
-const BLUE_HOVER = [125, 211, 252, 240]; // sky-300
+const BLUE_BASE = [56, 189, 248, 200];
+const BLUE_HOVER = [125, 211, 252, 240];
 function riskRGBA(category, alpha = 240) {
   const RGB = {
     low: [251, 191, 36],
@@ -96,27 +57,19 @@ function bearingFor(idx) {
   return 35 + ((idx * 17) % 70) - 35;
 }
 
-// ─── GLB asset URLs ─────────────────────────────────────────────
-// Modelos PBR auto-contenidos del repositorio Khronos glTF Sample
-// Assets. Self-contained binary (textures embebidas) → un solo fetch
-// + CORS abierto desde raw.githubusercontent.com.
-//
-// ToyCar es una digitalización fotogramétrica real de un Cadillac de
-// juguete (Microsoft Maquette). En geometría tiny (~0.06 m de largo);
-// escalamos ~80x para ocupar ~5 m en mapa → tamaño realista de turismo.
 const CAR_GLB_URL =
   'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/ToyCar/glTF-Binary/ToyCar.glb';
 
-// Yaw determinista por póliza: coches "aparcados" en orientaciones
-// distintas para que el conjunto no parezca un copy-paste. 360°
-// porque autos pueden ir en cualquier dirección.
 function carYawFor(p, idx) {
   const seed = (idx * 53 + (p.lat * 1e4) | 0) >>> 0;
   return seed % 360;
 }
 
-// ─── TourMap principal ──────────────────────────────────────────
-export function TourMap({ policies, activeIndex, onSelectPolicy }) {
+function TourMapInner({ policies, onSelectPolicy }) {
+  const { mode, activePolicyIdx, hud, incidentTime } = useTourState();
+  const { setActiveIndex, setTotal } = useTourActions();
+  useKeyboardModeSwitcher();
+
   const liftStartRef = useRef(performance.now());
   const [liftT, setLiftT] = useState(1);
   const [pulseT, setPulseT] = useState(0);
@@ -125,24 +78,13 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
   const mapContainerRef = useRef(null);
   const mapLibreRef = useRef(null);
 
-  // ViewState compartida entre DeckGL y MapLibre. DeckGL la actualiza
-  // durante las transiciones via onViewStateChange; sincronizamos al
-  // basemap MapLibre con .jumpTo() en cada cambio para que la base
-  // siga la cámara sin sacudidas (cuando deck.gl es controlled, los
-  // intermediate viewStates fluyen a través del callback).
-  const initialVS = useMemo(() => {
-    const p = policies?.[activeIndex];
-    return p
-      ? { longitude: p.lon, latitude: p.lat, zoom: 16.5, pitch: 55, bearing: 0 }
-      : { longitude: -0.4, latitude: 39.42, zoom: 15, pitch: 55, bearing: 0 };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const [viewState, setViewState] = useState(initialVS);
-
-  // ── Animación de "ascenso" del halo al cambiar póliza ──────────
   useEffect(() => {
-    if (activeIndex === prevActiveRef.current) return;
-    prevActiveRef.current = activeIndex;
+    setTotal(policies?.length || 0);
+  }, [policies, setTotal]);
+
+  useEffect(() => {
+    if (activePolicyIdx === prevActiveRef.current) return;
+    prevActiveRef.current = activePolicyIdx;
     liftStartRef.current = performance.now();
     setLiftT(0);
     let id;
@@ -153,9 +95,8 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
     };
     id = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(id);
-  }, [activeIndex]);
+  }, [activePolicyIdx]);
 
-  // ── Pulso permanente del activo (radio oscila ±3 m cada 2s) ────
   useEffect(() => {
     let id;
     const tick = () => {
@@ -166,8 +107,15 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // ── Lanzar transición de cámara al cambiar póliza ───────────────
-  const activePolicy = policies?.[activeIndex];
+  const activePolicy = policies?.[activePolicyIdx];
+  const initialVS = useMemo(() => {
+    const p = activePolicy;
+    return p
+      ? { longitude: p.lon, latitude: p.lat, zoom: 16.5, pitch: 55, bearing: 0 }
+      : { longitude: -0.4, latitude: 39.42, zoom: 15, pitch: 55, bearing: 0 };
+  }, []);
+  const [viewState, setViewState] = useState(initialVS);
+
   useEffect(() => {
     const p = activePolicy;
     if (!p) return;
@@ -177,13 +125,12 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
       latitude: p.lat,
       zoom: Math.max(17.0, 17.4 - policyAlt * 0.02),
       pitch: Math.max(48, 60 - policyAlt * 0.4),
-      bearing: bearingFor(activeIndex),
+      bearing: bearingFor(activePolicyIdx),
       transitionDuration: 1500,
       transitionInterpolator: new FlyToInterpolator({ speed: 1.6 }),
     });
-  }, [activePolicy, activeIndex]);
+  }, [activePolicy, activePolicyIdx]);
 
-  // ── Init MapLibre basemap (solo en modo free) ──────────────────
   useEffect(() => {
     if (HAS_GOOGLE) return;
     if (!mapContainerRef.current || mapLibreRef.current) return;
@@ -194,23 +141,16 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
       zoom: initialVS.zoom,
       pitch: initialVS.pitch,
       bearing: initialVS.bearing,
-      // No interactive: deck.gl maneja todos los inputs encima.
       interactive: false,
       attributionControl: { compact: true },
     });
     mapLibreRef.current = map;
     return () => {
-      try {
-        map.remove();
-      } catch {
-        /* silent */
-      }
+      try { map.remove(); } catch { /* silent */ }
       mapLibreRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Sync MapLibre basemap a viewState (con cada tick deck.gl) ──
   useEffect(() => {
     if (HAS_GOOGLE) return;
     const map = mapLibreRef.current;
@@ -222,18 +162,14 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         pitch: viewState.pitch,
         bearing: viewState.bearing,
       });
-    } catch {
-      /* silent — puede pasar durante el dispose */
-    }
+    } catch { /* silent */ }
   }, [viewState]);
 
-  // ── Layers ────────────────────────────────────────────────────
   const layers = useMemo(() => {
     if (!policies?.length) return [];
-    const activePol = policies[activeIndex];
+    const activePol = policies[activePolicyIdx];
     const activeAlt = activePol ? policyAltitude(activePol) : 0;
     const liftOffset = -activeAlt * (1 - liftT);
-    // Pulso del radio del ring activo (sinusoidal entre 8 y 14)
     const pulseRadius = 8 + Math.sin(pulseT * Math.PI) * 3;
 
     const layers = [];
@@ -250,27 +186,26 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
       );
     }
 
-    // ─── Rings 2D · interactivos + animados ─────────────────────
     layers.push(
       new ScatterplotLayer({
         id: 'policy-rings',
         data: policies,
         getPosition: (d) => [d.lon, d.lat, 0],
         getRadius: (d, { index }) => {
-          if (index === activeIndex) return pulseRadius;
+          if (index === activePolicyIdx) return pulseRadius;
           if (index === hoverIdx) return 6;
           return 4;
         },
         radiusUnits: 'meters',
         radiusMinPixels: 5,
         getFillColor: (d, { index }) => {
-          if (index === activeIndex) return riskRGBA(d.risk_category, 250);
+          if (index === activePolicyIdx) return riskRGBA(d.risk_category, 250);
           if (index === hoverIdx) return BLUE_HOVER;
           return BLUE_BASE;
         },
         stroked: true,
         getLineColor: [248, 250, 252, 240],
-        getLineWidth: (d, { index }) => (index === activeIndex ? 1.8 : 0.6),
+        getLineWidth: (d, { index }) => (index === activePolicyIdx ? 1.8 : 0.6),
         lineWidthUnits: 'meters',
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'drape',
@@ -278,23 +213,22 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         autoHighlight: true,
         onClick: (info) => {
           if (info.index >= 0 && onSelectPolicy) {
-            onSelectPolicy(info.index);
+            setActiveIndex(info.index);
           }
         },
         onHover: (info) => {
           setHoverIdx(info.index >= 0 ? info.index : -1);
         },
         updateTriggers: {
-          getRadius: [activeIndex, hoverIdx, pulseRadius],
-          getFillColor: [activeIndex, hoverIdx],
-          getLineWidth: activeIndex,
+          getRadius: [activePolicyIdx, hoverIdx, pulseRadius],
+          getFillColor: [activePolicyIdx, hoverIdx],
+          getLineWidth: activePolicyIdx,
         },
       })
     );
 
-    // ─── Beams (rayos verticales) ────────────────────────────────
     const beamData = policies
-      .map((p, i) => ({ ...p, _i: i, _isActive: i === activeIndex, _isHover: i === hoverIdx }))
+      .map((p, i) => ({ ...p, _i: i, _isActive: i === activePolicyIdx, _isHover: i === hoverIdx }))
       .filter(
         (d) =>
           d.product !== 'autos' && d.subtype !== 'nave' && d.subtype !== 'comercio'
@@ -316,17 +250,10 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         },
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'offset',
-        updateTriggers: { getFillColor: [activeIndex, hoverIdx] },
+        updateTriggers: { getFillColor: [activePolicyIdx, hoverIdx] },
       })
     );
 
-    // ─── Coches · GLB real (ScenegraphLayer + ToyCar) ───────────
-    // Sustituye al halo cilíndrico genérico que teníamos para autos.
-    // Modelo PBR del repo Khronos, cargado vía GLTFLoader, alineado
-    // al suelo real vía TerrainExtension('offset'). sizeScale 80x
-    // porque ToyCar mide ~5 cm en model space → ~4 m en mapa. El
-    // tint del riesgo se aplica vía getColor (modula la BaseColor del
-    // PBR). El activo se tinta blanco y se eleva con liftOffset.
     const carsData = policies
       .map((p, i) => ({ ...p, _i: i }))
       .filter((p) => p.product === 'autos');
@@ -339,12 +266,12 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
           loaders: [GLTFLoader],
           _lighting: 'pbr',
           getPosition: (d) => {
-            const z = d._i === activeIndex ? 0.4 + liftOffset : 0.4;
+            const z = d._i === activePolicyIdx ? 0.4 + liftOffset : 0.4;
             return [d.lon, d.lat, z];
           },
           getOrientation: (d) => [0, carYawFor(d, d._i), 90],
           getColor: (d) => {
-            if (d._i === activeIndex) return [255, 255, 255, 255];
+            if (d._i === activePolicyIdx) return [255, 255, 255, 255];
             if (d._i === hoverIdx) return [...BLUE_HOVER];
             return [...BLUE_BASE.slice(0, 3), 220];
           },
@@ -355,22 +282,19 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
           terrainDrawMode: 'offset',
           pickable: true,
           onClick: (info) => {
-            if (info.object && onSelectPolicy) onSelectPolicy(info.object._i);
+            if (info.object && onSelectPolicy) setActiveIndex(info.object._i);
           },
           onHover: (info) => {
             setHoverIdx(info.object ? info.object._i : -1);
           },
           updateTriggers: {
-            getPosition: [activeIndex, liftT],
-            getColor: [activeIndex, hoverIdx],
+            getPosition: [activePolicyIdx, liftT],
+            getColor: [activePolicyIdx, hoverIdx],
           },
         })
       );
     }
 
-    // ─── Halos ───────────────────────────────────────────────────
-    // Solo no-autos: los coches ya tienen su propio GLB arriba. Los
-    // halos siguen sirviendo para apartamentos, locales y naves.
     const haloData = policies
       .map((p, i) => ({ ...p, _i: i }))
       .filter((p) => p.product !== 'autos');
@@ -380,7 +304,7 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         data: haloData,
         getPosition: (d) => {
           const baseAlt = policyAltitude(d);
-          const z = d._i === activeIndex ? baseAlt + liftOffset : baseAlt;
+          const z = d._i === activePolicyIdx ? baseAlt + liftOffset : baseAlt;
           return [d.lon, d.lat, z];
         },
         diskResolution: 26,
@@ -397,20 +321,19 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         radiusUnits: 'meters',
         extruded: true,
         getFillColor: (d) => {
-          if (d._i === activeIndex) return riskRGBA(d.risk_category, 230);
+          if (d._i === activePolicyIdx) return riskRGBA(d.risk_category, 230);
           if (d._i === hoverIdx) return [...BLUE_HOVER.slice(0, 3), 180];
           return [...BLUE_BASE.slice(0, 3), 90];
         },
         extensions: [new TerrainExtension()],
         terrainDrawMode: 'offset',
         updateTriggers: {
-          getPosition: [activeIndex, liftT],
-          getFillColor: [activeIndex, hoverIdx],
+          getPosition: [activePolicyIdx, liftT],
+          getFillColor: [activePolicyIdx, hoverIdx],
         },
       })
     );
 
-    // ─── Floor stack ─────────────────────────────────────────────
     const stackData = [];
     policies.forEach((p, i) => {
       if (p.product === 'autos' || p.subtype === 'nave' || p.subtype === 'comercio')
@@ -437,14 +360,47 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
     );
 
     return layers;
-  }, [policies, activeIndex, liftT, pulseT, hoverIdx, onSelectPolicy]);
+  }, [policies, activePolicyIdx, liftT, pulseT, hoverIdx, onSelectPolicy, setActiveIndex, incidentTime]);
+
+  const cssFilter = getShaderCssFilter(mode);
+  const polygonScale = getIncidentPolygonScale(incidentTime || 0);
+  const polygonOpacity = getIncidentOpacity(incidentTime || 0);
+
+  const emsrPolygons = useMemo(() => {
+    const coords = [
+      [[-1.25056, 39.96592], [-1.25033, 39.96574], [-1.24982, 39.96345], [-1.24748, 39.96281], [-1.24819, 39.96255], [-1.24841, 39.96273], [-1.25056, 39.96592]],
+      [[-1.24839, 39.96363], [-1.24760, 39.96272], [-1.24748, 39.96281], [-1.24819, 39.96255], [-1.24839, 39.96363]],
+      [[-1.22046, 39.95276], [-1.22129, 39.95250], [-1.22152, 39.95250], [-1.22046, 39.95276]],
+      [[-1.32357, 39.90547], [-1.32407, 39.90278], [-1.32493, 39.90261], [-1.32577, 39.90189], [-1.32682, 39.90191], [-1.32790, 39.90084], [-1.33032, 39.89763], [-1.35058, 39.87910], [-1.35238, 39.87723], [-1.34739, 39.87626], [-1.34694, 39.87526], [-1.34535, 39.87010], [-1.34316, 39.86944], [-1.34185, 39.86627], [-1.34296, 39.86324], [-1.35305, 39.84697], [-1.35196, 39.85812], [-1.34521, 39.86920], [-1.35777, 39.84019], [-1.36647, 39.81824], [-1.36666, 39.81500], [-1.28890, 39.86230], [-1.28969, 39.86163], [-1.28932, 39.86208]],
+    ];
+    return coords.map(ring => ring.map(([lon, lat]) => [lon, lat]));
+  }, []);
+
+  const allLayers = useMemo(() => {
+    const base = layers;
+    if ((mode === 'sweep' || incidentTime > 20) && emsrPolygons.length > 0) {
+      base.push(
+        new PolygonLayer({
+          id: 'emsr773-ground-truth',
+          data: [{ polygon: emsrPolygons[0] }],
+          getPolygon: (d) => d.polygon,
+          getFillColor: [245, 158, 11, Math.round(180 * polygonOpacity)],
+          getLineColor: [245, 158, 11, Math.round(255 * polygonOpacity)],
+          getLineWidth: 1.5,
+          lineWidthUnits: 'pixels',
+          stroked: true,
+          filled: true,
+          extruded: false,
+          pickable: false,
+          visible: polygonScale > 0,
+        })
+      );
+    }
+    return base;
+  }, [layers, mode, incidentTime, emsrPolygons, polygonOpacity, polygonScale]);
 
   return (
-    <div className="absolute inset-0">
-      {/* Basemap detrás (sibling, no child de DeckGL). Solo en modo
-       *  free; en modo premium el Tile3DLayer de Google sustituye la
-       *  base. interactive: false → todos los inputs los maneja DeckGL
-       *  encima, así no compiten por el pan/zoom. */}
+    <div className="absolute inset-0" style={{ filter: cssFilter }}>
       {!HAS_GOOGLE && (
         <div
           ref={mapContainerRef}
@@ -457,241 +413,41 @@ export function TourMap({ policies, activeIndex, onSelectPolicy }) {
         viewState={viewState}
         onViewStateChange={(e) => setViewState(e.viewState)}
         controller={true}
-        layers={layers}
+        layers={allLayers}
         getCursor={({ isHovering, isDragging }) =>
           isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
         }
         style={{ position: 'absolute', inset: 0 }}
       />
 
-      {/* Badge de modo (esquina inferior derecha) */}
-      <div
-        className="hidden md:flex absolute bottom-5 right-5 z-[600] items-center gap-2 px-2.5 py-1.5 rounded-sm backdrop-blur-md"
-        style={{
-          background: 'rgba(15,23,42,0.78)',
-          border: '1px solid rgba(255,255,255,0.10)',
-          color: 'rgba(248,250,252,0.7)',
-        }}
-      >
-        <span
-          className="inline-block w-1.5 h-1.5 rounded-full"
-          style={{ background: HAS_GOOGLE ? '#22D3EE' : '#94A3B8' }}
-        />
-        <span className="text-10 font-mono uppercase tracking-[0.16em]">
-          {HAS_GOOGLE
-            ? 'Google Photorealistic 3D'
-            : 'OpenFreeMap · Free tier'}
-        </span>
-      </div>
+      <HudOverlay policies={policies} onSelectPolicy={setActiveIndex} />
 
-      <CinematicPanel
-        policy={policies[activeIndex]}
-        index={activeIndex}
-        total={policies.length}
-      />
-      <MiniMap policies={policies} activeIndex={activeIndex} />
+      {hud.reticle && <CenterReticle mode={mode} />}
     </div>
   );
 }
 
-// ─── CinematicPanel ──────────────────────────────────────────────
-function CinematicPanel({ policy, index, total }) {
-  if (!policy) return null;
-  const RISK_LABEL = {
-    low: 'Bajo',
-    moderate: 'Moderado',
-    high: 'Alto',
-    very_high: 'Muy alto',
-  };
-  const RISK_TINT = {
-    low: '#FBBF24',
-    moderate: '#F87171',
-    high: '#DC2626',
-    very_high: '#7F1D1D',
-  };
-  const tint = RISK_TINT[policy.risk_category] || '#94A3B8';
-  const description = describePolicy(policy);
-  const location = locationText(policy);
-  const year = policy.construction_year;
+export function TourMap({ policies, activeIndex, onSelectPolicy }) {
   return (
-    <div
-      key={index}
-      className="hidden md:block absolute bottom-5 left-5 z-[600] w-[360px] rounded-md p-4 pt-3.5 backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300"
-      style={{
-        background: 'rgba(15,23,42,0.80)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow:
-          '0 8px 24px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset',
-        color: '#F8FAFC',
-      }}
-    >
-      <div
-        className="flex items-center justify-between mb-2 text-10 font-mono uppercase tracking-[0.16em]"
-        style={{ color: 'rgba(248,250,252,0.55)' }}
-      >
-        <span>
-          Póliza {index + 1} de {total}
-        </span>
-        <span style={{ color: tint }}>
-          Riesgo {RISK_LABEL[policy.risk_category] || policy.risk_category}
-        </span>
-      </div>
-      <div
-        className="font-mono text-14 mb-0.5 tracking-tight"
-        style={{ color: '#F8FAFC' }}
-      >
-        {policy.id}
-      </div>
-      <div
-        className="font-serif italic text-15 leading-snug mb-0.5"
-        style={{ color: '#F8FAFC' }}
-      >
-        {description}
-      </div>
-      <div
-        className="text-12 leading-snug mb-1"
-        style={{ color: 'rgba(248,250,252,0.72)' }}
-      >
-        {location}
-      </div>
-      <div
-        className="text-10 font-mono uppercase tracking-wider mb-3"
-        style={{ color: 'rgba(248,250,252,0.45)' }}
-      >
-        {year ? `Construido ${year} · ` : ''}
-        {policy.lat?.toFixed(4)}, {policy.lon?.toFixed(4)}
-      </div>
-      <div
-        className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3 border-t"
-        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-      >
-        <PanelMetric
-          label="P(flood)"
-          value={formatPercent(policy.risk_probability, 1)}
-          tint={tint}
-        />
-        <PanelMetric label="Asegurado" value={formatMoney(policy.insured_value)} />
-        <PanelMetric
-          label="Pérdida est."
-          value={formatMoney(policy.estimated_loss_dana)}
-          tint={tint}
-        />
-        <PanelMetric
-          label="Prima anual"
-          value={formatMoney(policy.annual_premium)}
-        />
-      </div>
-    </div>
+    <TourStateProvider>
+      <TourMapWithIndex policies={policies} activeIndex={activeIndex} onSelectPolicy={onSelectPolicy} />
+    </TourStateProvider>
   );
 }
 
-function PanelMetric({ label, value, tint }) {
-  return (
-    <div className="min-w-0">
-      <div
-        className="text-9 font-mono uppercase tracking-wider mb-0.5"
-        style={{ color: 'rgba(248,250,252,0.5)' }}
-      >
-        {label}
-      </div>
-      <div
-        className="font-mono text-13 truncate"
-        style={{ color: tint || '#F8FAFC', fontWeight: 600 }}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
+function TourMapWithIndex({ policies, activeIndex, onSelectPolicy }) {
+  const { setActiveIndex } = useTourActions();
 
-// ─── MiniMap SVG ─────────────────────────────────────────────────
-function MiniMap({ policies, activeIndex }) {
-  if (!policies || policies.length === 0) return null;
-  const W = 168, H = 168, PAD = 14;
-  let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
-  for (const p of policies) {
-    if (p.lon < minLon) minLon = p.lon;
-    if (p.lat < minLat) minLat = p.lat;
-    if (p.lon > maxLon) maxLon = p.lon;
-    if (p.lat > maxLat) maxLat = p.lat;
-  }
-  const lonSpan = Math.max(maxLon - minLon, 0.001);
-  const latSpan = Math.max(maxLat - minLat, 0.001);
-  const project = (lon, lat) => {
-    const x = PAD + ((lon - minLon) / lonSpan) * (W - 2 * PAD);
-    const y = PAD + ((maxLat - lat) / latSpan) * (H - 2 * PAD);
-    return [x, y];
+  useEffect(() => {
+    if (activeIndex !== undefined) {
+      setActiveIndex(activeIndex);
+    }
+  }, [activeIndex, setActiveIndex]);
+
+  const handleSelect = (idx) => {
+    setActiveIndex(idx);
+    if (onSelectPolicy) onSelectPolicy(idx);
   };
-  const active = policies[activeIndex];
-  const [ax, ay] = active ? project(active.lon, active.lat) : [W / 2, H / 2];
 
-  return (
-    <div
-      className="hidden md:block absolute top-3 right-3 z-[600] rounded-md backdrop-blur-md overflow-hidden"
-      style={{
-        background: 'rgba(15,23,42,0.78)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
-      }}
-    >
-      <div
-        className="px-2.5 pt-1.5 pb-1 text-9 font-mono uppercase tracking-[0.18em]"
-        style={{ color: 'rgba(248,250,252,0.55)' }}
-      >
-        Tour map · {activeIndex + 1}/{policies.length}
-      </div>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block">
-        <line x1={W / 2} y1="0" x2={W / 2} y2={H} stroke="rgba(255,255,255,0.04)" />
-        <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="rgba(255,255,255,0.04)" />
-        {policies.map((p, i) => {
-          if (i === activeIndex) return null;
-          const [x, y] = project(p.lon, p.lat);
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={2.5}
-              fill="#38BDF8"
-              fillOpacity="0.75"
-            />
-          );
-        })}
-        {active && (
-          <g>
-            <circle
-              cx={ax}
-              cy={ay}
-              r="11"
-              fill="none"
-              stroke={active._color || '#FFFFFF'}
-              strokeWidth="1.5"
-              opacity="0.6"
-            >
-              <animate
-                attributeName="r"
-                values="8;14;8"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                values="0.7;0;0.7"
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </circle>
-            <circle
-              cx={ax}
-              cy={ay}
-              r="5"
-              fill={active._color || '#FFFFFF'}
-              stroke="#FFFFFF"
-              strokeWidth="2"
-            />
-          </g>
-        )}
-      </svg>
-    </div>
-  );
+  return <TourMapInner policies={policies} onSelectPolicy={handleSelect} />;
 }
