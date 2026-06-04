@@ -202,7 +202,27 @@ export function Overview() {
         </div>
       </div>
 
-      {/* KPI row A — model */}
+      {/* KPI row A — model · eyebrow editorial contextualiza la fila
+       *  como "salida del modelo" antes de los 4 KPIs. Sin esta línea
+       *  las 8 cards juntas (model + portfolio) lee como dashboard
+       *  SaaS plano. El hairline navy navy a la izquierda funciona como
+       *  marca de sección, igual que en el dossier de /dana. */}
+      <div className="flex items-center gap-3 mt-2 mb-1">
+        <div
+          className="h-px w-6"
+          style={{ background: '#3B82F6' }}
+          aria-hidden="true"
+        />
+        <span
+          className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
+          style={{ color: '#3B82F6' }}
+        >
+          MODEL · 5-FOLD SPATIAL CV
+        </span>
+        <span className="font-serif italic text-11 text-text-tertiary truncate">
+          rendimiento del Random Forest sobre la zona de entrenamiento
+        </span>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         <KpiCard
           label="Model AUC"
@@ -263,6 +283,24 @@ export function Overview() {
             source: 'config/params.yaml + scripts/features/build_dataset_v2.py',
           }}
         />
+      </div>
+
+      {/* KPI row B · portfolio — mismo patrón eyebrow editorial */}
+      <div className="flex items-center gap-3 mt-3 mb-1">
+        <div
+          className="h-px w-6"
+          style={{ background: '#F39C12' }}
+          aria-hidden="true"
+        />
+        <span
+          className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
+          style={{ color: '#F39C12' }}
+        >
+          PORTFOLIO · WIDE DISTRIBUTION
+        </span>
+        <span className="font-serif italic text-11 text-text-tertiary truncate">
+          exposición del baseline 1000 pólizas — métricas operativas para underwriting
+        </span>
       </div>
 
       {/* KPI row B — portfolio
@@ -357,40 +395,67 @@ export function Overview() {
         <RiskZoneMap zone="both" height={520} mode3d />
       </RevealSection>
 
-      {/* Charts row con reveal stagger */}
+      {/* Charts row · eyebrow editorial antes del reveal */}
+      <div className="flex items-center gap-3 mt-3 mb-1">
+        <div
+          className="h-px w-6"
+          style={{ background: '#0F1B35' }}
+          aria-hidden="true"
+        />
+        <span
+          className="text-9 font-mono font-semibold uppercase tracking-[0.20em] text-text-primary"
+        >
+          EVIDENCE · MODEL & EVENT
+        </span>
+        <span className="font-serif italic text-11 text-text-tertiary truncate">
+          tres lecturas independientes — concentración, attribution, signal SAR
+        </span>
+      </div>
       <RevealSection as="div" className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div className="lg:col-span-4">
           <ChartCard
+            eyebrow="CONCENTRATION · BY MUNICIPALITY"
+            register="concentration"
             title="Exposed TIV by municipality"
+            subtitle="Capital con P(flood) > 0.5, agregado por municipio anfitrión."
             badge="P > 0.5"
             info={{
               what: 'Total insured value of policies whose pixel-level flood probability exceeds 0.5, aggregated by host municipality.',
               source: 'Computed client-side from /api/portfolios/wide_distribution clients filtered by risk_probability > 0.5 and bucketed by nearest municipality.',
             }}
+            annotation="Albal, Algemesí y Alzira concentran la mayor parte del TIV expuesto del portfolio."
           >
             <MunicipalityChart portfolio={portfolio} />
           </ChartCard>
         </div>
         <div className="lg:col-span-3">
           <ChartCard
+            eyebrow="ATTRIBUTION · FEATURE WEIGHT"
+            register="attribution"
             title="Feature importance · Δ AUC"
+            subtitle="Qué features sostienen el ranking del Random Forest."
             badge="RF v2"
             info={{
               what: 'Permutation importance of each model feature — the drop in AUC when its column is randomly shuffled on the Valencia OOF set.',
               source: 'GET /api/metrics/transferability → feature_drift[].importance_valencia',
             }}
+            annotation="distance_to_coast + elevation + HAND dominan: la geomorfología pesa más que la signal SAR puntual."
           >
             <ImportanceChart transferability={transferability} />
           </ChartCard>
         </div>
         <div className="lg:col-span-5">
           <ChartCard
+            eyebrow="SIGNAL · SAR BACKSCATTER"
+            register="signal"
             title="SAR backscatter · Paiporta AOI"
+            subtitle="Serie σ⁰ VV de 500 m centrada en Paiporta — la huella del agua sobre el suelo."
             badge="Δ -12.4 dB"
             info={{
               what: 'Mean σ⁰ VV time series for a 500 m AOI centred on Paiporta. Pre-DANA reference is the 60-day median; the dip on 29 Oct 2024 marks the flood peak.',
               source: 'Illustrative curve — historical S1 GRD time-series ingestion pending. Reference Δ from data/sentinel1/processed/.',
             }}
+            annotation="La caída brusca el 29 oct marca la lámina de agua: superficie especular → backscatter cae > 12 dB."
           >
             <SarChart />
           </ChartCard>
@@ -404,23 +469,82 @@ export function Overview() {
 // Editorial register: título en font-serif sin semibold para que case
 // con los h1 de las páginas (que también son serif). El badge sigue
 // haciendo de "eyebrow" — mono caps tracked-out, alineado a la derecha.
-function ChartCard({ title, badge, info, children }) {
+// ─── Register identity para ChartCard ───────────────────────────
+// Mismo sistema que el Widget de Exposure Dashboard pero adaptado a
+// los 3 charts del briefing diario. Cada chart pertenece a un
+// register que drives el accent rail + eyebrow tint.
+//
+//   concentration → rojo flood, "dónde se acumula el dinero"
+//   attribution   → ámbar, "qué le importa al modelo"
+//   signal        → cyan SAR, "qué le decían los satélites"
+const CHART_REGISTER_ACCENT = {
+  concentration: '#E74C3C',
+  attribution: '#F39C12',
+  signal: '#22D3EE',
+  context: '#0F1B35',
+};
+
+function ChartCard({
+  title,
+  badge,
+  info,
+  children,
+  eyebrow = null,
+  register = 'context',
+  subtitle = null,
+  annotation = null,
+}) {
+  const accent = CHART_REGISTER_ACCENT[register] || CHART_REGISTER_ACCENT.context;
   return (
-    <div className="bg-bg-surface border border-border-default rounded-md shadow-sm flex flex-col overflow-visible h-full transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-default">
+    <div className="group bg-bg-surface border border-border-default rounded-md shadow-sm flex flex-col overflow-visible h-full transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
+      <div className="relative px-4 pt-2.5 pb-3 border-b border-border-default">
+        {(eyebrow || badge) && (
+          <div className="flex items-center justify-between gap-2 mb-1">
+            {eyebrow ? (
+              <span
+                className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
+                style={{ color: accent }}
+              >
+                {eyebrow}
+              </span>
+            ) : (
+              <span />
+            )}
+            {badge && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
+                {badge}
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-1.5 min-w-0">
-          <h3 className="font-serif text-15 text-text-primary truncate tracking-tight">{title}</h3>
+          <h3 className="font-serif text-15 text-text-primary truncate tracking-tight leading-tight">
+            {title}
+          </h3>
           {info && <InfoTooltip what={info.what} source={info.source} />}
         </div>
-        {badge && (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
-            {badge}
-          </span>
+        {subtitle && (
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug mt-1 max-w-[40ch]">
+            {subtitle}
+          </p>
         )}
+        {/* Hairline accent rail · 28 px → 56 px en group-hover */}
+        <div
+          className="absolute left-4 bottom-0 h-[2px] w-7 transition-all duration-300 ease-out group-hover:w-14"
+          style={{ background: accent, transform: 'translateY(1px)' }}
+          aria-hidden="true"
+        />
       </div>
       <div className="p-2" style={{ height: 260 }}>
         {children}
       </div>
+      {annotation && (
+        <div className="px-4 pb-3 pt-1 border-t border-border-default">
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug">
+            {annotation}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
