@@ -18,6 +18,7 @@ import { CenterReticle } from '@/components/tour/center-reticle.jsx';
 import { useKeyboardModeSwitcher } from '@/components/tour/mode-bank.jsx';
 import { getShaderCssFilter } from '@/lib/tour/deck-effects.js';
 import { usePrefersReducedMotion } from '@/lib/animations.js';
+import { useReturnPeriod, getRPVisualFilter } from '@/lib/return-period.js';
 
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const HAS_GOOGLE = Boolean(GOOGLE_KEY);
@@ -375,7 +376,18 @@ function TourMapInner({ policies, onSelectPolicy }) {
     return layers;
   }, [policies, activePolicyIdx, liftT, pulseT, hoverIdx, onSelectPolicy, setActiveIndex, incidentTime]);
 
-  const cssFilter = getShaderCssFilter(mode);
+  // Componer dos filtros CSS independientes: el del modo visual
+  // (PHOTO/THERMAL/NIGHT/ARCHIVE/SWEEP) + el del Return Period
+  // (saturación/contraste por escenario). Aplicados al wrapper del
+  // canvas, no a la basemap — la modulación es honest, no
+  // falsifica datos del modelo. T100 = baseline = filtro vacío.
+  const [rp] = useReturnPeriod();
+  const modeFilter = getShaderCssFilter(mode);
+  const rpFilter = getRPVisualFilter(rp);
+  const cssFilter =
+    modeFilter === 'none' && rpFilter === 'none'
+      ? 'none'
+      : `${modeFilter === 'none' ? '' : modeFilter} ${rpFilter === 'none' ? '' : rpFilter}`.trim();
   const polygonScale = getIncidentPolygonScale(incidentTime || 0);
   const polygonOpacity = getIncidentOpacity(incidentTime || 0);
 

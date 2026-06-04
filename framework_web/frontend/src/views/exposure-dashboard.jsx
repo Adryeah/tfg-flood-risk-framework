@@ -27,9 +27,13 @@ import {
   scaleLoss,
   rpLabel,
   getLossMultiplier,
+  getRPVisualFilter,
   SOURCE_NOTE,
 } from '@/lib/return-period.js';
-import { ReturnPeriodSelector } from '@/components/return-period-selector.jsx';
+import {
+  ReturnPeriodSelector,
+  BackboneSourceSelector,
+} from '@/components/return-period-selector.jsx';
 
 const RISK_COLORS = {
   low: '#16A34A',
@@ -167,7 +171,7 @@ export function ExposureDashboard() {
              *  Screening emphasises spatial accumulation as the primary
              *  visual; clustering reveals where the portfolio piles up. */}
             <Widget
-              eyebrow="SPATIAL · 01"
+              eyebrow="ESPACIAL · 01"
               register="context"
               title="Geographic concentration"
               subtitle="Dónde se agrupa la cartera sobre la superficie de riesgo del modelo."
@@ -189,7 +193,7 @@ export function ExposureDashboard() {
             </Widget>
 
             <Widget
-              eyebrow="DENSITY · 01"
+              eyebrow="DENSIDAD · 01"
               register="composition"
               title="Risk distribution"
               subtitle="Reparto de pólizas por bucket de riesgo del Random Forest."
@@ -209,7 +213,7 @@ export function ExposureDashboard() {
             </Widget>
 
             <Widget
-              eyebrow="DENSITY · 02"
+              eyebrow="DENSIDAD · 02"
               register="mix"
               title="Exposure by product"
               subtitle="Capital asegurado por línea de negocio, sin aplicar probabilidad."
@@ -233,7 +237,7 @@ export function ExposureDashboard() {
              *  varies. The shape tells the underwriter what fraction of
              *  total loss concentrates in the worst tail. */}
             <Widget
-              eyebrow="TAIL · OEP-STYLE"
+              eyebrow="COLA · ESTILO OEP"
               register="tail"
               title="Loss exceedance curve"
               subtitle="Capital acumulado por encima de cada umbral de pérdida — donde vive el riesgo de cola."
@@ -255,7 +259,7 @@ export function ExposureDashboard() {
             </Widget>
 
             <Widget
-              eyebrow="ATTRIBUTION · BY CATEGORY"
+              eyebrow="ATRIBUCIÓN · POR CATEGORÍA"
               register="attribution"
               title="Loss breakdown"
               subtitle="Descomposición de la PML del escenario DANA en sus 4 buckets."
@@ -275,7 +279,7 @@ export function ExposureDashboard() {
             </Widget>
 
             <Widget
-              eyebrow="CONCENTRATION · TOP 10"
+              eyebrow="CONCENTRACIÓN · TOP 10"
               register="concentration"
               title="Top 10 highest risk"
               subtitle="Pólizas que cargan más € sobre el PML — los nombres del review pile."
@@ -719,10 +723,21 @@ function GeographicMap({ clients }) {
     [clients]
   );
 
+  // Filtro CSS por Return Period — modula intensidad visual del mapa
+  // según el escenario activo. T100 baseline = none.
+  const [rp] = useReturnPeriod();
+  const rpFilter = getRPVisualFilter(rp);
+
   // Centered on the union of both study areas (Valencia + Algemesí) so
   // both clusters are visible at the default zoom.
   return (
-    <div className="h-full min-h-[420px] rounded overflow-hidden">
+    <div
+      className="h-full min-h-[420px] rounded overflow-hidden"
+      style={{
+        filter: rpFilter,
+        transition: 'filter 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+    >
       <Map
         center={[
           (Math.min(ZONES.valencia.bbox[0], ZONES.algemesi.bbox[0]) +
@@ -1177,15 +1192,17 @@ function TopRiskClientsTable({ clients }) {
 }
 
 // ─── Return Period scenario bar ──────────────────────────────────
-// Selector dashboard variant + methodology note inline.
-// Reads como "este escenario es lo que estamos cotizando" + cita.
+// Strip de configuración del escenario: periodo de retorno +
+// fuente backbone + multiplicador AEP visible + cita Dottori.
+// Reads como "este escenario es lo que estamos cotizando".
 function ReturnPeriodScenarioBar() {
   const [rp] = useReturnPeriod();
   const mult = getLossMultiplier(rp);
   return (
-    <div className="bg-bg-surface border border-border-default rounded-md shadow-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+    <div className="bg-bg-surface border border-border-default rounded-md shadow-sm px-4 py-3 flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-5 flex-wrap">
       <ReturnPeriodSelector variant="dashboard" />
-      <div className="flex items-baseline gap-2 ml-auto">
+      <BackboneSourceSelector variant="dashboard" />
+      <div className="flex items-baseline gap-2 lg:ml-auto">
         <span className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary">
           Multiplicador AEP
         </span>

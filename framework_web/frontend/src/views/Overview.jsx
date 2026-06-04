@@ -217,7 +217,7 @@ export function Overview() {
           className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
           style={{ color: '#3B82F6' }}
         >
-          MODEL · 5-FOLD SPATIAL CV
+          MODELO · CV ESPACIAL 5-FOLD
         </span>
         <span className="font-serif italic text-11 text-text-tertiary truncate">
           rendimiento del Random Forest sobre la zona de entrenamiento
@@ -296,7 +296,7 @@ export function Overview() {
           className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
           style={{ color: '#F39C12' }}
         >
-          PORTFOLIO · WIDE DISTRIBUTION
+          CARTERA · DISTRIBUCIÓN AMPLIA
         </span>
         <span className="font-serif italic text-11 text-text-tertiary truncate">
           exposición del baseline 1000 pólizas — métricas operativas para underwriting
@@ -405,19 +405,19 @@ export function Overview() {
         <span
           className="text-9 font-mono font-semibold uppercase tracking-[0.20em] text-text-primary"
         >
-          EVIDENCE · MODEL & EVENT
+          EVIDENCIA · MODELO Y EVENTO
         </span>
         <span className="font-serif italic text-11 text-text-tertiary truncate">
-          tres lecturas independientes — concentración, attribution, signal SAR
+          tres lecturas independientes — concentración, atribución y señal SAR
         </span>
       </div>
       <RevealSection as="div" className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div className="lg:col-span-4">
           <ChartCard
-            eyebrow="CONCENTRATION · BY MUNICIPALITY"
+            eyebrow="CONCENTRACIÓN · POR MUNICIPIO"
             register="concentration"
             title="Exposed TIV by municipality"
-            subtitle="Capital con P(flood) > 0.5, agregado por municipio anfitrión."
+            subtitle="Capital con P(inundación) > 0.5, agregado por municipio anfitrión."
             badge="P > 0.5"
             info={{
               what: 'Total insured value of policies whose pixel-level flood probability exceeds 0.5, aggregated by host municipality.',
@@ -430,7 +430,7 @@ export function Overview() {
         </div>
         <div className="lg:col-span-3">
           <ChartCard
-            eyebrow="ATTRIBUTION · FEATURE WEIGHT"
+            eyebrow="ATRIBUCIÓN · PESO DE FEATURES"
             register="attribution"
             title="Feature importance · Δ AUC"
             subtitle="Qué features sostienen el ranking del Random Forest."
@@ -446,7 +446,7 @@ export function Overview() {
         </div>
         <div className="lg:col-span-5">
           <ChartCard
-            eyebrow="SIGNAL · SAR BACKSCATTER"
+            eyebrow="SEÑAL · RETRODISPERSIÓN SAR"
             register="signal"
             title="SAR backscatter · Paiporta AOI"
             subtitle="Serie σ⁰ VV de 500 m centrada en Paiporta — la huella del agua sobre el suelo."

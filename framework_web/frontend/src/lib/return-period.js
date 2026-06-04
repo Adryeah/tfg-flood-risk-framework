@@ -64,6 +64,27 @@ export function rpLabel(rp) {
 }
 
 /**
+ * Filtros CSS para aplicar al tile raster del risk surface según el
+ * RP activo. T100 = baseline (sin filtro), T < 100 desatura/aclara
+ * (el escenario es menos extremo, el mapa "respira"), T > 100 satura/
+ * oscurece (escenario más extremo, lectura más alarmante).
+ *
+ * Sin esto el risk surface es estático y el usuario no percibe que
+ * está cambiando de escenario. El filtro es honest: no falsifica
+ * datos, solo modula la INTENSIDAD VISUAL para reflejar la
+ * INTENSIDAD del escenario (los KPIs sí cambian con el multiplicador
+ * AEP en paralelo).
+ */
+export function getRPVisualFilter(rp) {
+  if (rp === 100 || !Number.isFinite(rp)) return 'none';
+  if (rp === 10) return 'saturate(0.55) brightness(1.08) opacity(0.78)';
+  if (rp === 50) return 'saturate(0.78) brightness(1.03) opacity(0.92)';
+  if (rp === 250) return 'saturate(1.18) brightness(0.95) contrast(1.05)';
+  if (rp === 500) return 'saturate(1.35) brightness(0.88) contrast(1.10)';
+  return 'none';
+}
+
+/**
  * Veredicto cualitativo para mostrar como pill en cards de póliza:
  *  · 'EXPOSED'    → loss(RP) > 10% TIV
  *  · 'MONITORED'  → 3% < loss(RP) ≤ 10% TIV
@@ -77,6 +98,82 @@ export function rpVerdict(scaledLoss, tiv) {
   if (pct > 0.10) return 'EXPOSED';
   if (pct > 0.03) return 'MONITORED';
   return 'SAFE';
+}
+
+// ─── Backbone source · de dónde vienen los rasters RP ────────────
+//
+// La plataforma soporta dos backbones intercambiables para los mapas
+// de zonas inundables por RP:
+//
+//  · 'rf_v2'  → modelo propio Random Forest v2 + escalado AEP por
+//               Dottori 2018 (todo client-side, sin dependencias
+//               externas, defendible metodológicamente). Default.
+//  · 'snczi'  → rasters oficiales MITECO (Sistema Nacional de
+//               Cartografía de Zonas Inundables), servidos vía
+//               WMS o como tiles propios desde el backend Render
+//               cuando el operador haya descargado los GeoTIFF.
+//
+// El switching es opt-in y queda persistido en localStorage. La UI
+// muestra una pill "Fuente: RF v2" o "Fuente: SNCZI" en el Console
+// y en el Exposure Dashboard.
+export const BACKBONE_SOURCES = ['rf_v2', 'snczi'];
+export const DEFAULT_BACKBONE = 'rf_v2';
+
+export const BACKBONE_LABELS = {
+  rf_v2: 'RF v2 propio',
+  snczi: 'SNCZI · MITECO',
+};
+
+export const BACKBONE_NOTES = {
+  rf_v2: 'Random Forest v2 + escalado AEP (Dottori 2018)',
+  snczi: 'Cartografía oficial MITECO · T10/T100/T500 (cuando configurado)',
+};
+
+const BACKBONE_KEY = 'frfw.backbone_source';
+const backboneListeners = new Set();
+
+export function getBackbone() {
+  try {
+    const stored = localStorage.getItem(BACKBONE_KEY);
+    if (stored && BACKBONE_SOURCES.includes(stored)) return stored;
+  } catch {
+    /* private mode */
+  }
+  return DEFAULT_BACKBONE;
+}
+
+export function setBackbone(source) {
+  if (!BACKBONE_SOURCES.includes(source)) return;
+  const prev = getBackbone();
+  if (prev === source) return;
+  try {
+    localStorage.setItem(BACKBONE_KEY, source);
+  } catch {
+    /* private mode */
+  }
+  backboneListeners.forEach((fn) => {
+    try {
+      fn(source);
+    } catch (err) {
+      console.warn('Backbone listener failed', err);
+    }
+  });
+}
+
+export function onBackboneChange(fn) {
+  backboneListeners.add(fn);
+  return () => backboneListeners.delete(fn);
+}
+
+export function useBackbone() {
+  const [source, setLocalSource] = useState(getBackbone);
+  useEffect(() => {
+    return onBackboneChange((next) => setLocalSource(next));
+  }, []);
+  const set = useCallback((next) => {
+    setBackbone(next);
+  }, []);
+  return [source, set];
 }
 
 // ─── State global persistido en localStorage ──────────────────────

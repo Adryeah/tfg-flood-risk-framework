@@ -263,7 +263,25 @@ Multiplicadores resultantes:
 
 P(flood) por píxel NO escala — representa la baseline climatológica actual, no la intensidad del escenario. La separación es intencional.
 
-**Backbone metodológico próximo paso**: integración directa de los rasters oficiales SNCZI (Sistema Nacional de Cartografía de Zonas Inundables, MITECO) que publican mapas T10/T100/T500 en GeoTIFF para todo el territorio español. Documentado como next step en chapter 7 de la memoria.
+**Backbone metodológico (Fase 8)**: la plataforma soporta dos backbones intercambiables para los mapas de zonas inundables. El switching es opt-in por usuario, persistido global en `localStorage['frfw.backbone_source']`.
+
+| Backbone | Default | Estado | Método |
+|----------|---------|--------|--------|
+| `rf_v2`  | ✓ | Operativo | Random Forest v2 + escalado AEP (Dottori 2018) — todo client-side, sin dependencias externas |
+| `snczi`  | — | Pendiente | Rasters oficiales SNCZI/MITECO T10/T100/T500 — requiere descarga manual + tiles propios o WMS INSPIRE proxy |
+
+Endpoint backend `/api/return-periods/sources` lista las fuentes disponibles para que el frontend sepa si puede ofrecer el toggle SNCZI. Manifest stub en `/api/return-periods/snczi/{zone}/{rp}/manifest` devuelve 503 mientras SNCZI no esté configurado, con mensaje claro para que la UI muestre el banner correspondiente.
+
+**Pasos para activar SNCZI** (documentados en `framework_web/backend/routers/return_periods.py`):
+
+1. Descargar manualmente rasters T10/T100/T500 desde MITECO (requiere aceptar términos web, no automatizable):
+   <https://www.miteco.gob.es/es/cartografia-y-sig/ide/descargas/agua/cartografia-zi-lamina.html>
+2. Recortar al bbox de cada zona con `gdalwarp`.
+3. Generar tile pyramids z=10-15 con `gdal2tiles.py`.
+4. Servir desde Render como capa raster `/api/return-periods/snczi/{zone}/{rp}/{z}/{x}/{y}.png`.
+5. Alternativa WMS: proxy del WMS INSPIRE de MITECO desde el backend para evitar CORS.
+
+**Visual feedback por RP** (Fase 8.A): el risk surface aplica un filtro CSS según el RP activo — saturación/brillo modulados para reflejar la intensidad del escenario sin falsificar datos. T100 baseline = filtro vacío. T10 desatura/aclara (escenario menos extremo), T500 satura/oscurece (escenario más extremo). Implementado en `getRPVisualFilter(rp)` en `src/lib/return-period.js`, aplicado al wrapper del canvas en `tour-map.jsx` y al wrapper de `GeographicMap` en `/exposure`.
 
 Componentes:
 - `ReturnPeriodSelector` (variants 'console' y 'dashboard') — `src/components/return-period-selector.jsx`

@@ -1,5 +1,12 @@
 import React from 'react';
-import { RETURN_PERIODS, useReturnPeriod, rpLabel } from '@/lib/return-period.js';
+import {
+  RETURN_PERIODS,
+  useReturnPeriod,
+  rpLabel,
+  useBackbone,
+  BACKBONE_LABELS,
+  BACKBONE_SOURCES,
+} from '@/lib/return-period.js';
 
 /**
  * Selector global de Return Period.
@@ -93,13 +100,13 @@ export function ReturnPeriodSelector({
     <div className={`inline-flex items-center gap-2 ${className}`}>
       {labelOn && (
         <span className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary">
-          Return period
+          Periodo de retorno
         </span>
       )}
       <div
         className="inline-flex items-center gap-1 p-1 rounded-md border border-border-default bg-bg-subtle"
         role="radiogroup"
-        aria-label="Return period"
+        aria-label="Periodo de retorno"
       >
         {RETURN_PERIODS.map((value) => {
           const active = value === rp;
@@ -124,9 +131,100 @@ export function ReturnPeriodSelector({
               onMouseLeave={(e) => {
                 if (!active) e.currentTarget.style.background = 'transparent';
               }}
-              title={`Return period ${value} años`}
+              title={`Periodo de retorno ${value} años`}
             >
               {rpLabel(value)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Selector de fuente backbone (RF v2 propio vs SNCZI oficial).
+ * Variante 'console' (mil-spec compacto) y 'dashboard' (chip más grande).
+ * Persistido global en localStorage vía useBackbone hook.
+ */
+export function BackboneSourceSelector({ variant = 'console', className = '' }) {
+  const [source, setSource] = useBackbone();
+  const isConsole = variant === 'console';
+
+  if (isConsole) {
+    return (
+      <div className={`inline-flex items-center gap-1.5 ${className}`}>
+        <span className="text-9 font-mono uppercase tracking-[0.18em] text-white/55">
+          Fuente:
+        </span>
+        <div
+          className="inline-flex items-center gap-0.5 px-0.5 py-0.5 rounded"
+          style={{ background: 'rgba(255,255,255,0.06)' }}
+          role="radiogroup"
+          aria-label="Fuente del backbone"
+        >
+          {BACKBONE_SOURCES.map((s) => {
+            const active = s === source;
+            return (
+              <button
+                key={s}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSource(s)}
+                className="px-1.5 py-0.5 rounded text-9 font-mono uppercase tracking-widest transition-all"
+                style={
+                  active
+                    ? { background: '#0F1B35', color: '#F8FAFC' }
+                    : { color: 'rgba(255,255,255,0.55)' }
+                }
+                title={BACKBONE_LABELS[s]}
+              >
+                {s === 'rf_v2' ? 'RF V2' : 'SNCZI'}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // dashboard variant
+  return (
+    <div className={`inline-flex items-center gap-2 ${className}`}>
+      <span className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary">
+        Fuente backbone
+      </span>
+      <div
+        className="inline-flex items-center gap-1 p-1 rounded-md border border-border-default bg-bg-subtle"
+        role="radiogroup"
+        aria-label="Fuente del backbone"
+      >
+        {BACKBONE_SOURCES.map((s) => {
+          const active = s === source;
+          return (
+            <button
+              key={s}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setSource(s)}
+              className="px-2.5 py-1 rounded text-11 font-mono font-semibold uppercase tracking-widest transition-all"
+              style={
+                active
+                  ? { background: '#0F1B35', color: '#F8FAFC' }
+                  : { color: 'var(--text-secondary)' }
+              }
+              onMouseEnter={(e) => {
+                if (!active)
+                  e.currentTarget.style.background = 'rgba(15,27,53,0.05)';
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.background = 'transparent';
+              }}
+              title={BACKBONE_LABELS[s]}
+            >
+              {s === 'rf_v2' ? 'RF v2' : 'SNCZI'}
             </button>
           );
         })}

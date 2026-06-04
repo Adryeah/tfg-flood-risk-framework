@@ -23,6 +23,7 @@ from .routers import geo as geo_router
 from .routers import metrics as metrics_router
 from .routers import methodology as methodology_router
 from .routers import portfolio as portfolio_router
+from .routers import return_periods as return_periods_router
 from .routers import risk as risk_router
 from .routers import tiles as tiles_router
 from .services.feature_extractor import get_feature_extractor
@@ -114,6 +115,7 @@ app.include_router(tiles_router.router)
 app.include_router(portfolio_router.router)
 app.include_router(metrics_router.router)
 app.include_router(methodology_router.router)
+app.include_router(return_periods_router.router)
 
 
 @app.get("/", tags=["root"])
@@ -133,6 +135,8 @@ def root():
             "GET  /api/portfolios/{portfolio_id}/exposure",
             "GET  /api/metrics/{section}",
             "GET  /api/methodology/leakage_audit",
+            "GET  /api/return-periods/sources",
+            "GET  /api/return-periods/snczi/{zone}/{rp}/manifest",
         ],
     }
 
