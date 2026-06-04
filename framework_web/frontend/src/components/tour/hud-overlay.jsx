@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTourState } from '@/lib/tour/tour-state.jsx';
 import { MODE_LABELS } from '@/lib/tour/tour-state.jsx';
 import { TargetRegistry } from '@/components/tour/target-registry.jsx';
@@ -13,6 +13,27 @@ export function HudOverlay({ policies, onSelectPolicy }) {
     useTourState();
   const [showHelp, setShowHelp] = useState(false);
   const activePolicy = policies?.[activePolicyIdx];
+
+  // Keyboard shortcuts globales del console — no específicos de mode
+  // bank (eso vive en useKeyboardModeSwitcher). '?' o '/' o 'h' abren
+  // la ayuda; ESC la cierra.
+  useEffect(() => {
+    const handler = (e) => {
+      const tag = (e.target?.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      // '?' viene con Shift+/. Capturamos ambos por compatibilidad
+      // multiplataforma (Mac, ES layout, etc.).
+      if (e.key === '?' || (e.shiftKey && e.key === '/') || e.key === 'h') {
+        e.preventDefault();
+        setShowHelp((prev) => !prev);
+      } else if (e.key === 'Escape' && showHelp) {
+        e.preventDefault();
+        setShowHelp(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showHelp]);
 
   return (
     <>

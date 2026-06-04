@@ -37,6 +37,7 @@ const EN_ES = {
   'Leakage Audit': 'Auditoría de Fugas',
   'Data & Downloads': 'Datos y Descargas',
   '3D Policy Tour': 'Tour 3D de Pólizas',
+  'Underwriter Console': 'Consola del Underwriter',
   // Sidebar — status
   'Checking backend…': 'Comprobando backend…',
   'Backend online · model loaded': 'Backend en línea · modelo cargado',

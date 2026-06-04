@@ -10,6 +10,8 @@ const SHORTCUTS = [
   { key: 'F4', label: 'Archive mode (evidence)' },
   { key: 'F5', label: 'Sweep mode (portfolio panoptic)' },
   { key: '1-9', label: 'Jump to top-N risk assets' },
+  { key: '?', label: 'Toggle this help' },
+  { key: 'Esc', label: 'Close help' },
 ];
 
 export function HelpOverlay({ onClose }) {

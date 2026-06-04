@@ -196,6 +196,7 @@ Términos militares en inglés usados como jerga técnica con tooltips que tradu
 | archive | contrast(1.15) brightness(0.92) | Dossier / evidence |
 
 ### Arquitectura
+
 ```
 src/
 ├── components/tour/
@@ -219,6 +220,33 @@ src/
 
 ### Teclas
 - ← → : Navegar pólizas
--Space : Play/Pause
+- Space : Play/Pause
 - F1-F5 : Cambiar modo visual
-- ? : Help overlay
+- ? / h : Toggle help overlay
+- Esc : Cerrar help overlay
+
+### Accesibilidad (Fase 6)
+- `prefers-reduced-motion` respetado vía `usePrefersReducedMotion` hook en `src/lib/animations.js`:
+  - Fly-throughs entre pólizas → jump instantáneo (`transitionDuration: 0`)
+  - CSS filter crossfade entre modos → switch instantáneo (`transition: none`)
+- Mobile (< md breakpoint, 768 px) muestra banner "Consola pensada para desktop" pero el mapa sigue renderizando — degradación graceful, no bloqueo total.
+- Focus visible global (2 px outline accent-info) heredado de `main.css :focus-visible`.
+
+### Defaults HUD
+`HUD_DEFAULTS` en `tour-state.jsx`:
+- callsigns: true (TargetRegistry visible)
+- reticle: true (CenterReticle por modo)
+- grid: true (TacticalMiniMap esquina superior derecha)
+- trace: false (opt-in; sweep mode lo activa)
+- scanlines: false (opt-in; archive mode lo activa)
+
+### Mode bank tintes semánticos
+| Modo | Pill activa tint | Fondo glifo | Lectura |
+|------|------------------|-------------|---------|
+| F1 PHOTO   | #22D3EE cyan   | dark navy | analítica neutra |
+| F2 THERMAL | #E74C3C red    | white | heat-map register |
+| F3 NIGHT   | #22C55E green  | dark green | NVG low-light |
+| F4 ARCHIVE | #F39C12 amber  | dark | evidence dossier |
+| F5 SWEEP   | #FBBF24 gold   | dark | god-mode panoptic |
+
+Sin estos tintes el modo activo se confunde con el resto cuando el ojo no está mirando la pill directamente — el chrome del HUD lleva paleta navy uniforme así que la pill activa es la única señal cromática.

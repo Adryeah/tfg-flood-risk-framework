@@ -3,12 +3,19 @@ import { useTourState } from '@/lib/tour/tour-state.jsx';
 import { useTourActions } from '@/lib/tour/tour-state.jsx';
 import { TOUR_MODES, MODE_LABELS } from '@/lib/tour/tour-state.jsx';
 
+// Cada modo lleva su propio tinte semántico — refuerza la
+// transición visual y desambigua el modo activo del resto.
+//   PHOTO   → azul cian (analítica neutra)
+//   THERMAL → rojo flood (heat-map register)
+//   NIGHT   → verde NVG (low-light register)
+//   ARCHIVE → ámbar (evidence/dossier)
+//   SWEEP   → dorado (god-mode panoptic)
 const MODE_KEYS = [
-  { mode: TOUR_MODES.PHOTO, key: 'F1', label: 'PHOTO' },
-  { mode: TOUR_MODES.THERMAL, key: 'F2', label: 'THERMAL' },
-  { mode: TOUR_MODES.NIGHT, key: 'F3', label: 'NIGHT' },
-  { mode: TOUR_MODES.ARCHIVE, key: 'F4', label: 'ARCHIVE' },
-  { mode: TOUR_MODES.SWEEP, key: 'F5', label: 'SWEEP' },
+  { mode: TOUR_MODES.PHOTO, key: 'F1', label: 'PHOTO', tint: '#22D3EE', fg: '#0F172A' },
+  { mode: TOUR_MODES.THERMAL, key: 'F2', label: 'THERMAL', tint: '#E74C3C', fg: '#FFFFFF' },
+  { mode: TOUR_MODES.NIGHT, key: 'F3', label: 'NIGHT', tint: '#22C55E', fg: '#052E16' },
+  { mode: TOUR_MODES.ARCHIVE, key: 'F4', label: 'ARCHIVE', tint: '#F39C12', fg: '#1F2937' },
+  { mode: TOUR_MODES.SWEEP, key: 'F5', label: 'SWEEP', tint: '#FBBF24', fg: '#1F2937' },
 ];
 
 export function ModeBank({ currentMode }) {
@@ -22,20 +29,27 @@ export function ModeBank({ currentMode }) {
         border: '1px solid rgba(255,255,255,0.10)',
       }}
     >
-      {MODE_KEYS.map(({ mode, key, label }) => {
+      {MODE_KEYS.map(({ mode, key, label, tint, fg }) => {
         const isActive = mode === currentMode;
         return (
           <button
             key={mode}
             onClick={() => setMode(mode)}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all ${
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all"
+            style={
               isActive
-                ? 'bg-[#22D3EE] text-slate-900'
-                : 'text-slate-300 hover:bg-white/10'
-            }`}
+                ? { background: tint, color: fg }
+                : { color: 'rgb(203,213,225)' }
+            }
+            onMouseEnter={(e) => {
+              if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.10)';
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) e.currentTarget.style.background = 'transparent';
+            }}
             title={`${key} · ${label}`}
           >
-            <span className="text-9 font-mono" style={{ opacity: isActive ? 0.7 : 0.4 }}>
+            <span className="text-9 font-mono" style={{ opacity: isActive ? 0.65 : 0.4 }}>
               {key}
             </span>
             <span className="text-10 font-mono uppercase tracking-widest">{label}</span>

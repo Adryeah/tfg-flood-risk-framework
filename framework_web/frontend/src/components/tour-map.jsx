@@ -17,6 +17,7 @@ import { HudOverlay } from '@/components/tour/hud-overlay.jsx';
 import { CenterReticle } from '@/components/tour/center-reticle.jsx';
 import { useKeyboardModeSwitcher } from '@/components/tour/mode-bank.jsx';
 import { getShaderCssFilter } from '@/lib/tour/deck-effects.js';
+import { usePrefersReducedMotion } from '@/lib/animations.js';
 
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const HAS_GOOGLE = Boolean(GOOGLE_KEY);
@@ -99,6 +100,7 @@ function TourMapInner({ policies, onSelectPolicy }) {
   const { mode, activePolicyIdx, hud, incidentTime } = useTourState();
   const { setActiveIndex, setTotal } = useTourActions();
   useKeyboardModeSwitcher();
+  const reducedMotion = usePrefersReducedMotion();
 
   const liftStartRef = useRef(performance.now());
   const [liftT, setLiftT] = useState(1);
@@ -150,16 +152,24 @@ function TourMapInner({ policies, onSelectPolicy }) {
     const p = activePolicy;
     if (!p) return;
     const policyAlt = policyAltitude(p);
+    // prefers-reduced-motion: el fly-through cinemático se sustituye
+    // por un jump instantáneo. La cámara llega al destino sin curva
+    // ni transitionInterpolator — accesibilidad sobre estética.
+    const transitionProps = reducedMotion
+      ? { transitionDuration: 0 }
+      : {
+          transitionDuration: 1500,
+          transitionInterpolator: new FlyToInterpolator({ speed: 1.6 }),
+        };
     setViewState({
       longitude: p.lon,
       latitude: p.lat,
       zoom: Math.max(17.0, 17.4 - policyAlt * 0.02),
       pitch: Math.max(48, 60 - policyAlt * 0.4),
       bearing: bearingFor(activePolicyIdx),
-      transitionDuration: 1500,
-      transitionInterpolator: new FlyToInterpolator({ speed: 1.6 }),
+      ...transitionProps,
     });
-  }, [activePolicy, activePolicyIdx]);
+  }, [activePolicy, activePolicyIdx, reducedMotion]);
 
   useEffect(() => {
     if (HAS_GOOGLE) return;
@@ -402,8 +412,18 @@ function TourMapInner({ policies, onSelectPolicy }) {
     return base;
   }, [layers, mode, incidentTime, emsrPolygons, polygonOpacity, polygonScale]);
 
+  // Transición del CSS filter entre modos: 300 ms cubic-bezier en
+  // modo normal, instantáneo si el usuario pide reduced-motion.
+  // Sin esto el switch entre PHOTO ↔ THERMAL parpadea.
+  const filterTransition = reducedMotion
+    ? 'none'
+    : 'filter 300ms cubic-bezier(0.4, 0, 0.2, 1)';
+
   return (
-    <div className="absolute inset-0" style={{ filter: cssFilter }}>
+    <div
+      className="absolute inset-0"
+      style={{ filter: cssFilter, transition: filterTransition }}
+    >
       {!HAS_GOOGLE && (
         <div
           ref={mapContainerRef}

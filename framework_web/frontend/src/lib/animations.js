@@ -1,6 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
+ * Returns true when the user has the OS-level "reduce motion" pref
+ * activado (System Settings → Accessibility en macOS, Settings →
+ * Ease of Access → Display en Windows, etc.). Componentes que disparan
+ * fly-throughs, count-ups largos, o transiciones >300ms deben
+ * cortocircuitar a "snap" instantáneo cuando esto es true.
+ */
+export function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (e) => setReduced(e.matches);
+    // Safari < 14 usa addListener; el resto addEventListener.
+    if (mq.addEventListener) mq.addEventListener('change', handler);
+    else if (mq.addListener) mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', handler);
+      else if (mq.removeListener) mq.removeListener(handler);
+    };
+  }, []);
+  return reduced;
+}
+
+/**
  * Hooks de animación scroll-driven para la plataforma.
  *
  * Por qué hooks y no clases CSS sueltas: tailwindcss-animate cubre el

@@ -153,10 +153,28 @@ export function PolicyTour3D() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-3.5rem)]">
+      {/* Banner desktop-recommended · sólo aparece en mobile (md:hidden).
+       *  El console es un instrumento denso: las pills F1-F5 a 36 px,
+       *  el ASSET REGISTRY de 340 px, el tactical minimap esquina arriba
+       *  derecha — todo cabe mal en 375 px. En vez de degradar la
+       *  consola entera mostramos un aviso editorial y mantenemos el
+       *  mapa renderizando (consulta visual sigue siendo útil). */}
+      <div className="md:hidden shrink-0 m-3 p-3 rounded-md border border-amber-200 bg-amber-50/80 text-amber-900">
+        <div className="text-10 font-mono uppercase tracking-[0.16em] mb-1">
+          Consola pensada para desktop
+        </div>
+        <p className="font-serif italic text-12 leading-snug">
+          La Underwriter Console usa una densidad informativa pensada
+          para 1280 px+ (HUD chrome, mode bank F1-F5, tactical minimap).
+          Funciona en móvil pero la lectura es mucho más cómoda en
+          portátil o tablet horizontal.
+        </p>
+      </div>
+
       {/* Top strip · controles globales */}
       <div className="shrink-0 px-3 sm:px-4 py-2 border-b border-border-default bg-bg-surface flex items-center gap-2 sm:gap-3 flex-wrap">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
-          UW · 3D Policy Tour
+          UW · Underwriter Console
         </div>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger className="w-[200px] sm:w-[240px] h-8 text-12">

@@ -16,11 +16,17 @@ export const MODE_LABELS = {
   sweep: 'SWEEP',
 };
 
+// HUD defaults · qué se renderiza al boot del console.
+// grid (tactical mini-map) = true porque sin él la consola pierde
+// contexto espacial — el underwriter no sabe dónde está mirando
+// dentro del bbox global de la cartera.
+// trace, scanlines son opt-in por modo (sweep activa trace,
+// archive activa scanlines).
 export const HUD_DEFAULTS = {
   callsigns: true,
   reticle: true,
   trace: false,
-  grid: false,
+  grid: true,
   scanlines: false,
 };
 
