@@ -167,7 +167,10 @@ export function ExposureDashboard() {
              *  Screening emphasises spatial accumulation as the primary
              *  visual; clustering reveals where the portfolio piles up. */}
             <Widget
+              eyebrow="SPATIAL · 01"
+              register="context"
               title="Geographic concentration"
+              subtitle="Dónde se agrupa la cartera sobre la superficie de riesgo del modelo."
               badge="clustered · 2 study areas"
               hint={
                 <>
@@ -180,12 +183,16 @@ export function ExposureDashboard() {
               }
               cite="CARTO Portfolio Screening pattern"
               className="lg:col-span-2 lg:row-span-2"
+              annotation="Manchas rojas dominantes en l'Horta Sud · Catarroja · Paiporta. Lo que el modelo había marcado antes de la DANA coincide con lo que pasó."
             >
               <GeographicMap clients={portfolio.clients} />
             </Widget>
 
             <Widget
+              eyebrow="DENSITY · 01"
+              register="composition"
               title="Risk distribution"
+              subtitle="Reparto de pólizas por bucket de riesgo del Random Forest."
               badge={`${portfolio.n_clients} policies`}
               hint={
                 <>
@@ -196,12 +203,16 @@ export function ExposureDashboard() {
                   mayor base esperada de siniestralidad anual.
                 </>
               }
+              annotation="Más volumen rojo = más siniestralidad anual esperada en cartera."
             >
               <RiskDonut distribution={exposure.distribution_by_category || {}} />
             </Widget>
 
             <Widget
+              eyebrow="DENSITY · 02"
+              register="mix"
               title="Exposure by product"
+              subtitle="Capital asegurado por línea de negocio, sin aplicar probabilidad."
               badge="€ insured value"
               hint={
                 <>
@@ -212,6 +223,7 @@ export function ExposureDashboard() {
                   por ramo.
                 </>
               }
+              annotation="Particulares concentra el mayor TIV; PYMES segunda línea de exposición."
             >
               <ExposureByTypeChart clients={portfolio.clients} />
             </Widget>
@@ -221,7 +233,10 @@ export function ExposureDashboard() {
              *  varies. The shape tells the underwriter what fraction of
              *  total loss concentrates in the worst tail. */}
             <Widget
+              eyebrow="TAIL · OEP-STYLE"
+              register="tail"
               title="Loss exceedance curve"
+              subtitle="Capital acumulado por encima de cada umbral de pérdida — donde vive el riesgo de cola."
               badge="Oasis OEP-style"
               hint={
                 <>
@@ -234,12 +249,16 @@ export function ExposureDashboard() {
                 </>
               }
               cite="Oasis LMF · single-event PML approximation"
+              annotation="Caída pronunciada al inicio: unas pocas pólizas concentran la mayor parte de la pérdida potencial."
             >
               <LossExceedanceCurve clients={portfolio.clients} />
             </Widget>
 
             <Widget
+              eyebrow="ATTRIBUTION · BY CATEGORY"
+              register="attribution"
               title="Loss breakdown"
+              subtitle="Descomposición de la PML del escenario DANA en sus 4 buckets."
               badge="DANA scenario"
               hint={
                 <>
@@ -250,12 +269,16 @@ export function ExposureDashboard() {
                   vistazo qué bucket de riesgo aporta más € a la PML.
                 </>
               }
+              annotation="High + Very High aportan la mayor parte del DANA loss — candidatos prioritarios a re-tarificar."
             >
               <LossBreakdownChart clients={portfolio.clients} />
             </Widget>
 
             <Widget
+              eyebrow="CONCENTRATION · TOP 10"
+              register="concentration"
               title="Top 10 highest risk"
+              subtitle="Pólizas que cargan más € sobre el PML — los nombres del review pile."
               badge="sorted by est. loss"
               hint={
                 <>
@@ -267,6 +290,7 @@ export function ExposureDashboard() {
                   de renovar.
                 </>
               }
+              annotation="Re-tarificar, renegociar deductibles o exigir medidas físicas antes de la próxima renovación."
             >
               <TopRiskClientsTable clients={portfolio.clients} />
             </Widget>
@@ -397,31 +421,112 @@ function MethodologyFooter() {
 //   - `cite` (opcional): chip de referencia bajo el cuerpo del tooltip
 //     (e.g., "Oasis LMF · Brier 1950").
 // ────────────────────────────────────────────────────────────────
-function Widget({ title, badge, hint, cite, children, className = '' }) {
+// ─── Widget identity system ──────────────────────────────────────
+// Cada widget del dashboard pertenece a uno de 6 "registers" — el
+// register define el accent color del hairline rail, el eyebrow de
+// arriba a la izquierda, y el tono de la card. Sin esto, los widgets
+// son chrome idéntico que lee como "default AI dashboard".
+//
+//   tail          rojo crítico  · análisis de cola, capital risk
+//   attribution   ámbar         · descomposición, segregación
+//   concentration rojo flood    · ranking, top-N, concentración
+//   composition   azul info     · estructura, reparto, mix
+//   mix           violeta       · portfolio mix, producto, semantic
+//   context       navy autoridad· mapa, contexto espacial
+//
+// Tipográficamente: eyebrow mono extreme tracked text-9 + título
+// serif text-15 sin semibold + hairline rail debajo del header +
+// optional subtitle italic serif + optional annotation italic serif
+// al pie. Lee como brief editorial, no como card SaaS.
+const REGISTER_ACCENT = {
+  tail: '#DC2626',
+  attribution: '#F39C12',
+  concentration: '#E74C3C',
+  composition: '#3B82F6',
+  mix: '#7C3AED',
+  context: '#0F1B35',
+};
+
+function Widget({
+  title,
+  badge,
+  hint,
+  cite,
+  children,
+  className = '',
+  /** Eyebrow text rendered above the serif title (mono caps tracked). */
+  eyebrow = null,
+  /** Semantic register — drives hairline accent color + eyebrow tint. */
+  register = 'context',
+  /** Optional italic serif "story" below the title. */
+  subtitle = null,
+  /** Optional italic serif insight at the bottom of the card. */
+  annotation = null,
+}) {
+  const accent = REGISTER_ACCENT[register] || REGISTER_ACCENT.context;
   return (
     <Card
       className={
-        'overflow-visible flex flex-col transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 ' +
+        'group overflow-visible flex flex-col transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 ' +
         className
       }
     >
-      <CardHeader className="py-2.5 px-4 border-b border-border-default">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {/* Título editorial: font-serif sin semibold, mismo registro
-             *  que los h1 de las páginas. El badge a la derecha hace de
-             *  eyebrow (mono caps tracked). */}
-            <CardTitle className="font-serif text-15 font-normal tracking-tight">{title}</CardTitle>
-            {hint && <InfoHint cite={cite}>{hint}</InfoHint>}
+      <CardHeader className="pt-2.5 pb-3 px-4 border-b border-border-default relative">
+        {/* Eyebrow row · mono caps tracked + badge a la derecha.
+         *  Solo se renderiza si hay al menos uno de los dos — evita
+         *  spacing vertical fantasma cuando un widget no usa ninguno. */}
+        {(eyebrow || badge) && (
+          <div className="flex items-center justify-between gap-2 mb-1">
+            {eyebrow ? (
+              <span
+                className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
+                style={{ color: accent }}
+              >
+                {eyebrow}
+              </span>
+            ) : (
+              <span />
+            )}
+            {badge && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
+                {badge}
+              </span>
+            )}
           </div>
-          {badge && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
-              {badge}
-            </span>
-          )}
+        )}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <CardTitle className="font-serif text-15 font-normal tracking-tight leading-tight">
+            {title}
+          </CardTitle>
+          {hint && <InfoHint cite={cite}>{hint}</InfoHint>}
         </div>
+        {subtitle && (
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug mt-1 max-w-[44ch]">
+            {subtitle}
+          </p>
+        )}
+        {/* Hairline accent rail · 28 px width en register color.
+         *  Crece a 56 px al hover del Card (semánticamente "este
+         *  widget está activo"). Lee como anotación a margen, no
+         *  como rail de severidad SaaS. width via Tailwind para que
+         *  group-hover funcione (inline style sobreescribiría). */}
+        <div
+          className="absolute left-4 bottom-0 h-[2px] w-7 transition-all duration-300 ease-out group-hover:w-14"
+          style={{
+            background: accent,
+            transform: 'translateY(1px)',
+          }}
+          aria-hidden="true"
+        />
       </CardHeader>
       <CardContent className="p-3 flex-1">{children}</CardContent>
+      {annotation && (
+        <div className="px-4 pb-3 pt-1 border-t border-border-default">
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug">
+            {annotation}
+          </p>
+        </div>
+      )}
     </Card>
   );
 }
