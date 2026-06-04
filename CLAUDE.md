@@ -240,6 +240,35 @@ src/
 - trace: false (opt-in; sweep mode lo activa)
 - scanlines: false (opt-in; archive mode lo activa)
 
+### Return Period · escalado AEP global (Fase 7)
+Estado global persistido en `localStorage['frfw.return_period']` con valores T10, T50, T100 (default), T250, T500. Implementado en `src/lib/return-period.js` con hook `useReturnPeriod()` que cualquier consumer puede leer.
+
+Escalado de pérdidas vía Annual Exceedance Probability:
+
+```
+loss(T) = loss(T_ref) * (T / T_ref)^α    con α = 0.35
+```
+
+α publicado en Dottori et al. (2018) *Nat. Clim. Change* 8(9) DOI:10.1038/s41558-018-0257-z (rango 0.28–0.45 para flood losses). T_ref = 100 porque la DANA Valencia 2024 corresponde a T75-100 según el reanalysis AEMET de precipitación 8h en cabecera del Poyo.
+
+Multiplicadores resultantes:
+
+| RP | Multiplicador |
+|----|---------------|
+| T10  | ×0.46 |
+| T50  | ×0.80 |
+| T100 | ×1.00 (baseline) |
+| T250 | ×1.36 |
+| T500 | ×1.75 |
+
+P(flood) por píxel NO escala — representa la baseline climatológica actual, no la intensidad del escenario. La separación es intencional.
+
+**Backbone metodológico próximo paso**: integración directa de los rasters oficiales SNCZI (Sistema Nacional de Cartografía de Zonas Inundables, MITECO) que publican mapas T10/T100/T500 en GeoTIFF para todo el territorio español. Documentado como next step en chapter 7 de la memoria.
+
+Componentes:
+- `ReturnPeriodSelector` (variants 'console' y 'dashboard') — `src/components/return-period-selector.jsx`
+- Integrado en StatusStrip de /tour (variant console) y en /exposure como scenario bar (variant dashboard) + en TargetRegistry para recalcular Pérdida est. + pill verdict EXPOSED/MONITORED/SAFE.
+
 ### Mode bank tintes semánticos
 | Modo | Pill activa tint | Fondo glifo | Lectura |
 |------|------------------|-------------|---------|

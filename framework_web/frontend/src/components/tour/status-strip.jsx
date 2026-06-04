@@ -1,6 +1,7 @@
 import React from 'react';
 import { MODE_LABELS } from '@/lib/tour/tour-state.jsx';
 import { MODEL_METRICS } from '@/lib/tour/incident-replay.js';
+import { ReturnPeriodSelector } from '@/components/return-period-selector.jsx';
 
 export function StatusStrip({ mode, activeIndex, total, isPlaying, speed, incidentTime, isReplaying }) {
   return (
@@ -37,6 +38,14 @@ export function StatusStrip({ mode, activeIndex, total, isPlaying, speed, incide
           </span>
         </>
       )}
+      {/* Return Period selector · alineado a la derecha (ml-auto)
+       *  para que viva separado del cluster de estado a la izquierda.
+       *  El RP es una dimensión ortogonal del análisis: el resto del
+       *  strip describe "qué estoy viendo ahora", el RP describe
+       *  "bajo qué escenario lo estoy evaluando". */}
+      <div className="ml-auto">
+        <ReturnPeriodSelector variant="console" />
+      </div>
     </div>
   );
 }

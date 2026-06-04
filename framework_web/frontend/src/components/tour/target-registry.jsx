@@ -1,6 +1,21 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatMoney, formatPercent } from '@/lib/format.js';
+import {
+  useReturnPeriod,
+  scaleLoss,
+  rpLabel,
+  rpVerdict,
+} from '@/lib/return-period.js';
+
+// Tinte del verdict pill según severidad — alineado con la paleta
+// risk semantics (Zurich spec). 'EXPOSED' rojo crítico,
+// 'MONITORED' ámbar, 'SAFE' verde status-live.
+const VERDICT_STYLE = {
+  EXPOSED: { color: '#FFFFFF', bg: '#E74C3C', label: 'EXPOSED' },
+  MONITORED: { color: '#0F172A', bg: '#F39C12', label: 'MONITORED' },
+  SAFE: { color: '#0F172A', bg: '#10B981', label: 'SAFE' },
+};
 
 const RISK_TINT = {
   low: '#FBBF24',
@@ -29,9 +44,18 @@ const SUBTYPE_LABEL = {
 };
 
 export function TargetRegistry({ policy, index, total, onPrev, onNext }) {
+  const [rp] = useReturnPeriod();
   if (!policy) return null;
   const tint = RISK_TINT[policy.risk_category] || '#94A3B8';
   const desc = SUBTYPE_LABEL[policy.subtype] || policy.subtype || policy.product;
+
+  // Pérdida escalada al RP activo. La baseline (estimated_loss_dana)
+  // corresponde al escenario observado, que tomamos como T100. Para
+  // otros RP aplicamos la elasticidad publicada de Dottori 2018.
+  const baselineLoss = policy.estimated_loss_dana || 0;
+  const scaledLoss = scaleLoss(baselineLoss, rp);
+  const verdict = rpVerdict(scaledLoss, policy.insured_value);
+  const verdictStyle = verdict ? VERDICT_STYLE[verdict] : null;
 
   return (
     <div
@@ -67,9 +91,38 @@ export function TargetRegistry({ policy, index, total, onPrev, onNext }) {
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <PanelMetric label="P(flood)" value={formatPercent(policy.risk_probability, 1)} tint={tint} />
         <PanelMetric label="TIV" value={formatMoney(policy.insured_value)} />
-        <PanelMetric label="Est. loss" value={formatMoney(policy.estimated_loss_dana)} tint={tint} />
+        <PanelMetric
+          label={`Est. loss · ${rpLabel(rp)}`}
+          value={formatMoney(scaledLoss)}
+          tint={tint}
+        />
         <PanelMetric label="Premium" value={formatMoney(policy.annual_premium)} />
       </div>
+
+      {/* Verdict pill por RP · 'EXPOSED' / 'MONITORED' / 'SAFE' según
+       *  la fracción de TIV expuesta. Es el lenguaje del underwriter
+       *  ("¿esta póliza me cuesta a partir de qué RP?") traducido a
+       *  un chip visual. */}
+      {verdictStyle && (
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <span
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-9 font-mono font-semibold uppercase tracking-[0.18em]"
+            style={{
+              color: verdictStyle.color,
+              background: verdictStyle.bg,
+            }}
+            title={`Loss / TIV = ${((scaledLoss / policy.insured_value) * 100).toFixed(1)}% at RP ${rp} years`}
+          >
+            {verdictStyle.label} AT {rpLabel(rp)}
+          </span>
+          <span
+            className="text-9 font-mono tabular-nums"
+            style={{ color: 'rgba(248,250,252,0.45)' }}
+          >
+            {((scaledLoss / policy.insured_value) * 100).toFixed(1)}% TIV
+          </span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mt-3 pt-2.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <button

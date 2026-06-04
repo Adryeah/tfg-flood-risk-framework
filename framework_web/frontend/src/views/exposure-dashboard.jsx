@@ -22,6 +22,14 @@ import { InfoHint } from '@/components/info-hint.jsx';
 import { api } from '@/lib/api.js';
 import { ZONES } from '@/lib/constants.js';
 import { t, useLang } from '@/lib/i18n.js';
+import {
+  useReturnPeriod,
+  scaleLoss,
+  rpLabel,
+  getLossMultiplier,
+  SOURCE_NOTE,
+} from '@/lib/return-period.js';
+import { ReturnPeriodSelector } from '@/components/return-period-selector.jsx';
 
 const RISK_COLORS = {
   low: '#16A34A',
@@ -140,6 +148,15 @@ export function ExposureDashboard() {
         </div>
       ) : (
         <>
+          {/* Return Period selector + methodology note ─────────────────
+           *  Encima de los Hero KPIs porque el RP define el escenario
+           *  bajo el cual se leen las cifras. Sin él, los KPIs no
+           *  tienen contexto regulatorio (Munich Re NATHAN / Swiss Re
+           *  CatNet siempre cotizan por RP). El RP se persiste global
+           *  en localStorage — si el user lo cambia aquí, también
+           *  cambia en /tour. */}
+          <ReturnPeriodScenarioBar />
+
           {/* Hero KPI strip — True Flood Risk Map Intelligence Dashboard
            *  pattern: the top of the screen is dominated by the 4 numbers
            *  an underwriter checks first (TIV / EAL / PML / Affected). */}
@@ -271,9 +288,13 @@ function HeroKpis({ portfolio, exposure }) {
   // Suscribe a cambios de idioma para que los t() de abajo se
   // re-evalúen cuando el usuario hace toggle EN ⇄ ES.
   useLang();
+  // RP global escala PML y EAL al escenario seleccionado.
+  // baseline = T100 (DANA observada ≈ T75-100 por AEMET reanalysis).
+  const [rp] = useReturnPeriod();
+  const mult = getLossMultiplier(rp);
   const tiv = portfolio.total_insured_value || 0;
-  const eal = exposure.expected_total_loss || 0;
-  const pml = exposure.estimated_total_loss_dana || 0;
+  const eal = (exposure.expected_total_loss || 0) * mult;
+  const pml = (exposure.estimated_total_loss_dana || 0) * mult;
   const totalCount = portfolio.n_clients || portfolio.clients?.length || 0;
   const highCount =
     (exposure.distribution_by_category?.high || 0) +
@@ -304,22 +325,22 @@ function HeroKpis({ portfolio, exposure }) {
       />
       <ExposureKpi
         tier={2}
-        label="EAL · annual"
+        label={`EAL · ${rpLabel(rp)}`}
         numeric={eal / 1000}
         format={(v) => `€${v.toFixed(0)}`}
         unit="K"
-        sub={`${t('Probability-weighted')} · €${(vaR / 1e6).toFixed(1)}M ${t('VaR')}`}
+        sub={`${t('Probability-weighted')} · escalado AEP a ${rpLabel(rp)}`}
         variant="warning"
         objective="Minimizar — base de prima técnica anual."
         animationDelay={80}
       />
       <ExposureKpi
         tier={1}
-        label="PML · DANA scenario"
+        label={`PML · ${rpLabel(rp)} scenario`}
         numeric={pml / 1e6}
         format={(v) => `€${v.toFixed(1)}`}
         unit="M"
-        sub="Single-event loss if a DANA hits today"
+        sub={`Single-event loss at ${rpLabel(rp)} (Dottori 2018 elasticidad)`}
         variant="risk"
         objective="Vigilar — capital requerido por Solvencia II."
         animationDelay={160}
@@ -1046,6 +1067,33 @@ function TopRiskClientsTable({ clients }) {
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// ─── Return Period scenario bar ──────────────────────────────────
+// Selector dashboard variant + methodology note inline.
+// Reads como "este escenario es lo que estamos cotizando" + cita.
+function ReturnPeriodScenarioBar() {
+  const [rp] = useReturnPeriod();
+  const mult = getLossMultiplier(rp);
+  return (
+    <div className="bg-bg-surface border border-border-default rounded-md shadow-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+      <ReturnPeriodSelector variant="dashboard" />
+      <div className="flex items-baseline gap-2 ml-auto">
+        <span className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary">
+          Multiplicador AEP
+        </span>
+        <span className="font-mono font-semibold tabular-nums text-text-primary text-14">
+          ×{mult.toFixed(2)}
+        </span>
+        <span
+          className="text-10 font-serif italic text-text-tertiary truncate"
+          title={SOURCE_NOTE}
+        >
+          baseline T100 · {SOURCE_NOTE}
+        </span>
+      </div>
     </div>
   );
 }
