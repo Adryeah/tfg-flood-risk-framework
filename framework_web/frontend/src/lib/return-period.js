@@ -176,6 +176,61 @@ export function useBackbone() {
   return [source, set];
 }
 
+/**
+ * Sonda el estado del backbone SNCZI vía /api/return-periods/sources.
+ *
+ * Estado retornado:
+ *   { state: 'checking' | 'ready' | 'unavailable' | 'error',
+ *     detail?: string,
+ *     snczi?: { wms_url, note, ... } }
+ *
+ * - 'checking'    → request en vuelo (mostrar nada, no parpadear)
+ * - 'ready'       → backend confirma SNCZI configurado → mostrar
+ *                   "Modo SNCZI activo" (futuro)
+ * - 'unavailable' → backend responde pero ready=false → mostrar
+ *                   banner "SNCZI no configurado en este deployment"
+ * - 'error'       → fetch falló (backend dormido, network, etc.) →
+ *                   mostrar banner "no se pudo verificar la fuente"
+ *
+ * Solo se monta una vez por sesión del componente — no re-fetcha
+ * automáticamente. El consumer puede llamar refresh() para forzar
+ * un re-check.
+ */
+export function useSnczAvailability() {
+  const [state, setState] = useState({ state: 'checking' });
+
+  const check = useCallback(async () => {
+    setState({ state: 'checking' });
+    try {
+      // import dinámico para evitar dependencia circular si api.js
+      // importa este módulo en el futuro.
+      const { api } = await import('./api.js');
+      const data = await api.returnPeriods.getSources();
+      const snczi = (data?.available || []).find((s) => s.id === 'snczi');
+      if (!snczi) {
+        setState({ state: 'unavailable', detail: 'snczi entry missing' });
+        return;
+      }
+      if (snczi.ready) {
+        setState({ state: 'ready', snczi });
+      } else {
+        setState({ state: 'unavailable', snczi });
+      }
+    } catch (err) {
+      setState({
+        state: 'error',
+        detail: err?.message || 'No se pudo verificar la fuente',
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    check();
+  }, [check]);
+
+  return { ...state, refresh: check };
+}
+
 // ─── State global persistido en localStorage ──────────────────────
 const STORAGE_KEY = 'frfw.return_period';
 const listeners = new Set();

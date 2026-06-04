@@ -34,6 +34,7 @@ import {
   ReturnPeriodSelector,
   BackboneSourceSelector,
 } from '@/components/return-period-selector.jsx';
+import { SnczNoticeBar } from '@/components/sncz-notice.jsx';
 
 const RISK_COLORS = {
   low: '#16A34A',
@@ -160,6 +161,12 @@ export function ExposureDashboard() {
            *  en localStorage — si el user lo cambia aquí, también
            *  cambia en /tour. */}
           <ReturnPeriodScenarioBar />
+
+          {/* Banner SNCZI · solo aparece cuando el operador ha
+           *  activado el toggle 'snczi' Y el backend responde que la
+           *  integración está pendiente. Mientras seguimos con RF v2
+           *  como fallback. */}
+          <SnczNoticeBar variant="inline" />
 
           {/* Hero KPI strip — True Flood Risk Map Intelligence Dashboard
            *  pattern: the top of the screen is dominated by the 4 numbers

@@ -127,4 +127,17 @@ export const api = {
   methodology: {
     getLeakageAudit: () => request('/api/methodology/leakage_audit'),
   },
+
+  returnPeriods: {
+    // Lista de backbones disponibles (rf_v2 default, snczi opcional).
+    // El frontend usa el flag `ready` para saber si puede ofrecer
+    // SNCZI como opción funcional o solo como toggle "pendiente de
+    // configuración".
+    getSources: () => request('/api/return-periods/sources'),
+    // Manifest del raster SNCZI para una zona + RP. Devuelve 503 con
+    // detail JSON mientras la integración SNCZI no esté configurada
+    // — el frontend captura el error para mostrar el banner editorial.
+    getSnczManifest: (zone, rp) =>
+      request(`/api/return-periods/snczi/${zone}/${rp}/manifest`),
+  },
 };

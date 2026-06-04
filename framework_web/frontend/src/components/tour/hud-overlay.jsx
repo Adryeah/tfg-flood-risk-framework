@@ -7,6 +7,7 @@ import { ModeBank } from '@/components/tour/mode-bank.jsx';
 import { StatusStrip } from '@/components/tour/status-strip.jsx';
 import { IncidentTimeline } from '@/components/tour/incident-timeline.jsx';
 import { HelpButton, HelpOverlay } from '@/components/tour/help-overlay.jsx';
+import { SnczNoticeBar } from '@/components/sncz-notice.jsx';
 
 export function HudOverlay({ policies, onSelectPolicy }) {
   const { mode, hud, activePolicyIdx, totalPolicies, isPlaying, speed, incidentTime, isReplaying } =
@@ -40,6 +41,11 @@ export function HudOverlay({ policies, onSelectPolicy }) {
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
 
       <HelpButton onHelp={() => setShowHelp(true)} />
+
+      {/* Banner SNCZI ribbon · top del canvas, no bloquea interacción.
+       *  Solo aparece cuando el toggle backbone está en 'snczi' Y el
+       *  backend confirma que no está configurado (503). */}
+      <SnczNoticeBar variant="console" />
 
       {hud.callsigns && (
         <TargetRegistry
