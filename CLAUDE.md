@@ -175,6 +175,9 @@ ratio VV/VH distingue agua abierta de vegetación inundada. Usar ambas como feat
 - NO invertir calibración y speckle
 - NO datos internos de Zurich Insurance
 
+## DESIGN SYSTEM · DESIGN.md
+La fuente única de verdad del lenguaje visual está en `framework_web/frontend/DESIGN.md` (formato AI-readable estilo refero.design). **Cualquier agente que genere componentes UI debe leerlo antes.** Consolida: paleta navy-authority + bright-blue interactive, pairing Inter/JetBrains Mono/IBM Plex Serif, sistema de registros editoriales por widget, jerarquía TIER de KPIs, recipe del eyebrow+rail, y los anti-patterns que delatan "AI-generated". Validado como sistema "Column-class" (light fintech + mono accent); NO importar un DESIGN.md externo wholesale porque los registros, tiers, RP selectors y HUD son domain-specific (flood underwriting).
+
 ## UNDERWRITER CONSOLE · /tour
 Consola de inteligencia de cartera en `framework_web/frontend/src/` inspirada en el lenguaje visual de Palantir/Bloomberg adaptada a insurance underwriting.
 
