@@ -6,6 +6,7 @@ import { InfoTooltip } from '../components/InfoTooltip.jsx';
 import { RiskZoneMap } from '../components/RiskZoneMap.jsx';
 import { RevealSection } from '../components/reveal-section.jsx';
 import { LoadErrorState } from '../components/load-error-state.jsx';
+import { StatusPill } from '../components/status-pill.jsx';
 import { api } from '../lib/api.js';
 // Money + percent helpers compartidos en src/lib/format.js. Importamos
 // formatMoneySpaced (símbolo detrás, espacio) bajo el alias formatEur
@@ -176,29 +177,9 @@ export function Overview() {
         </div>
 
         <div className="flex flex-row items-start sm:flex-col sm:items-end gap-2 shrink-0">
-          <div
-            className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded border backdrop-blur-sm"
-            style={{
-              // Liquid-glass treatment (design-taste-frontend §4):
-              // translucent surface + inset 1px highlight to simulate
-              // physical edge refraction. Reads as a "live status pill"
-              // not a flat colour swatch.
-              background:
-                'linear-gradient(180deg, rgba(240,253,244,0.92) 0%, rgba(220,252,231,0.85) 100%)',
-              borderColor: 'rgba(22,163,74,0.32)',
-              color: '#15803D',
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.55), 0 1px 1px rgba(15,23,42,0.04)',
-            }}
-          >
-            <span className="relative inline-flex items-center">
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-ping opacity-60" />
-              <span className="relative w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
-            </span>
-            <span className="font-semibold uppercase tracking-wider text-10">LIVE</span>
-            <span style={{ color: 'rgba(21,128,61,0.4)' }}>·</span>
-            <span className="font-mono">S1A 19h ago</span>
-          </div>
+          {/* StatusPill mil-spec (variant light) — reemplaza el antiguo
+           *  liquid-glass + animate-ping que leía como AI-generated badge. */}
+          <StatusPill variant="light" label="LIVE" detail="S1A · 19h ago" />
         </div>
       </div>
 

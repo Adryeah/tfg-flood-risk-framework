@@ -2,6 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { getLang, setLang, onLangChange } from '../lib/i18n.js';
 import { GlobalSearch } from './global-search.jsx';
+import { StatusPill } from './status-pill.jsx';
 
 const SECTION_TITLES = {
   '/': 'Daily Briefing',
@@ -148,26 +149,10 @@ export function Topbar({ onMenuClick = () => {} }) {
         </span>
 
         {/* Live ingestion indicator — solo lg+ para que no sature el topbar
-         *  estrecho. La actividad del backend ya la indica el dot del sidebar. */}
-        <span
-          className="hidden lg:inline-flex ml-3 items-center gap-1.5 text-11 font-mono tabular-nums px-2 py-0.5 rounded-sm whitespace-nowrap"
-          style={{
-            color: '#86EFAC',
-            background: 'rgba(22,163,74,0.10)',
-            border: '1px solid rgba(22,163,74,0.20)',
-          }}
-        >
-          <span className="relative inline-flex items-center">
-            <span
-              className="absolute w-1.5 h-1.5 rounded-full animate-ping opacity-60"
-              style={{ background: '#16A34A' }}
-            />
-            <span
-              className="relative w-1.5 h-1.5 rounded-full"
-              style={{ background: '#16A34A' }}
-            />
-          </span>
-          S1A · {tickLabel} ago
+         *  estrecho. La actividad del backend ya la indica el dot del sidebar.
+         *  variant='dark' porque va sobre el navy del topbar. */}
+        <span className="hidden lg:inline-flex ml-3">
+          <StatusPill variant="dark" label={null} detail={`S1A · ${tickLabel} ago`} />
         </span>
       </div>
 

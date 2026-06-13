@@ -224,6 +224,19 @@ Never leave a spinner hanging. Amber icon + serif italic title + Reintentar
 button. Banner tone is amber ("config pending"), never red ("error") unless
 truly broken.
 
+### Status pill (`src/components/status-pill.jsx`)
+The single canonical "live / status" indicator. Replaced two AI-generated-
+looking badges (animate-ping ring + off-palette green + glassmorphism).
+Two variants: `dark` (on navy chrome — Topbar) and `light` (on white — Overview
+header). Token colors only: dot is `--status-live #10B981` with a subtle
+opacity *breathe* (`.status-dot` keyframe, 2.4s) — NOT an expanding ping ring.
+The dot carries the status color; the detail text is neutral mono (terminal
+convention). Label optional (`label={null}` for dot-only). On light bg the
+label uses `#15803D` (data-7) because `#10B981` fails 4.5:1 on white.
+
+> Any "live", "online", "active" indicator uses StatusPill. Never hand-roll a
+> green badge with `animate-ping`.
+
 ---
 
 ## 7 · The eyebrow + rail recipe (copy this for new sections)
@@ -254,6 +267,9 @@ consistently, is what reads as "editorial system" instead of "Tailwind default".
 - ❌ Bouncy/spring motion → ✅ ease-out cubic, small magnitudes.
 - ❌ Hanging spinner on API failure → ✅ `LoadErrorState`.
 - ❌ Pure-grey palette (the old Palantir-grey we migrated away from).
+- ❌ `animate-ping` expanding-ring "LIVE" badge → ✅ `StatusPill` with subtle dot breathe.
+- ❌ Glassmorphism / liquid-glass (gradient + inset highlight) on pills/chips → ✅ flat token tint + 1px border.
+- ❌ Off-palette greens (`#86EFAC`, `#16A34A`, `#15803D` random) for status → ✅ `--status-live #10B981` token.
 
 ---
 

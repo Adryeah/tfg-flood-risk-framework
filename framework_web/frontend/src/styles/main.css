@@ -156,6 +156,19 @@
     50%      { opacity: 0.55; transform: scale(0.85); }
   }
 
+  /* StatusPill dot · breathe sutil de opacidad. Reemplaza el
+   * animate-ping (anillo expansivo) que leía como AI-generated badge.
+   * El dot "respira" entre 1 y 0.5 cada 2.4s — señal de "live" sin el
+   * pulso genérico. prefers-reduced-motion lo neutraliza vía el
+   * override global de @layer base. */
+  @keyframes statusBreathe {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+  }
+  .status-dot {
+    animation: statusBreathe 2.4s ease-in-out infinite;
+  }
+
   @keyframes bgShift {
     0%, 100% {
       background-position: 0 0, 0 0;

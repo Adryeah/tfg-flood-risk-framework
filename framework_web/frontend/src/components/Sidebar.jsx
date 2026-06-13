@@ -79,7 +79,9 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
         // perfecto.
         const data = await api.health();
         const ok = data?.status === 'ok' && data?.model_loaded === true;
-        setStatusDot(ok ? '#16A34A' : '#D97706');
+        // Token colors: status-live #10B981 / status-warning #F39C12 /
+        // status-error #DC2626 (antes usaba el #16A34A off-token).
+        setStatusDot(ok ? '#10B981' : '#F39C12');
         setStatusLabel(ok ? 'Backend online · model loaded' : 'Backend degraded');
       } catch {
         setStatusDot('#DC2626');
