@@ -664,36 +664,52 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
     //   x: 0 = Pred. Negative, 1 = Pred. Positive
     //   y: 0 = Actual Positive (bottom), 1 = Actual Negative (top)
     //
-    // Colours follow the same semantic palette as the rest of the app:
-    //   TN (Actual Neg, Pred Neg) — risk-low green        ← correct
-    //   FP (Actual Neg, Pred Pos) — risk-medium amber     ← false alarm
-    //   FN (Actual Pos, Pred Neg) — risk-high red         ← missed flood
-    //   TP (Actual Pos, Pred Pos) — brand blue            ← correct
+    // Tratamiento por celda · tints, NO bloques saturados (eso era el
+    // "rainbow confusion matrix" que delata AI-generated). Lógica de
+    // jerarquía visual:
+    //   TN — correcto-rechazo, el bloque gigante. NEUTRO (navy tint).
+    //        No debe dominar con color: es lo esperado, lo aburrido.
+    //   TP — acierto de inundación. Verde (la victoria del modelo).
+    //   FP — falsa alarma. Ámbar (mata Precision, pero menos grave).
+    //   FN — inundación NO detectada. Rojo (mata Recall, el peor caso).
+    // Cada celda: bg tinte ~12% + número en el color fuerte legible.
+    const PALETTE = {
+      TN: { bg: 'rgba(15,27,53,0.05)', fg: '#6B7280' }, // neutro
+      TP: { bg: 'rgba(16,185,129,0.13)', fg: '#047857' }, // verde
+      FP: { bg: 'rgba(243,156,18,0.15)', fg: '#B45309' }, // ámbar
+      FN: { bg: 'rgba(231,76,60,0.15)', fg: '#B91C1C' }, // rojo
+    };
+    const mkCell = (x, y, value, type) => {
+      const c = PALETTE[type];
+      return {
+        value: [x, y, value],
+        cellType: type,
+        pct: pct(value),
+        itemStyle: { color: c.bg },
+        label: {
+          rich: {
+            val: {
+              fontFamily: 'JetBrains Mono',
+              fontSize: 18,
+              fontWeight: 600,
+              color: c.fg,
+              lineHeight: 22,
+            },
+            sub: {
+              fontFamily: 'JetBrains Mono',
+              fontSize: 10,
+              color: '#9CA3AF',
+              lineHeight: 14,
+            },
+          },
+        },
+      };
+    };
     const cells = [
-      {
-        value: [0, 1, matrix.tn],
-        itemStyle: { color: '#16A34A' },
-        cellType: 'TN',
-        pct: pct(matrix.tn),
-      },
-      {
-        value: [1, 1, matrix.fp],
-        itemStyle: { color: '#D97706' },
-        cellType: 'FP',
-        pct: pct(matrix.fp),
-      },
-      {
-        value: [0, 0, matrix.fn],
-        itemStyle: { color: '#DC2626' },
-        cellType: 'FN',
-        pct: pct(matrix.fn),
-      },
-      {
-        value: [1, 0, matrix.tp],
-        itemStyle: { color: '#3B82F6' },
-        cellType: 'TP',
-        pct: pct(matrix.tp),
-      },
+      mkCell(0, 1, matrix.tn, 'TN'),
+      mkCell(1, 1, matrix.fp, 'FP'),
+      mkCell(0, 0, matrix.fn, 'FN'),
+      mkCell(1, 0, matrix.tp, 'TP'),
     ];
 
     // ECharts requires a visualMap with type:'heatmap' or it throws
@@ -771,30 +787,33 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
                 `{sub|${c.cellType} · ${c.pct}%}`
               );
             },
+            // El color de val/sub lo aporta cada celda vía su `label.rich`
+            // (mkCell arriba). Aquí solo va el fallback neutro.
             rich: {
               val: {
                 fontFamily: 'JetBrains Mono',
                 fontSize: 18,
                 fontWeight: 600,
-                color: '#FAFBFC',
+                color: '#111827',
                 lineHeight: 22,
               },
               sub: {
                 fontFamily: 'JetBrains Mono',
                 fontSize: 10,
-                color: 'rgba(250,251,252,0.85)',
+                color: '#9CA3AF',
                 lineHeight: 14,
               },
             },
           },
           itemStyle: {
-            borderColor: '#FAFBFC',
-            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            borderWidth: 3,
+            borderRadius: 4,
           },
           emphasis: {
             itemStyle: {
               shadowBlur: 8,
-              shadowColor: 'rgba(15,23,42,0.25)',
+              shadowColor: 'rgba(15,27,53,0.12)',
             },
           },
         },
