@@ -227,6 +227,8 @@ export function Overview() {
         <KpiCard
           label="Model AUC"
           value={m.auc_mean?.toFixed(3) ?? '—'}
+          numeric={m.auc_mean}
+          format={(v) => v.toFixed(3)}
           delta={m.auc_std != null ? `±${m.auc_std.toFixed(3)}` : null}
           trend="up"
           subInfo={`5-fold spatial CV · ±${(m.auc_std ?? 0).toFixed(3)}`}
@@ -243,6 +245,8 @@ export function Overview() {
         <KpiCard
           label="Recall @ 100m"
           value={recall100 != null ? formatPercent(recall100, 1) : '—'}
+          numeric={recall100}
+          format={(v) => formatPercent(v, 1)}
           delta="+1.1%"
           trend="up"
           subInfo="Block-level on EMSR773"
@@ -259,6 +263,8 @@ export function Overview() {
         <KpiCard
           label="Pixels analyzed"
           value={((valMetrics?.n_pixels || 0) / 1_000_000).toFixed(1)}
+          numeric={(valMetrics?.n_pixels || 0) / 1_000_000}
+          format={(v) => v.toFixed(1)}
           unit="M"
           subInfo="10m × 10m · 750 km²"
           sparkline={SPARK.pixels}
@@ -274,6 +280,8 @@ export function Overview() {
         <KpiCard
           label="Features"
           value="14"
+          numeric={14}
+          format={(v) => Math.round(v).toString()}
           subInfo="SAR · DEM · NDVI / NDWI"
           severity="info"
           objective="Contexto — entradas al modelo Random Forest."
@@ -319,6 +327,8 @@ export function Overview() {
           <KpiCard
             label="Portfolio TIV"
             value={formatEur(tiv)}
+            numeric={tiv}
+            format={(v) => formatEur(v)}
             subInfo={`${exposure?.n_clients || 0} active policies · ${highCount} high-risk`}
             severity="info"
             objective="Contexto — capital total bajo análisis."
@@ -333,6 +343,8 @@ export function Overview() {
           <KpiCard
             label="TIV at risk"
             value={formatEur(exposedTiv)}
+            numeric={exposedTiv}
+            format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? exposedTiv / tiv : 0, 1)} of portfolio · P > 0.5`}
             severity={tiv > 0 && exposedTiv / tiv > 0.35 ? 'high' : 'low'}
             objective="Vigilar — exposición por encima del umbral."
@@ -347,6 +359,8 @@ export function Overview() {
           <KpiCard
             label="EAL · annual"
             value={formatEur(eal)}
+            numeric={eal}
+            format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? eal / tiv : 0, 2)} of portfolio`}
             severity={tiv > 0 && eal / tiv > 0.01 ? 'high' : 'low'}
             objective="Minimizar — pérdida esperada anual."
@@ -361,6 +375,8 @@ export function Overview() {
           <KpiCard
             label="PML · DANA scenario"
             value={formatEur(pml)}
+            numeric={pml}
+            format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? pml / tiv : 0, 1)} of portfolio · 1-event basis`}
             severity={tiv > 0 && pml / tiv > 0.08 ? 'critical' : 'medium'}
             objective="Vigilar — capital requerido (Solvencia II)."

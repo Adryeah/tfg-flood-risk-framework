@@ -1,6 +1,23 @@
 import React, { useRef, useEffect } from 'react';
 import { InfoTooltip } from './InfoTooltip.jsx';
+import { useInView, useCountUp } from '@/lib/animations.js';
 
+/**
+ * KpiCard · variante de KPI para métricas de TENDENCIA (con sparkline).
+ *
+ * Contrato compartido con ExposureKpi (ver DESIGN.md §6):
+ *   - Misma motion (hover lift, mount fade+slide, count-up opt-in).
+ *   - Mismo eyebrow mono caps tracked [0.16em].
+ *   - Mismo count-up: pasa `numeric` (number) + `format` (v→string) y el
+ *     número anima 0→target con ease-out cuártico al entrar al viewport.
+ *
+ * Cuándo usar KpiCard vs ExposureKpi:
+ *   - KpiCard      → métrica de tendencia con evolución temporal (AUC,
+ *                    recall, píxeles). El sparkline da el contexto del
+ *                    "cómo ha cambiado". Severity rail por nivel.
+ *   - ExposureKpi  → magnitud de cartera con jerarquía (TIV, PML, EAL).
+ *                    El sistema TIER da el peso visual. Change pill ▲▼.
+ */
 export function KpiCard({
   label,
   value,
@@ -17,8 +34,29 @@ export function KpiCard({
   objective = null,
   /** Stagger entry animation across a row (idx × 60-80 ms). */
   animationDelay = 0,
+  /**
+   * Count-up opt-in. Pasa `numeric` (target) + `format` (función v→string)
+   * y la card ignora `value` y anima 0→target con ease-out cuártico cuando
+   * entra al viewport. Mismo contrato que ExposureKpi. Sin ambos, muestra
+   * el string `value` directo (backwards-compat).
+   */
+  numeric = null,
+  format = null,
 }) {
   const sparkRef = useRef(null);
+
+  // Count-up opt-in: requiere AMBOS numeric (target) + format (formatter).
+  // Trigger via IntersectionObserver — aunque los KPIs de Overview están
+  // above-the-fold, el threshold 0.3 dispara igual en el primer paint.
+  const animateCountUp =
+    typeof numeric === 'number' && typeof format === 'function';
+  const [inViewRef, inView] = useInView({ threshold: 0.3 });
+  const animatedValue = useCountUp(animateCountUp ? numeric : 0, {
+    active: animateCountUp && inView,
+    duration: 1100,
+    startDelay: animationDelay,
+  });
+  const displayValue = animateCountUp ? format(animatedValue) : value;
 
   useEffect(() => {
     if (!sparkRef.current || !sparkline || sparkline.length < 2) return;
@@ -91,6 +129,7 @@ export function KpiCard({
 
   return (
     <div
+      ref={inViewRef}
       className="group bg-bg-surface border border-border-default rounded-md shadow-sm p-3.5 relative overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:border-brand-500/30 animate-in fade-in slide-in-from-bottom-2"
       style={{
         animationDelay: `${animationDelay}ms`,
@@ -106,7 +145,7 @@ export function KpiCard({
       )}
 
       <div className="flex items-start justify-between gap-2">
-        <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">{label}</span>
+        <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.16em]">{label}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {dotColor && <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />}
           {info && <InfoTooltip what={info.what} source={info.source} />}
@@ -115,7 +154,7 @@ export function KpiCard({
 
       <div className="flex items-end justify-between gap-3 mt-2">
         <div className="flex items-baseline gap-1.5 min-w-0">
-          <span className="text-22 font-semibold font-mono text-text-primary leading-none tracking-tight">{value}</span>
+          <span className="text-22 font-semibold font-mono text-text-primary leading-none tabular-nums tracking-tight">{displayValue}</span>
           {unit && <span className="text-12 text-text-secondary font-mono">{unit}</span>}
           {delta && (
             <span className={`font-mono font-medium text-11 flex items-center gap-0.5 ${trendColors[trend || 'neutral']}`}>

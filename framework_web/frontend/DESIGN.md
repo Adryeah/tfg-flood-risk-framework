@@ -164,13 +164,35 @@ Hooks live in `src/lib/animations.js`: `useInView`, `useCountUp`,
 
 ## 6 · Signature components
 
-### KPI tier system (`ExposureKpi`, `src/components/exposure-kpi.jsx`)
-Three prominence levels via `data-tier` attribute, styled in `main.css`:
+### KPI cards — TWO variants, one shared contract
+
+There are **two** KPI components. They are NOT redundant: each serves a
+different metric type. Pick by what the number *is*, not by which view you're in.
+
+| Variant | Component | Use for | Carries |
+|---|---|---|---|
+| **Trend** | `KpiCard` (`src/components/KpiCard.jsx`) | metrics with temporal evolution (AUC, recall, pixels) | left **severity rail** + animated **sparkline** + delta/trend arrow |
+| **Magnitude** | `ExposureKpi` (`src/components/exposure-kpi.jsx`) | portfolio sums with hierarchy (TIV, PML, EAL) | **TIER 1/2/3** system + **change pill** ▲▼ |
+
+**Shared contract (both must honor):**
+- Same motion: hover `shadow-md` + `-translate-y-0.5` (200ms ease-out), mount fade+slide.
+- Same eyebrow: `text-10 font-mono font-semibold uppercase tracking-[0.16em] text-text-tertiary`.
+- Same **opt-in count-up**: pass `numeric` (number) + `format` (v→string) and the number animates `0→target` (ease-out quartic, 1100ms) on viewport entry via `useInView` + `useCountUp`. Without both props, shows the `value` string directly (backwards-compat).
+- Same `objective` line: italic serif `text-11 text-text-tertiary` after a short hairline.
+
+**`ExposureKpi` TIER system** (via `data-tier` attribute, styled in `main.css`):
 - **TIER 1** — anchor (TIV, PML). `grid-column: span 2`, navy border, white→navy-tint gradient, deep shadow, number text-32. The two numbers the stakeholder checks first.
 - **TIER 2** — operational. Standard border + shadow, text-22.
 - **TIER 3** — drill-down. Subtle border, opacity 0.92, text-18, no objective line.
 
-Opt-in count-up: pass `numeric` + `format` and it animates 0→target on viewport entry.
+**`KpiCard` severity rail** (left edge, grows 3→4px on hover): `info #3B82F6`,
+`low #10B981`, `medium #F39C12`, `high #E74C3C`, `critical #DC2626`.
+
+> Rule of thumb: if the metric has a *history* (it moved over time), it's a
+> `KpiCard` with sparkline. If the metric is a *sum* with siblings of unequal
+> importance (one anchor, some drill-downs), it's an `ExposureKpi` with tiers.
+> Don't use tiers for trend metrics (they're all equal-weight model context)
+> and don't use sparklines for portfolio sums (there's no meaningful series).
 
 ### Widget register identity (`src/views/exposure-dashboard.jsx` Widget)
 Every dashboard widget belongs to one of 6 **registers** that drive a hairline
