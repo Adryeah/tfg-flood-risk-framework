@@ -128,6 +128,12 @@ export function PolicyTour3D({ policy, onClose }) {
       const building = features.find(
         (f) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
       );
+      if (typeof window !== 'undefined') {
+        window.__ptourLog.push(
+          `placeFloor · zoom=${map.getZoom().toFixed(1)} layers=[${layers.join(',')}] ` +
+            `feats=${features.length} building=${!!building}`
+        );
+      }
       if (!building) return false; // edificio no encontrado → solo panel (fallback spec)
       addFloorExtrusion(map, sourceId, layerId, building.geometry, policy, risk.riskColor);
       return true;
