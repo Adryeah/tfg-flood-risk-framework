@@ -135,19 +135,19 @@ export function Overview() {
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-11 font-mono text-text-tertiary">
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            <span className="inline-block w-px h-2.5 bg-border-strong" />
             Random Forest v2 · 14 features
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            <span className="inline-block w-px h-2.5 bg-border-strong" />
             AUC 0.922 · GroupKFold 5×1 km
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            <span className="inline-block w-px h-2.5 bg-border-strong" />
             Valencia → Algemesí transferable
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-tertiary" />
+            <span className="inline-block w-px h-2.5 bg-border-strong" />
             Adrián Vargas Aceituno · UAB ETS
           </span>
         </div>

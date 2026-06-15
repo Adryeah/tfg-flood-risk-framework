@@ -177,7 +177,7 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
           }}
         >
           <span
-            className="inline-block w-1.5 h-1.5 rounded-full"
+            className="inline-block w-1.5 h-1.5"
             style={{ background: 'var(--accent-valid)' }}
             aria-hidden="true"
           />
@@ -200,7 +200,7 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
           }}
         >
           <span
-            className="inline-block w-1.5 h-1.5 rounded-full"
+            className="inline-block w-1.5 h-1.5"
             style={{ background: 'var(--accent-risk)' }}
             aria-hidden="true"
           />

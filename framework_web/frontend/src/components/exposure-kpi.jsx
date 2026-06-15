@@ -28,12 +28,15 @@ import { useInView, useCountUp } from '@/lib/animations.js';
  * variantes son visuales (data-attributes + Tailwind classes). No
  * añade lógica nueva.
  */
-const VARIANT_DOT = {
-  default: '#9CA3AF',
-  info: '#3B82F6',
-  warning: '#F39C12',
-  risk: '#E74C3C',
-  success: '#10B981',
+// Color de variante → rail vertical del eyebrow (no "status dot"). Las
+// variantes -text son las legibles sobre dark a 2px de ancho; las bases
+// saturadas se verían apagadas como rail fino.
+const VARIANT_ACCENT = {
+  default: 'var(--text-secondary)',
+  info: 'var(--accent-sar-text)',
+  warning: 'var(--accent-warn-text)',
+  risk: 'var(--accent-risk-text)',
+  success: 'var(--accent-valid-text)',
 };
 
 export function ExposureKpi({
@@ -73,7 +76,7 @@ export function ExposureKpi({
   numeric = null,
   format = null,
 }) {
-  const dot = VARIANT_DOT[variant] || VARIANT_DOT.default;
+  const accent = VARIANT_ACCENT[variant] || VARIANT_ACCENT.default;
 
   // Tamaño del número principal escala con tier — anchor más grande.
   const valueSizeClass =
@@ -114,11 +117,11 @@ export function ExposureKpi({
         animationFillMode: 'backwards',
       }}
     >
-      {/* Label row: dot variant + tracked-out uppercase mono caps */}
-      <div className="flex items-center gap-1.5">
+      {/* Label row: rail de acento (eyebrow primitive) + mono caps */}
+      <div className="flex items-center gap-2">
         <span
-          className="inline-block w-1.5 h-1.5 rounded-full"
-          style={{ background: dot }}
+          className="inline-block w-0.5 h-3 rounded-[1px] shrink-0"
+          style={{ background: accent }}
           aria-hidden="true"
         />
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.16em]">
@@ -196,7 +199,7 @@ export function ExposureKpi({
             className="h-px mt-2 mb-1.5"
             style={{
               width: 28,
-              background: dot,
+              background: accent,
               opacity: 0.6,
             }}
           />

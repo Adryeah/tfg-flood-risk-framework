@@ -165,7 +165,6 @@ export function KpiCard({
       <div className="flex items-start justify-between gap-2">
         <span className="text-10 font-mono uppercase tracking-[0.08em]" style={{ color: 'var(--text-muted)', fontWeight: 510 }}>{label}</span>
         <div className="flex items-center gap-1.5 shrink-0">
-          {dotColor && <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />}
           {info && <InfoTooltip what={info.what} source={info.source} />}
         </div>
       </div>
