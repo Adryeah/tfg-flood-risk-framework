@@ -141,22 +141,33 @@ export function PolicyTour3D({ policy, onClose }) {
       }
     };
 
-    // flyTo se llama DIRECTO sobre el objeto map: solo necesita la
-    // instancia, mueve la cámara aunque los tiles sigan cargando. NO se
-    // gatea en isLoaded del contexto (combina isStyleLoaded, puede quedar
-    // colgado) ni en map.loaded() (devuelve false mientras hay tiles en
-    // vuelo y 'load' ya no vuelve a dispararse → begin nunca correría).
-    flyToPolicy(map, policy);
-    if (typeof window !== 'undefined') {
-      window.__ptourLog.push(`flyTo called → target zoom 18`);
-    }
-    // Espera al final del vuelo (spec: NO setTimeout fijo → moveend).
-    map.on('moveend', onMoveEnd);
+    // El flyTo se descarta si se llama antes de que el estilo cargue (mapa
+    // recién creado en el mount inicial). Se difiere con 'styledata' hasta
+    // isStyleLoaded(): fiable en el mount (estilo aún cargando → espera) y
+    // en navegación (estilo ya cargado → vuela ya). NO se usa 'load'
+    // (dispara una vez) ni map.loaded() (false mientras hay tiles en vuelo).
+    const fly = () => {
+      if (cancelled) return;
+      flyToPolicy(map, policy);
+      map.on('moveend', onMoveEnd);
+      if (typeof window !== 'undefined') {
+        window.__ptourLog.push(`flyTo called · zoomBefore=${map.getZoom().toFixed(2)}`);
+      }
+    };
+    const onStyle = () => {
+      if (map.isStyleLoaded()) {
+        map.off('styledata', onStyle);
+        fly();
+      }
+    };
+    if (map.isStyleLoaded()) fly();
+    else map.on('styledata', onStyle);
 
     // Cleanup: SIEMPRE elimina layer + source + listeners para que no se
     // acumulen al navegar entre pólizas (spec §LIMPIEZA).
     return () => {
       cancelled = true;
+      map.off('styledata', onStyle);
       map.off('moveend', onMoveEnd);
       map.off('idle', placeFloor);
       if (map.getLayer(layerId)) map.removeLayer(layerId);
