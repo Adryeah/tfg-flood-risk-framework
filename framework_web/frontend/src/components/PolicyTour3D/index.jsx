@@ -131,24 +131,19 @@ export function PolicyTour3D({ policy, onClose }) {
       }
     };
 
-    // Arranca el vuelo + el placement. Gateamos en la propia disponibilidad
-    // del mapa (map.loaded()), NO en el isLoaded del contexto: ese combina
-    // isStyleLoaded y puede quedar colgado en false, bloqueando el flyTo.
-    const begin = () => {
-      if (cancelled) return;
-      flyToPolicy(map, policy);
-      // Espera al final del vuelo (spec: NO setTimeout fijo → moveend).
-      map.on('moveend', onMoveEnd);
-    };
-
-    if (map.loaded()) begin();
-    else map.once('load', begin);
+    // flyTo se llama DIRECTO sobre el objeto map: solo necesita la
+    // instancia, mueve la cámara aunque los tiles sigan cargando. NO se
+    // gatea en isLoaded del contexto (combina isStyleLoaded, puede quedar
+    // colgado) ni en map.loaded() (devuelve false mientras hay tiles en
+    // vuelo y 'load' ya no vuelve a dispararse → begin nunca correría).
+    flyToPolicy(map, policy);
+    // Espera al final del vuelo (spec: NO setTimeout fijo → moveend).
+    map.on('moveend', onMoveEnd);
 
     // Cleanup: SIEMPRE elimina layer + source + listeners para que no se
     // acumulen al navegar entre pólizas (spec §LIMPIEZA).
     return () => {
       cancelled = true;
-      map.off('load', begin);
       map.off('moveend', onMoveEnd);
       map.off('idle', placeFloor);
       if (map.getLayer(layerId)) map.removeLayer(layerId);
