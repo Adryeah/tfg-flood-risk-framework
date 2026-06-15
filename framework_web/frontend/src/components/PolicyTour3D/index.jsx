@@ -26,6 +26,36 @@ function getBuildingLayerIds(map) {
     .map((l) => l.id);
 }
 
+/** Centroide aproximado (media del anillo exterior) de un footprint. */
+function footprintCentroid(geometry) {
+  const ring =
+    geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates[0]?.[0];
+  if (!ring?.length) return null;
+  let sx = 0;
+  let sy = 0;
+  for (const [x, y] of ring) {
+    sx += x;
+    sy += y;
+  }
+  return [sx / ring.length, sy / ring.length];
+}
+
+/** De una lista de features-polígono, el más cercano al punto [lon,lat]. */
+function nearestBuilding(polys, lon, lat) {
+  let best = null;
+  let bestD = Infinity;
+  for (const f of polys) {
+    const c = footprintCentroid(f.geometry);
+    if (!c) continue;
+    const d = (c[0] - lon) ** 2 + (c[1] - lat) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = f;
+    }
+  }
+  return best;
+}
+
 /** flyTo cinematográfico al edificio de la póliza (zoom 18, pitch 55). */
 function flyToPolicy(map, policy) {
   map.flyTo({
@@ -108,33 +138,39 @@ export function PolicyTour3D({ policy, onClose }) {
     const sourceId = `ptour-src-${policy.id}`;
     const layerId = `ptour-floor-${policy.id}`;
 
-    // Busca el edificio bajo la póliza (bbox ±28 px) y extruye su planta.
+    // Coordenadas de póliza SINTÉTICAS (cartera simulada) → rara vez caen
+    // justo sobre un footprint OSM. Se consulta un bbox amplio (±150 px) de
+    // las capas de edificios y se elige el footprint REAL más cercano al
+    // punto (snap), en vez de exigir que el punto esté dentro del edificio.
+    // No se inventa geometría: se extruye un edificio OSM real próximo.
     const placeFloor = () => {
       if (cancelled || !map.getStyle()) return false;
       const layers = getBuildingLayerIds(map);
       const p = map.project([policy.lon, policy.lat]);
+      const R = 150;
       let features = [];
       try {
         features = map.queryRenderedFeatures(
           [
-            [p.x - 28, p.y - 28],
-            [p.x + 28, p.y + 28],
+            [p.x - R, p.y - R],
+            [p.x + R, p.y + R],
           ],
           layers.length ? { layers } : undefined
         );
       } catch {
         features = [];
       }
-      const building = features.find(
+      const polys = features.filter(
         (f) => f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
       );
+      const building = nearestBuilding(polys, policy.lon, policy.lat);
       if (typeof window !== 'undefined') {
         window.__ptourLog.push(
-          `placeFloor · zoom=${map.getZoom().toFixed(1)} layers=[${layers.join(',')}] ` +
-            `feats=${features.length} building=${!!building}`
+          `placeFloor · zoom=${map.getZoom().toFixed(1)} feats=${features.length} ` +
+            `polys=${polys.length} picked=${!!building}`
         );
       }
-      if (!building) return false; // edificio no encontrado → solo panel (fallback spec)
+      if (!building) return false; // sin edificio cercano → solo panel (fallback spec)
       addFloorExtrusion(map, sourceId, layerId, building.geometry, policy, risk.riskColor);
       return true;
     };
