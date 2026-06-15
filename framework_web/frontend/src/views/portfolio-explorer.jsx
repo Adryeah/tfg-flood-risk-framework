@@ -79,11 +79,11 @@ const RISK_COLORS = {
   very_high: '#991B1B',
 };
 const RISK_BG = {
-  low: '#ECFDF5',
-  moderate: '#FFFBEB',
-  medium: '#FFFBEB',
-  high: '#FEF2F2',
-  very_high: '#FEF2F2',
+  low: 'rgba(22,163,74,0.14)',
+  moderate: 'rgba(217,119,6,0.15)',
+  medium: 'rgba(217,119,6,0.15)',
+  high: 'rgba(220,38,38,0.14)',
+  very_high: 'rgba(220,38,38,0.14)',
 };
 
 const PRODUCT_COLORS = {
@@ -796,12 +796,12 @@ function RiskDonut({ distribution }) {
       animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
       },
       // Donut compacto sin leyenda — ahora vive en el KPI bar horizontal;
@@ -815,7 +815,7 @@ function RiskDonut({ distribution }) {
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 2,
-            borderColor: '#FAFBFC',
+            borderColor: '#1e2022',
             borderWidth: 1.5,
           },
           label: { show: false },

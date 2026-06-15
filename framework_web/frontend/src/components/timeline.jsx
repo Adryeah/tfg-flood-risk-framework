@@ -33,11 +33,11 @@ export default function Timeline({ phases }) {
                 className={cn(
                   'w-7 h-7 rounded-full flex items-center justify-center border-2 z-10',
                   status === 'pass' &&
-                    'bg-risk-low-bg border-risk-low text-risk-low',
+                    'bg-risk-low-bg border-risk-low text-risk-low-soft',
                   status === 'fail' &&
-                    'bg-risk-high-bg border-risk-high text-risk-high',
+                    'bg-risk-high-bg border-risk-high text-risk-high-soft',
                   status === 'warning' &&
-                    'bg-risk-medium-bg border-risk-medium text-risk-medium',
+                    'bg-risk-medium-bg border-risk-medium text-risk-medium-soft',
                   !status &&
                     'bg-bg-surface border-border-strong text-text-secondary'
                 )}

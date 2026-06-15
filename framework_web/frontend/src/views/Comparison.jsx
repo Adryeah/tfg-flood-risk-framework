@@ -73,10 +73,10 @@ function DeltaChip({ delta, kind = 'numeric', suffix = '' }) {
     else if (delta > 0) tone = 'positive';
   }
   const palette = {
-    severe: 'bg-risk-high-bg text-risk-high',
-    moderate: 'bg-risk-medium-bg text-risk-medium',
+    severe: 'bg-risk-high-bg text-risk-high-soft',
+    moderate: 'bg-risk-medium-bg text-risk-medium-soft',
     mild: 'bg-bg-subtle text-text-secondary',
-    positive: 'bg-risk-low-bg text-risk-low',
+    positive: 'bg-risk-low-bg text-risk-low-soft',
     neutral: 'bg-bg-subtle text-text-secondary',
   };
   const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : Minus;
@@ -179,15 +179,15 @@ export function Comparison() {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         borderWidth: 1,
         padding: [8, 10],
-        extraCssText: 'box-shadow: 0 2px 4px rgba(15,23,42,0.08);',
+        extraCssText: 'box-shadow: 0 2px 4px rgba(255,255,255,0.08);',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         formatter: (params) => {
           if (!Array.isArray(params)) return '';
@@ -210,7 +210,7 @@ export function Comparison() {
       xAxis: {
         type: 'category',
         data: ['AUC ROC', 'F1', 'Recall', 'Precision'],
-        axisLine: { lineStyle: { color: 'rgba(15,23,42,0.08)' } },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
         axisTick: { show: false },
         axisLabel: {
           color: '#52525B',
@@ -224,7 +224,7 @@ export function Comparison() {
         min: 0,
         max: 1,
         splitLine: {
-          lineStyle: { color: 'rgba(15,23,42,0.06)', type: 'dashed' },
+          lineStyle: { color: 'rgba(255,255,255,0.06)', type: 'dashed' },
         },
         axisLabel: {
           color: '#98A2B3',
@@ -343,7 +343,7 @@ export function Comparison() {
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-brand-50 text-brand-700 text-10 font-mono font-semibold uppercase tracking-wider">
             Same model
           </span>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-risk-medium-bg text-risk-medium text-10 font-mono font-semibold uppercase tracking-wider">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-risk-medium-bg text-risk-medium-soft text-10 font-mono font-semibold uppercase tracking-wider">
             Different zone
           </span>
         </div>
@@ -390,7 +390,7 @@ export function Comparison() {
                 extrapolation zone
               </span>
             </div>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium-soft shrink-0">
               Extrapolation
             </span>
           </div>

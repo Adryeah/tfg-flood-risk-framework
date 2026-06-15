@@ -557,12 +557,12 @@ function RiskDonut({ distribution }) {
       animationEasing: 'cubicOut',
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         formatter: '{b}: {c} ({d}%)',
       },
@@ -584,7 +584,7 @@ function RiskDonut({ distribution }) {
           avoidLabelOverlap: false,
           itemStyle: {
             borderRadius: 3,
-            borderColor: '#FAFBFC',
+            borderColor: '#1e2022',
             borderWidth: 2,
           },
           label: { show: false },
@@ -658,9 +658,9 @@ function ExposureByTypeChart({ clients }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
-        textStyle: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: '#1F2937' },
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
+        textStyle: { fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12, color: '#f7f8f8' },
         valueFormatter: (v) => `€${(v / 1e6).toFixed(1)}M`,
       },
       xAxis: {
@@ -848,12 +848,12 @@ function LossExceedanceCurve({ clients }) {
           type: 'line',
           lineStyle: { color: '#DC2626', width: 1, type: 'dashed' },
         },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         formatter: (p) => {
           const [loss, cum] = p[0].data;
@@ -913,7 +913,7 @@ function LossExceedanceCurve({ clients }) {
             scale: 1.6,
             itemStyle: {
               color: '#DC2626',
-              borderColor: '#FAFBFC',
+              borderColor: '#1e2022',
               borderWidth: 2,
               shadowColor: 'rgba(220,38,38,0.5)',
               shadowBlur: 8,
@@ -987,14 +987,14 @@ function LossBreakdownChart({ clients }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         borderWidth: 1,
         padding: [8, 10],
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         valueFormatter: (v) =>
           v >= 1_000_000

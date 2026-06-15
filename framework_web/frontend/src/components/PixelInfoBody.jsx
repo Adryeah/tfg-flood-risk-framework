@@ -39,7 +39,7 @@ export function PixelInfoBody({ info }) {
     return (
       <div>
         <Coords lat={lat} lon={lon} />
-        <div className="mt-2 text-12 text-risk-high">
+        <div className="mt-2 text-12 text-risk-high-soft">
           {error || 'Point outside coverage.'}
         </div>
       </div>
@@ -50,7 +50,7 @@ export function PixelInfoBody({ info }) {
   const cat = (
     data.category || (prob < 0.3 ? 'low' : prob < 0.614 ? 'medium' : 'high')
   ).toUpperCase();
-  const sevBg = { LOW: '#ECFDF5', MEDIUM: '#FFFBEB', HIGH: '#FEF2F2' }[cat] || '#F3F5F7';
+  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MEDIUM: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)' }[cat] || '#F3F5F7';
   const sevFg = { LOW: '#15803D', MEDIUM: '#D97706', HIGH: '#DC2626' }[cat] || '#1F2937';
   const features = data.features || {};
   const topFeatures = Object.entries(features).slice(0, 6);

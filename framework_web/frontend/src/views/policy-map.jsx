@@ -58,10 +58,10 @@ const RISK_COLORS = {
   very_high: '#991B1B',
 };
 const RISK_BG = {
-  low: '#ECFDF5',
-  moderate: '#FFFBEB',
-  high: '#FEF2F2',
-  very_high: '#FEF2F2',
+  low: 'rgba(22,163,74,0.14)',
+  moderate: 'rgba(217,119,6,0.15)',
+  high: 'rgba(220,38,38,0.14)',
+  very_high: 'rgba(220,38,38,0.14)',
 };
 
 // ─── Backwards-compat helper ─────────────────────────────────
@@ -498,7 +498,7 @@ export function PolicyMap() {
                       height: 20,
                       borderRadius: '50%',
                       background: '#FFFFFF',
-                      border: '3px solid #0F172A',
+                      border: '3px solid #1d6fa8',
                       boxShadow: '0 1px 3px rgba(15,23,42,0.35)',
                     }}
                   />
@@ -698,10 +698,10 @@ const DOCK_RISK_FG = {
   very_high: '#991B1B',
 };
 const DOCK_RISK_BG = {
-  low: '#ECFDF5',
-  moderate: '#FFFBEB',
-  high: '#FEF2F2',
-  very_high: '#FEF2F2',
+  low: 'rgba(22,163,74,0.14)',
+  moderate: 'rgba(217,119,6,0.15)',
+  high: 'rgba(220,38,38,0.14)',
+  very_high: 'rgba(220,38,38,0.14)',
 };
 
 function PolicyDock({
@@ -952,7 +952,7 @@ function DockMetric({ label, value, highlight = false }) {
       <span
         className={
           'font-mono tabular-nums text-12 shrink-0 ' +
-          (highlight ? 'text-risk-high font-semibold' : 'text-text-primary font-medium')
+          (highlight ? 'text-risk-high-soft font-semibold' : 'text-text-primary font-medium')
         }
       >
         {value}
@@ -1026,7 +1026,7 @@ function DockRow({ k, v, highlight = false }) {
       <span
         className={
           'font-mono tabular-nums shrink-0 ' +
-          (highlight ? 'text-risk-high font-semibold' : 'text-text-primary')
+          (highlight ? 'text-risk-high-soft font-semibold' : 'text-text-primary')
         }
       >
         {v}

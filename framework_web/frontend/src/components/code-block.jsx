@@ -42,7 +42,7 @@ export default function CodeBlock({
               </span>
             )}
             {badge && (
-              <span className="inline-flex items-center px-1.5 py-0.5 text-10 font-mono font-semibold rounded-sm bg-risk-high-bg text-risk-high uppercase tracking-wider shrink-0">
+              <span className="inline-flex items-center px-1.5 py-0.5 text-10 font-mono font-semibold rounded-sm bg-risk-high-bg text-risk-high-soft uppercase tracking-wider shrink-0">
                 {badge}
               </span>
             )}

@@ -3,9 +3,9 @@ import React from 'react';
 export function Badge({ label, variant = 'default' }) {
   const variantClasses = {
     default: 'bg-bg-subtle text-text-secondary',
-    'risk-low': 'bg-risk-low-bg text-risk-low',
-    'risk-medium': 'bg-risk-medium-bg text-risk-medium',
-    'risk-high': 'bg-risk-high-bg text-risk-high',
+    'risk-low': 'bg-risk-low-bg text-risk-low-soft',
+    'risk-medium': 'bg-risk-medium-bg text-risk-medium-soft',
+    'risk-high': 'bg-risk-high-bg text-risk-high-soft',
     brand: 'bg-brand-50 text-brand-700',
     info: 'bg-brand-50 text-brand-700',
   };

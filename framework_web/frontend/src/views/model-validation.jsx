@@ -475,7 +475,7 @@ function ROCChart({ auc, stdAuc }) {
           color: colour,
           width: 1.6,
           opacity: 0.82,
-          shadowColor: 'rgba(15, 23, 42, 0.18)',
+          shadowColor: 'rgba(255,255,255,0.14)',
           shadowBlur: 4,
         },
         // Subtle area gradient under each curve reinforces "AUC = area
@@ -531,19 +531,19 @@ function ROCChart({ auc, stdAuc }) {
       grid: { left: 56, right: 16, top: 16, bottom: 70, containLabel: false },
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
       },
       legend: {
         bottom: 0,
         textStyle: {
           fontSize: 11,
-          color: '#52525B',
+          color: '#8a8f98',
           fontFamily: 'Inter, system-ui, sans-serif',
         },
         type: 'scroll',
@@ -674,10 +674,10 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
     //   FN — inundación NO detectada. Rojo (mata Recall, el peor caso).
     // Cada celda: bg tinte ~12% + número en el color fuerte legible.
     const PALETTE = {
-      TN: { bg: 'rgba(15,27,53,0.05)', fg: '#6B7280' }, // neutro
-      TP: { bg: 'rgba(16,185,129,0.13)', fg: '#047857' }, // verde
-      FP: { bg: 'rgba(243,156,18,0.15)', fg: '#B45309' }, // ámbar
-      FN: { bg: 'rgba(231,76,60,0.15)', fg: '#B91C1C' }, // rojo
+      TN: { bg: 'rgba(255,255,255,0.05)', fg: '#9aa0a8' }, // neutro
+      TP: { bg: 'rgba(16,185,129,0.13)', fg: '#5dcaa5' }, // verde
+      FP: { bg: 'rgba(243,156,18,0.15)', fg: '#d2a24a' }, // ámbar
+      FN: { bg: 'rgba(231,76,60,0.15)', fg: '#f87171' }, // rojo
     };
     const mkCell = (x, y, value, type) => {
       const c = PALETTE[type];
@@ -729,12 +729,12 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
         inRange: { color: ['#E5E7EB', '#E5E7EB'] }, // overridden per cell
       },
       tooltip: {
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         formatter: (p) => {
           const c = p.data;
@@ -755,7 +755,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
         axisLabel: {
           fontFamily: 'JetBrains Mono',
           fontSize: 10,
-          color: '#52525B',
+          color: '#8a8f98',
           fontWeight: 600,
         },
       },
@@ -770,7 +770,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
         axisLabel: {
           fontFamily: 'JetBrains Mono',
           fontSize: 10,
-          color: '#52525B',
+          color: '#8a8f98',
           fontWeight: 600,
         },
       },
@@ -794,7 +794,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
                 fontFamily: 'JetBrains Mono',
                 fontSize: 18,
                 fontWeight: 600,
-                color: '#111827',
+                color: '#f7f8f8',
                 lineHeight: 22,
               },
               sub: {
@@ -806,14 +806,14 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
             },
           },
           itemStyle: {
-            borderColor: '#FFFFFF',
+            borderColor: '#161718',
             borderWidth: 3,
             borderRadius: 4,
           },
           emphasis: {
             itemStyle: {
               shadowBlur: 8,
-              shadowColor: 'rgba(15,27,53,0.12)',
+              shadowColor: 'rgba(255,255,255,0.10)',
             },
           },
         },
@@ -887,7 +887,7 @@ function FeatureImportanceChart({ features }) {
         <div style="max-width:300px;font-family:'Inter',system-ui,sans-serif;font-size:12px;color:#4B5563;line-height:1.5;">
           ${safe(doc.description)}
         </div>
-        <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(15,23,42,0.06);font-family:'JetBrains Mono',monospace;font-size:10px;color:#98A2B3;text-transform:uppercase;letter-spacing:0.06em;">
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-family:'JetBrains Mono',monospace;font-size:10px;color:#98A2B3;text-transform:uppercase;letter-spacing:0.06em;">
           ${safe(doc.source)}${doc.cite ? ` · ${safe(doc.cite)}` : ''}
         </div>
       `
@@ -901,15 +901,15 @@ function FeatureImportanceChart({ features }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         borderWidth: 1,
         padding: [8, 10],
-        extraCssText: 'box-shadow: 0 2px 4px rgba(15,23,42,0.08);',
+        extraCssText: 'box-shadow: 0 2px 4px rgba(255,255,255,0.08);',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         formatter: renderTooltip,
       },
@@ -935,7 +935,7 @@ function FeatureImportanceChart({ features }) {
         axisLabel: {
           fontFamily: 'JetBrains Mono',
           fontSize: 11,
-          color: '#52525B',
+          color: '#8a8f98',
         },
       },
       series: [
@@ -1097,12 +1097,12 @@ function BufferMetricsChart({ bufferMetrics }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         valueFormatter: (v) => Number(v).toFixed(3),
       },
@@ -1110,7 +1110,7 @@ function BufferMetricsChart({ bufferMetrics }) {
         bottom: 0,
         textStyle: {
           fontSize: 11,
-          color: '#52525B',
+          color: '#8a8f98',
           fontFamily: 'Inter, system-ui, sans-serif',
         },
         icon: 'roundRect',
@@ -1121,7 +1121,7 @@ function BufferMetricsChart({ bufferMetrics }) {
         axisLabel: {
           fontFamily: 'JetBrains Mono',
           fontSize: 11,
-          color: '#52525B',
+          color: '#8a8f98',
         },
         axisLine: { lineStyle: { color: '#E4E4E7' } },
       },

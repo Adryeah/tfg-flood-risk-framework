@@ -13,8 +13,8 @@ import {
 // 'MONITORED' ámbar, 'SAFE' verde status-live.
 const VERDICT_STYLE = {
   EXPOSED: { color: '#FFFFFF', bg: '#E74C3C', label: 'EXPOSED' },
-  MONITORED: { color: '#0F172A', bg: '#F39C12', label: 'MONITORED' },
-  SAFE: { color: '#0F172A', bg: '#10B981', label: 'SAFE' },
+  MONITORED: { color: '#f7f8f8', bg: '#F39C12', label: 'MONITORED' },
+  SAFE: { color: '#f7f8f8', bg: '#10B981', label: 'SAFE' },
 };
 
 const RISK_TINT = {

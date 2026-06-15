@@ -74,7 +74,7 @@ export function ReturnPeriodSelector({
                 className="px-1.5 py-0.5 rounded text-9 font-mono uppercase tracking-widest tabular-nums transition-all"
                 style={
                   active
-                    ? { background: tint, color: '#0F172A' }
+                    ? { background: tint, color: '#f7f8f8' }
                     : { color: 'rgba(255,255,255,0.55)' }
                 }
                 onMouseEnter={(e) => {
@@ -126,7 +126,7 @@ export function ReturnPeriodSelector({
               }
               onMouseEnter={(e) => {
                 if (!active)
-                  e.currentTarget.style.background = 'rgba(15,27,53,0.05)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
               }}
               onMouseLeave={(e) => {
                 if (!active) e.currentTarget.style.background = 'transparent';
@@ -217,7 +217,7 @@ export function BackboneSourceSelector({ variant = 'console', className = '' }) 
               }
               onMouseEnter={(e) => {
                 if (!active)
-                  e.currentTarget.style.background = 'rgba(15,27,53,0.05)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
               }}
               onMouseLeave={(e) => {
                 if (!active) e.currentTarget.style.background = 'transparent';

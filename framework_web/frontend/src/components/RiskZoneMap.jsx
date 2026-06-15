@@ -718,7 +718,7 @@ function PixelInspectionContent({ inspection }) {
   // status === 'ready'
   const prob = Number(data.probability ?? 0);
   const cat = (data.category || categorize(prob)).toUpperCase();
-  const sevBg = { LOW: '#ECFDF5', MEDIUM: '#FFFBEB', HIGH: '#FEF2F2' }[cat] || '#F3F5F7';
+  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MEDIUM: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)' }[cat] || '#F3F5F7';
   const sevFg = { LOW: '#15803D', MEDIUM: '#D97706', HIGH: '#DC2626' }[cat] || '#1F2937';
   const features = data.features || {};
   const topFeatures = Object.entries(features).slice(0, 5);
@@ -818,7 +818,7 @@ function OverlayPanel({
   items.push({
     id: 'municipalities',
     label: 'DANA municipalities',
-    color: '#1E2B4A',
+    color: '#f7f8f8',
   });
   if (showZones) {
     items.push({
@@ -862,7 +862,7 @@ function OverlayPanel({
       // (256px). En mobile el panel + zoom controls a la derecha caben
       // sin tapar más del 60% del ancho del mapa.
       className="absolute top-2 right-12 sm:top-3 sm:right-14 z-[1000] w-52 sm:w-64 bg-bg-surface border border-border-default rounded shadow-sm overflow-hidden"
-      style={{ boxShadow: '0 1px 2px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.05)' }}
+      style={{ boxShadow: '0 1px 2px rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.05)' }}
     >
       {/* Header — clickable en mobile (alterna openMobile). En md+ es
        *  decorativo, no responde a click pero el cursor sigue siendo
@@ -927,7 +927,7 @@ function OverlayPanel({
                   className="inline-block w-3 h-3 rounded-sm border shrink-0"
                   style={{
                     backgroundColor: color,
-                    borderColor: 'rgba(15,23,42,0.10)',
+                    borderColor: 'rgba(255,255,255,0.10)',
                   }}
                 />
                 <span className="text-12 text-text-secondary truncate">{label}</span>

@@ -58,10 +58,10 @@ function DeltaVsValencia({ delta }) {
   else if (delta < 0) tone = 'mild';
   else if (delta > 0) tone = 'positive';
   const palette = {
-    severe: 'text-risk-high',
-    moderate: 'text-risk-medium',
+    severe: 'text-risk-high-soft',
+    moderate: 'text-risk-medium-soft',
     mild: 'text-text-tertiary',
-    positive: 'text-risk-low',
+    positive: 'text-risk-low-soft',
     neutral: 'text-text-tertiary',
   };
   const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : Minus;
@@ -171,7 +171,7 @@ export function AlgemesiMap() {
             <span className="text-text-tertiary font-normal mx-2 not-italic">·</span>
             <span className="italic">Algemesí</span>
           </h1>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium">
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium-soft">
             Extrapolation zone
           </span>
         </div>
@@ -250,8 +250,8 @@ export function AlgemesiMap() {
                   className="px-2.5 py-1 uppercase tracking-wider transition-colors"
                   style={{
                     backgroundColor:
-                      viewMode === opt.id ? '#1E2B4A' : '#FAFBFC',
-                    color: viewMode === opt.id ? '#FFFFFF' : '#98A2B3',
+                      viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
+                    color: viewMode === opt.id ? '#f7f8f8' : '#8a8f98',
                     fontWeight: viewMode === opt.id ? 600 : 400,
                     borderLeft: i > 0 ? '1px solid var(--border-strong)' : 'none',
                   }}
@@ -320,7 +320,7 @@ export function AlgemesiMap() {
 
           {error && (
             <Card title="Error">
-              <p className="text-12 text-risk-high">{error}</p>
+              <p className="text-12 text-risk-high-soft">{error}</p>
             </Card>
           )}
         </aside>

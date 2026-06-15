@@ -290,8 +290,8 @@ export function SnczInfoModal({ onClose }) {
                 <div
                   className="shrink-0 w-8 h-8 rounded-full inline-flex items-center justify-center font-mono text-11 font-semibold border"
                   style={{
-                    background: '#EEF1F8',
-                    color: '#0F1B35',
+                    background: 'rgba(255,255,255,0.05)',
+                    color: '#f7f8f8',
                     borderColor: '#D4DCEC',
                   }}
                 >

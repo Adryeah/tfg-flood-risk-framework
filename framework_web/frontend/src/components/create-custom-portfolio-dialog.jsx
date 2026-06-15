@@ -247,7 +247,7 @@ export function CreateCustomPortfolioDialog({ open, onOpenChange, onCreated }) {
           </div>
 
           {error && (
-            <div className="text-12 text-risk-high bg-risk-high-bg border border-risk-high/20 rounded p-2">
+            <div className="text-12 text-risk-high-soft bg-risk-high-bg border border-risk-high/20 rounded p-2">
               {error}
             </div>
           )}

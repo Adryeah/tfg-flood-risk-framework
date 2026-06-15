@@ -93,8 +93,11 @@ export default {
           50: 'var(--accent-sar-glow)',
           100: 'rgba(29,111,168,0.22)',
           500: 'var(--accent-sar)',
-          700: '#155A86',
-          900: '#0C3B59',
+          // 700 sirve doble: bg de botón primario (texto blanco, contraste
+          // AA) y texto de chips/iconos sobre dark (legible). Unificado al
+          // accent-sar evita el #155A86 que quedaba muddy como texto.
+          700: 'var(--accent-sar)',
+          900: '#155A86',
         },
         // Semantic accents · color = meaning (flood-risk specific)
         accent: {
@@ -112,15 +115,20 @@ export default {
         'corporate-navy-light': 'var(--accent-sar-glow)',
         // Risk semantics → dark accents. bg variants are the glow tints.
         risk: {
+          // Bases saturadas: swatches sólidos, botón danger (texto blanco),
+          // map fills. NO tocar — necesitan saturación para leerse como fill.
           low: '#0F6E56',
           'low-bg': 'rgba(15,110,86,0.12)',
           'low-soft': '#5DCAA5',
           medium: '#854F0B',
           'medium-bg': 'rgba(133,79,11,0.12)',
+          'medium-soft': '#D2A24A',
           high: '#C0392B',
           'high-bg': 'rgba(192,57,43,0.12)',
+          'high-soft': '#F87171',
           critical: '#C0392B',
           'critical-bg': 'rgba(192,57,43,0.16)',
+          'critical-soft': '#F87171',
         },
         // Data viz palette · semantic accents (dark)
         data: {

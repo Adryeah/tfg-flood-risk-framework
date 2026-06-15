@@ -705,7 +705,7 @@ function SarChart() {
           markPoint: {
             symbol: 'circle',
             symbolSize: 7,
-            itemStyle: { color: '#DC2626', borderColor: '#FFFFFF', borderWidth: 1.5 },
+            itemStyle: { color: '#DC2626', borderColor: '#161718', borderWidth: 1.5 },
             label: { show: false },
             data: [{ xAxis: 12, yAxis: values[12] }],
           },

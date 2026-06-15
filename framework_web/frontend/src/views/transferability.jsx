@@ -141,7 +141,7 @@ export function Transferability() {
       {/* ─── KEY FINDING · vertical-rule pull quote ─── */}
       <div className="mb-8 pl-6 border-l-2 border-risk-medium">
         <div className="flex items-center gap-2 mb-2">
-          <AlertCircle className="w-4 h-4 text-risk-medium" strokeWidth={1.75} />
+          <AlertCircle className="w-4 h-4 text-risk-medium-soft" strokeWidth={1.75} />
           <span className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
             Hallazgo crítico
           </span>
@@ -257,12 +257,12 @@ function FeatureDriftChart({ features, highlightFeature = null }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         valueFormatter: (v) => `${Number(v).toFixed(3)} σ`,
       },
@@ -367,12 +367,12 @@ function ImportanceComparisonChart({ data }) {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        backgroundColor: '#FAFBFC',
-        borderColor: 'rgba(15,23,42,0.12)',
+        backgroundColor: '#1e2022',
+        borderColor: 'rgba(255,255,255,0.10)',
         textStyle: {
           fontFamily: 'Inter, system-ui, sans-serif',
           fontSize: 12,
-          color: '#1F2937',
+          color: '#f7f8f8',
         },
         valueFormatter: (v) => Number(v).toFixed(4),
       },
@@ -486,7 +486,7 @@ function TransferHero({ aucValencia, aucAlgemesi, aucDrop }) {
         </div>
       </div>
       <div className="self-end pb-2">
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-risk-medium-bg text-risk-medium text-13 font-mono font-semibold tabular-nums">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-risk-medium-bg text-risk-medium-soft text-13 font-mono font-semibold tabular-nums">
           Δ {(aucDrop < 0 ? '-' : '')}
           {d.toFixed(3)}
         </span>

@@ -136,8 +136,8 @@ export function ValenciaMap() {
                   className="px-2.5 py-1 uppercase tracking-wider transition-colors"
                   style={{
                     backgroundColor:
-                      viewMode === opt.id ? '#1E2B4A' : '#FAFBFC',
-                    color: viewMode === opt.id ? '#FFFFFF' : '#98A2B3',
+                      viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
+                    color: viewMode === opt.id ? '#f7f8f8' : '#8a8f98',
                     fontWeight: viewMode === opt.id ? 600 : 400,
                     borderLeft: i > 0 ? '1px solid var(--border-strong)' : 'none',
                   }}
@@ -206,7 +206,7 @@ export function ValenciaMap() {
 
           {error && (
             <Card title="Error">
-              <p className="text-12 text-risk-high">{error}</p>
+              <p className="text-12 text-risk-high-soft">{error}</p>
             </Card>
           )}
         </aside>

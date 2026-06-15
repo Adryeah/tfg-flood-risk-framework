@@ -227,14 +227,14 @@ export function LeakageAudit() {
         className="grid grid-cols-[auto_1fr_auto] gap-6 items-start bg-risk-high-bg border border-risk-high/25 rounded-md px-6 py-5"
       >
         <Ban
-          className="w-9 h-9 text-risk-high mt-1"
+          className="w-9 h-9 text-risk-high-soft mt-1"
           strokeWidth={1.5}
         />
         <div className="min-w-0">
-          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-risk-high/80 mb-1">
+          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-risk-high-soft/80 mb-1">
             Verdict
           </div>
-          <div className="text-20 font-semibold text-risk-high tracking-tight">
+          <div className="text-20 font-semibold text-risk-high-soft tracking-tight">
             Rejected
           </div>
           <p className="text-13 text-text-secondary leading-relaxed mt-2 max-w-[60ch]">
@@ -293,7 +293,7 @@ export function LeakageAudit() {
                 XGBoost v3 · 24 features
               </div>
               <div
-                className="font-mono font-semibold tabular-nums text-risk-high inline-flex items-baseline"
+                className="font-mono font-semibold tabular-nums text-risk-high-soft inline-flex items-baseline"
                 style={{ fontSize: '40px', lineHeight: 1 }}
               >
                 <span className="line-through decoration-2 decoration-risk-high/60">
@@ -310,7 +310,7 @@ export function LeakageAudit() {
               <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
                 Δ AUC
               </div>
-              <div className="font-mono font-semibold tabular-nums text-risk-high text-16">
+              <div className="font-mono font-semibold tabular-nums text-risk-high-soft text-16">
                 +{AUC_DELTA.toFixed(3)}
               </div>
               <ArrowRight
@@ -331,12 +331,12 @@ export function LeakageAudit() {
                 Random Forest v2 · 14 features
               </div>
               <div
-                className="font-mono font-semibold tabular-nums text-risk-low inline-flex items-baseline gap-2"
+                className="font-mono font-semibold tabular-nums text-risk-low-soft inline-flex items-baseline gap-2"
                 style={{ fontSize: '40px', lineHeight: 1 }}
               >
                 {AUC_VERIFIED.toFixed(3)}
                 <ShieldCheck
-                  className="w-5 h-5 text-risk-low self-center"
+                  className="w-5 h-5 text-risk-low-soft self-center"
                   strokeWidth={1.75}
                 />
               </div>
@@ -406,7 +406,7 @@ export function LeakageAudit() {
             />
             <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-3 items-start text-12 text-text-secondary leading-relaxed pt-1">
               <CircleAlert
-                className="w-4 h-4 text-risk-high mt-0.5 shrink-0"
+                className="w-4 h-4 text-risk-high-soft mt-0.5 shrink-0"
                 strokeWidth={1.75}
               />
               <p>
@@ -597,14 +597,14 @@ function WinterDiffTable({ rows, maxDiff }) {
                   <div className="flex items-center gap-2">
                     {isCritical && (
                       <CircleAlert
-                        className="w-3.5 h-3.5 text-risk-high shrink-0"
+                        className="w-3.5 h-3.5 text-risk-high-soft shrink-0"
                         strokeWidth={2}
                       />
                     )}
                     <span
                       className={
                         isCritical
-                          ? 'font-semibold text-risk-high'
+                          ? 'font-semibold text-risk-high-soft'
                           : 'text-text-primary'
                       }
                     >
@@ -641,7 +641,7 @@ function WinterDiffTable({ rows, maxDiff }) {
                     <span
                       className={
                         isCritical
-                          ? 'text-risk-high font-semibold'
+                          ? 'text-risk-high-soft font-semibold'
                           : 'text-text-primary font-medium'
                       }
                     >
