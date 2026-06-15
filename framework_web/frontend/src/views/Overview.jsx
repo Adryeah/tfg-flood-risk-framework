@@ -179,7 +179,7 @@ export function Overview() {
         <div className="flex flex-row items-start sm:flex-col sm:items-end gap-2 shrink-0">
           {/* StatusPill mil-spec (variant light) — reemplaza el antiguo
            *  liquid-glass + animate-ping que leía como AI-generated badge. */}
-          <StatusPill variant="light" label="LIVE" detail="S1A · 19h ago" />
+          <StatusPill tone="valid" label="LIVE" detail="S1A · 19h ago" />
         </div>
       </div>
 
@@ -213,9 +213,7 @@ export function Overview() {
           delta={m.auc_std != null ? `±${m.auc_std.toFixed(3)}` : null}
           trend="up"
           subInfo={`5-fold spatial CV · ±${(m.auc_std ?? 0).toFixed(3)}`}
-          sparkline={SPARK.auc}
-          sparkColor="#3B82F6"
-          severity="info"
+          accent="sar"
           objective="Maximizar — capacidad de ranking del modelo."
           animationDelay={0}
           info={{
@@ -231,9 +229,7 @@ export function Overview() {
           delta="+1.1%"
           trend="up"
           subInfo="Block-level on EMSR773"
-          sparkline={SPARK.recall}
-          sparkColor="#15803D"
-          severity="low"
+          accent="valid"
           objective="Maximizar — no perder inundaciones reales."
           animationDelay={70}
           info={{
@@ -248,9 +244,7 @@ export function Overview() {
           format={(v) => v.toFixed(1)}
           unit="M"
           subInfo="10m × 10m · 750 km²"
-          sparkline={SPARK.pixels}
-          sparkColor="#3B82F6"
-          severity="info"
+          accent="purple"
           objective="Contexto — escala del grid analizado."
           animationDelay={140}
           info={{
@@ -264,7 +258,7 @@ export function Overview() {
           numeric={14}
           format={(v) => Math.round(v).toString()}
           subInfo="SAR · DEM · NDVI / NDWI"
-          severity="info"
+          accent="warn"
           objective="Contexto — entradas al modelo Random Forest."
           animationDelay={210}
           info={{
@@ -311,7 +305,7 @@ export function Overview() {
             numeric={tiv}
             format={(v) => formatEur(v)}
             subInfo={`${exposure?.n_clients || 0} active policies · ${highCount} high-risk`}
-            severity="info"
+            accent="sar"
             objective="Contexto — capital total bajo análisis."
             animationDelay={280}
             info={{
@@ -327,7 +321,7 @@ export function Overview() {
             numeric={exposedTiv}
             format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? exposedTiv / tiv : 0, 1)} of portfolio · P > 0.5`}
-            severity={tiv > 0 && exposedTiv / tiv > 0.35 ? 'high' : 'low'}
+            accent="risk"
             objective="Vigilar — exposición por encima del umbral."
             animationDelay={340}
             info={{
@@ -343,7 +337,7 @@ export function Overview() {
             numeric={eal}
             format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? eal / tiv : 0, 2)} of portfolio`}
-            severity={tiv > 0 && eal / tiv > 0.01 ? 'high' : 'low'}
+            accent="warn"
             objective="Minimizar — pérdida esperada anual."
             animationDelay={400}
             info={{
@@ -359,7 +353,7 @@ export function Overview() {
             numeric={pml}
             format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? pml / tiv : 0, 1)} of portfolio · 1-event basis`}
-            severity={tiv > 0 && pml / tiv > 0.08 ? 'critical' : 'medium'}
+            accent="risk"
             objective="Vigilar — capital requerido (Solvencia II)."
             animationDelay={460}
             info={{

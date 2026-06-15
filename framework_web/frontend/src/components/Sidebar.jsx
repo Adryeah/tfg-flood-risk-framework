@@ -161,14 +161,20 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4">
+      <nav className="flex-1 overflow-y-auto py-3">
         {SIDEBAR_SECTIONS.map((section) => (
-          <div key={section.label} className="mb-4">
-            {/* Section header with accent dot. Dot is sized at 1.5×1.5 px
-             *  so it reads as a typographic accent, not a status badge. */}
+          <div key={section.label} className="mb-2">
+            {/* Section label · Linear×Basedash spec: 10px / weight 510 /
+             *  tracking 0.08em / muted, with breathing room above each
+             *  group (pt-4). Accent dot kept as the register marker. */}
             <div
-              className="px-5 mb-1.5 text-10 font-mono font-semibold uppercase tracking-wider inline-flex items-center gap-1.5 w-full"
-              style={{ color: 'var(--sidebar-text-muted)' }}
+              className="flex items-center gap-1.5 w-full text-10 font-mono uppercase"
+              style={{
+                color: 'var(--text-muted)',
+                fontWeight: 510,
+                letterSpacing: '0.08em',
+                padding: '16px 16px 6px 20px',
+              }}
             >
               <span
                 className="inline-block w-1.5 h-1.5 rounded-full"
@@ -185,13 +191,17 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
                   href={`#${item.path}`}
                   className={`group flex items-center gap-2.5 px-5 py-1.5 text-13 border-l-2 transition-colors ${isActive ? 'is-active' : ''}`}
                   style={{
-                    color: isActive ? '#ffffff' : 'var(--sidebar-text-muted)',
-                    backgroundColor: isActive ? 'var(--sidebar-active)' : 'transparent',
-                    // Active rail picks up the section accent — this is
-                    // what turns the sidebar into 3 visual registers.
+                    // Active: subtle white wash (NOT a heavy fill) + the
+                    // section-accent rail + primary text at weight 510.
+                    // Inactive: transparent, secondary text weight 400.
+                    color: isActive
+                      ? 'var(--text-primary)'
+                      : 'var(--text-secondary)',
+                    fontWeight: isActive ? 510 : 400,
+                    backgroundColor: isActive
+                      ? 'rgba(255,255,255,0.06)'
+                      : 'transparent',
                     borderLeftColor: isActive ? section.accent : 'transparent',
-                    // CSS variable so the .is-active inset-shadow rail in
-                    // main.css can pick up this section's accent too.
                     ['--section-accent']: section.accent,
                   }}
                 >
@@ -199,7 +209,9 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
                     name={item.icon}
                     size={16}
                     className="shrink-0"
-                    style={isActive ? { color: section.accent } : undefined}
+                    style={{
+                      color: isActive ? section.accent : 'var(--text-muted)',
+                    }}
                   />
                   <span className="truncate">{item.label}</span>
                 </a>
@@ -215,21 +227,23 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
        *  health dot stays compact; status text reads as caption. */}
       <div
         className="px-5 py-3 border-t"
-        style={{ borderTopColor: 'rgba(255,255,255,0.06)' }}
+        style={{ borderTopColor: 'var(--border-hairline)' }}
       >
+        {/* Bottom status · both lines JetBrains Mono 10px muted, green
+         *  dot = accent-valid (Linear×Basedash spec). */}
         <div
-          className="flex items-center gap-2 text-11 mb-1.5"
-          style={{ color: 'var(--sidebar-text-muted)' }}
+          className="flex items-center gap-2 text-10 font-mono mb-1.5"
+          style={{ color: 'var(--text-secondary)' }}
         >
           <span
-            className="inline-block w-1.5 h-1.5 rounded-full"
+            className="status-dot inline-block w-1.5 h-1.5 rounded-full shrink-0"
             style={{ backgroundColor: statusDot }}
           />
-          <span>{statusLabel}</span>
+          <span className="truncate">{statusLabel}</span>
         </div>
         <div
-          className="text-[9px] font-mono uppercase tracking-[0.22em]"
-          style={{ color: 'rgba(248,250,252,0.32)' }}
+          className="text-10 font-mono uppercase tracking-[0.14em]"
+          style={{ color: 'var(--text-muted)' }}
         >
           Build 0.1.0 · RF v2 · GroupKFold 5×1km
         </div>

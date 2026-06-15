@@ -29,22 +29,41 @@ import React from 'react';
  *   detail    texto secundario en mono (ej. 'S1A · 19h 0m ago')
  *   color     color del dot + label (default status-live #10B981)
  */
+// Tone sets · Linear×Basedash dark. Each maps to a semantic accent with
+// its glow bg + border + dot + a dark-readable text tint.
+const TONES = {
+  sar: {
+    dot: 'var(--accent-sar)',
+    bg: 'var(--accent-sar-glow)',
+    border: 'var(--accent-sar-border)',
+    text: 'var(--accent-sar-text)',
+  },
+  valid: {
+    dot: 'var(--accent-valid)',
+    bg: 'var(--accent-valid-glow)',
+    border: 'var(--accent-valid-border)',
+    text: 'var(--accent-valid-text)',
+  },
+  risk: {
+    dot: 'var(--accent-risk)',
+    bg: 'var(--accent-risk-glow)',
+    border: 'var(--accent-risk-border)',
+    text: 'var(--accent-risk-text)',
+  },
+};
+
 export function StatusPill({
   variant = 'light',
   label = 'LIVE',
   detail = null,
-  color = '#10B981',
+  color = null,
+  tone = 'sar',
   className = '',
 }) {
-  const isDark = variant === 'dark';
-  // El verde token #10B981 no alcanza 4.5:1 sobre blanco; en variante
-  // light usamos data-7 #15803D para el label (sí legible). El dot
-  // siempre #10B981 porque sobre el tinte verde sí se ve.
-  const labelColor = isDark ? color : '#15803D';
-  const detailColor = isDark
-    ? 'var(--sidebar-text-muted)'
-    : 'var(--text-secondary)';
-  const sepColor = isDark ? 'rgba(214,222,240,0.30)' : 'var(--text-tertiary)';
+  const t = TONES[tone] || TONES.sar;
+  const dotColor = color || t.dot;
+  const detailColor = 'var(--text-secondary)';
+  const sepColor = 'var(--text-muted)';
 
   return (
     <span
@@ -53,23 +72,19 @@ export function StatusPill({
         className
       }
       style={{
-        background: isDark
-          ? 'rgba(16,185,129,0.10)'
-          : 'rgba(16,185,129,0.08)',
-        border: `1px solid ${
-          isDark ? 'rgba(16,185,129,0.24)' : 'rgba(16,185,129,0.22)'
-        }`,
+        background: t.bg,
+        border: `1px solid ${t.border}`,
       }}
     >
       <span
         className="status-dot inline-block w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ background: color }}
+        style={{ background: dotColor }}
         aria-hidden="true"
       />
       {label && (
         <span
           className="font-semibold uppercase tracking-[0.14em]"
-          style={{ color: labelColor }}
+          style={{ color: t.text }}
         >
           {label}
         </span>

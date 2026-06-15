@@ -109,12 +109,14 @@ export function Topbar({ onMenuClick = () => {} }) {
     setLangState(code);
   };
 
-  const TOP_BG = '#243358';
-  const INK = '#E6EAF2';
-  const INK_MUTED = '#9BA6C1';
+  // Linear×Basedash dark: topbar is the nav surface (same as sidebar),
+  // separated from the canvas by a hairline. Text ramp from tokens.
+  const TOP_BG = 'var(--surface-nav)';
+  const INK = 'var(--text-primary)';
+  const INK_MUTED = 'var(--text-secondary)';
 
   return (
-    <header className="h-14 sticky top-0 z-[1100] flex items-center px-3 sm:px-6 gap-2 sm:gap-6 border-b" style={{ backgroundColor: TOP_BG, borderBottomColor: 'rgba(0,0,0,0.18)', color: INK }}>
+    <header className="h-14 sticky top-0 z-[1100] flex items-center px-3 sm:px-6 gap-2 sm:gap-6 border-b" style={{ backgroundColor: TOP_BG, borderBottomColor: 'var(--border-hairline)', color: INK }}>
       {/* Hamburguesa — solo mobile. Abre el sidebar como drawer. md+ no
        *  la necesita porque el sidebar es persistente. */}
       <button
@@ -152,7 +154,7 @@ export function Topbar({ onMenuClick = () => {} }) {
          *  estrecho. La actividad del backend ya la indica el dot del sidebar.
          *  variant='dark' porque va sobre el navy del topbar. */}
         <span className="hidden lg:inline-flex ml-3">
-          <StatusPill variant="dark" label={null} detail={`S1A · ${tickLabel} ago`} />
+          <StatusPill tone="sar" label="LIVE" detail={`S1A · ${tickLabel} ago`} />
         </span>
       </div>
 

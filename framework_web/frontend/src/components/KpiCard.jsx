@@ -42,8 +42,20 @@ export function KpiCard({
    */
   numeric = null,
   format = null,
+  /** Linear×Basedash dark: acento semántico → top-border 2px (color =
+   *  significado). sar/valid/purple/warn/risk. Sustituye al severity rail. */
+  accent = null,
 }) {
   const sparkRef = useRef(null);
+
+  const ACCENT_BORDER = {
+    sar: 'var(--accent-sar)',
+    valid: 'var(--accent-valid)',
+    purple: 'var(--accent-purple)',
+    warn: 'var(--accent-warn)',
+    risk: 'var(--accent-risk)',
+  };
+  const topBorder = accent ? ACCENT_BORDER[accent] : null;
 
   // Count-up opt-in: requiere AMBOS numeric (target) + format (formatter).
   // Trigger via IntersectionObserver — aunque los KPIs de Overview están
@@ -130,22 +142,28 @@ export function KpiCard({
   return (
     <div
       ref={inViewRef}
-      className="group bg-bg-surface border border-border-default rounded-md shadow-sm p-3.5 relative overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5 hover:border-brand-500/30 animate-in fade-in slide-in-from-bottom-2"
+      className="kpi-card group bg-bg-surface rounded-lg p-3.5 relative overflow-hidden transition-all duration-200 ease-out hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2"
+      data-accent={accent || undefined}
       style={{
+        boxShadow: 'var(--shadow-card)',
         animationDelay: `${animationDelay}ms`,
         animationDuration: '500ms',
         animationFillMode: 'backwards',
+        // Linear×Basedash: 2px top-border en el accent semántico.
+        borderTop: topBorder ? `2px solid ${topBorder}` : undefined,
       }}
     >
-      {severity && (
+      {/* Left severity rail solo cuando NO hay accent top-border (modo
+       *  legacy). En el dark redesign el color va arriba. */}
+      {severity && !accent && (
         <span
           className="absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-300 ease-out group-hover:w-[4px]"
-          style={{ backgroundColor: severityColors[severity] || '#3B82F6' }}
+          style={{ backgroundColor: severityColors[severity] || 'var(--accent-sar)' }}
         />
       )}
 
       <div className="flex items-start justify-between gap-2">
-        <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.16em]">{label}</span>
+        <span className="text-10 font-mono uppercase tracking-[0.08em]" style={{ color: 'var(--text-muted)', fontWeight: 510 }}>{label}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {dotColor && <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />}
           {info && <InfoTooltip what={info.what} source={info.source} />}
@@ -154,29 +172,39 @@ export function KpiCard({
 
       <div className="flex items-end justify-between gap-3 mt-2">
         <div className="flex items-baseline gap-1.5 min-w-0">
-          <span className="text-22 font-semibold font-mono text-text-primary leading-none tabular-nums tracking-tight">{displayValue}</span>
-          {unit && <span className="text-12 text-text-secondary font-mono">{unit}</span>}
+          <span className="mono-val text-[26px] text-text-primary leading-none tracking-tight" style={{ fontWeight: 500 }}>{displayValue}</span>
+          {unit && <span className="mono-val text-12 text-text-secondary">{unit}</span>}
           {delta && (
-            <span className={`font-mono font-medium text-11 flex items-center gap-0.5 ${trendColors[trend || 'neutral']}`}>
+            <span className={`mono-val font-medium text-11 flex items-center gap-0.5 ${trendColors[trend || 'neutral']}`}>
               <span>{trendArrows[trend || 'neutral']}</span>
               <span>{delta}</span>
             </span>
           )}
         </div>
-        {sparkline && sparkline.length > 1 && <div ref={sparkRef} className="shrink-0" />}
+        {/* Sparklines removed in dark redesign (spec Agent 4). Kept render
+         *  path only when no accent (legacy light usage). */}
+        {!accent && sparkline && sparkline.length > 1 && <div ref={sparkRef} className="shrink-0" />}
       </div>
+
+      {/* Separator 20px del spec, en el accent color */}
+      {topBorder && (
+        <div className="mt-2 mb-1" style={{ width: 20, height: 1.5, background: topBorder }} />
+      )}
 
       {subInfo && <div className="mt-1.5 text-11 text-text-secondary truncate">{subInfo}</div>}
 
       {/* Goal annotation — italic serif, short. Reads as paper margin
-       *  note, not as another UI label. */}
+       *  note. El hairline propio solo cuando NO hay accent (en dark el
+       *  separator del accent ya hace de divisor). */}
       {objective && (
         <>
-          <div
-            className="h-px mt-2 mb-1.5 w-7"
-            style={{ background: severityColors[severity] || '#94A3B8', opacity: 0.6 }}
-          />
-          <div className="font-serif italic text-11 text-text-tertiary leading-snug">
+          {!topBorder && (
+            <div
+              className="h-px mt-2 mb-1.5 w-7"
+              style={{ background: severityColors[severity] || 'var(--text-muted)', opacity: 0.6 }}
+            />
+          )}
+          <div className="font-serif italic text-11 leading-snug" style={{ color: 'var(--text-muted)' }}>
             {objective}
           </div>
         </>
