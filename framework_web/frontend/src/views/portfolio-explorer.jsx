@@ -124,8 +124,8 @@ function ProductBadgeCell(params) {
 }
 function RiskBadgeCell(params) {
   const cat = params.value || 'low';
-  const fg = RISK_COLORS[cat] || '#52525B';
-  const bg = RISK_BG[cat] || '#F4F4F5';
+  const fg = RISK_COLORS[cat] || '#8a8f98';
+  const bg = RISK_BG[cat] || 'rgba(255,255,255,0.06)';
   return (
     <span
       style={{
@@ -640,6 +640,13 @@ export function PortfolioExplorer() {
               </div>
             ) : null}
             <AgGridReact
+              /* v33+ usa la Theming API (JS) por defecto, que inyecta el
+               * Quartz light e IGNORA los overrides de --ag-* del
+               * .ag-theme-quartz en main.css (por eso el body salía blanco
+               * y solo el header — estilado por propiedad directa — iba
+               * dark). theme="legacy" reactiva el tema CSS + nuestras
+               * variables dark. */
+              theme="legacy"
               rowData={filteredClients}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
