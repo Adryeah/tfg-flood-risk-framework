@@ -94,6 +94,16 @@ export function PolicyTour3D({ policy, onClose }) {
   useEffect(() => {
     if (!map) return undefined;
 
+    // TEMP DIAG — quitar tras verificar el flyTo.
+    if (typeof window !== 'undefined') {
+      window.__ptourMap = map;
+      window.__ptourLog = window.__ptourLog || [];
+      window.__ptourLog.push(
+        `effect run · policy=${policy.id} lon=${policy.lon} lat=${policy.lat} ` +
+          `zoomBefore=${map.getZoom?.().toFixed?.(2)} loaded=${map.loaded?.()}`
+      );
+    }
+
     let cancelled = false;
     const sourceId = `ptour-src-${policy.id}`;
     const layerId = `ptour-floor-${policy.id}`;
@@ -137,6 +147,9 @@ export function PolicyTour3D({ policy, onClose }) {
     // colgado) ni en map.loaded() (devuelve false mientras hay tiles en
     // vuelo y 'load' ya no vuelve a dispararse → begin nunca correría).
     flyToPolicy(map, policy);
+    if (typeof window !== 'undefined') {
+      window.__ptourLog.push(`flyTo called → target zoom 18`);
+    }
     // Espera al final del vuelo (spec: NO setTimeout fijo → moveend).
     map.on('moveend', onMoveEnd);
 
