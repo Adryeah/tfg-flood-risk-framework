@@ -55,74 +55,83 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
 
-        // ── Project tokens · Flood Risk × Zurich Design System ─────
-        // Migrated from the Palantir-grey palette to the Zurich
-        // enterprise spec (Authority navy + clean whites). Token
-        // names stay identical so JSX doesn't move.
-        'bg-base': '#F9FAFB', // main canvas — neutral-50
-        'bg-surface': '#FFFFFF', // card body — pure white now
-        'bg-subtle': '#F3F4F6', // chip / inactive header — neutral-100
-        'bg-hover': '#F3F4F6', // soft hover — neutral-100
-        'bg-elevated': '#FFFFFF',
-        // Dark sidebar band · Zurich Blue (Authority)
-        'sidebar-bg': '#0F1B35',
-        'sidebar-hover': '#1A2A4A',
-        'sidebar-active': '#243759',
-        // Text · neutral-900 / 600 / 400
-        'text-primary': '#111827',
-        'text-secondary': '#4B5563',
-        'text-tertiary': '#9CA3AF',
-        'text-muted': '#6B7280',
-        'text-inverse': '#F9FAFB',
-        // Borders — solid neutral-200 (more delineation than the
-        // previous transparent blacks; cards now read as crisp tiles)
-        'border-default': '#E5E7EB',
-        'border-strong': '#D1D5DB',
-        'border-subtle': 'rgba(15,27,53,0.06)',
-        'border-focus': '#0F1B35',
-        // Brand · Zurich navy primary
+        // ── Project tokens · HYBRID LINEAR × BASEDASH (dark) ───────
+        // Structural tokens point at the CSS vars in tokens.css so the
+        // single source of truth is one file. Flipping the theme =
+        // editing tokens.css only. Token NAMES stay identical so JSX
+        // doesn't move; their values now resolve to the dark surfaces.
+        'bg-base': 'var(--surface-canvas)',
+        'bg-surface': 'var(--surface-card)',
+        'bg-subtle': 'var(--surface-elevated)',
+        'bg-hover': 'rgba(255,255,255,0.04)',
+        'bg-elevated': 'var(--surface-elevated)',
+        // Nav surface (sidebar + topbar)
+        'sidebar-bg': 'var(--surface-nav)',
+        'sidebar-hover': 'rgba(255,255,255,0.04)',
+        'sidebar-active': 'rgba(255,255,255,0.06)',
+        // Text · Linear ramp
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-tertiary': 'var(--text-muted)',
+        'text-muted': 'var(--text-muted)',
+        'text-inverse': 'var(--surface-canvas)',
+        // Borders · Linear inset system
+        'border-default': 'var(--border-hairline)',
+        'border-strong': 'var(--border-strong)',
+        'border-subtle': 'rgba(255,255,255,0.04)',
+        'border-focus': 'var(--accent-sar)',
+        // New spec surface aliases (usable directly as bg-surface-card etc.)
+        'surface-canvas': 'var(--surface-canvas)',
+        'surface-nav': 'var(--surface-nav)',
+        'surface-card': 'var(--surface-card)',
+        'surface-elevated': 'var(--surface-elevated)',
+        'surface-input': 'var(--surface-input)',
+        'border-hairline': 'var(--border-hairline)',
+        'border-medium': 'var(--border-medium)',
+        // Brand → SAR accent (the interactive primary is now SAR blue)
         brand: {
-          50: '#EEF1F8',
-          100: '#D4DCEC',
-          500: '#0F1B35', // primary CTA, nav-active, KPI value
-          700: '#0A1428',
-          900: '#060D1C',
+          50: 'var(--accent-sar-glow)',
+          100: 'rgba(29,111,168,0.22)',
+          500: 'var(--accent-sar)',
+          700: '#155A86',
+          900: '#0C3B59',
         },
-        // Interactive accent — links, focus rings, data-viz series 1.
-        // Stays bright so the navy primary doesn't dominate everything.
+        // Semantic accents · color = meaning (flood-risk specific)
         accent: {
-          info: '#3B82F6',
-          live: '#10B981',
-          warning: '#F59E0B',
-          error: '#EF4444',
+          info: 'var(--accent-sar)',
+          sar: 'var(--accent-sar)',
+          risk: 'var(--accent-risk)',
+          valid: 'var(--accent-valid)',
+          warn: 'var(--accent-warn)',
+          purple: 'var(--accent-purple)',
+          live: 'var(--accent-valid)',
+          warning: 'var(--accent-warn)',
+          error: 'var(--accent-risk)',
         },
-        // Corporate accent aliases (used directly by some views as
-        // semantic shortcuts).
-        'corporate-navy': '#0F1B35',
-        'corporate-navy-light': '#EEF1F8',
-        // Risk semantics — Zurich enterprise tones per spec
+        'corporate-navy': 'var(--surface-nav)',
+        'corporate-navy-light': 'var(--accent-sar-glow)',
+        // Risk semantics → dark accents. bg variants are the glow tints.
         risk: {
-          low: '#10B981',
-          'low-bg': '#ECFDF5',
-          'low-soft': '#A8D5BA',
-          medium: '#F39C12',
-          'medium-bg': '#FFFBEB',
-          high: '#E74C3C',
-          'high-bg': '#FEF2F2',
-          critical: '#DC2626',
-          'critical-bg': '#FEE2E2',
+          low: '#0F6E56',
+          'low-bg': 'rgba(15,110,86,0.12)',
+          'low-soft': '#5DCAA5',
+          medium: '#854F0B',
+          'medium-bg': 'rgba(133,79,11,0.12)',
+          high: '#C0392B',
+          'high-bg': 'rgba(192,57,43,0.12)',
+          critical: '#C0392B',
+          'critical-bg': 'rgba(192,57,43,0.16)',
         },
-        // Data viz palette — series 1 is interactive blue (not navy)
-        // so the most frequent series reads as a vivid data point.
+        // Data viz palette · semantic accents (dark)
         data: {
-          1: '#3B82F6',
-          2: '#10B981',
-          3: '#F39C12',
-          4: '#7C3AED',
-          5: '#DB2777',
-          6: '#4F46E5',
-          7: '#15803D',
-          8: '#E74C3C',
+          1: '#1D6FA8', // SAR
+          2: '#0F6E56', // valid
+          3: '#854F0B', // warn
+          4: '#534AB7', // purple
+          5: '#C0392B', // risk
+          6: '#1D6FA8',
+          7: '#0F6E56',
+          8: '#C0392B',
         },
       },
       fontFamily: {
@@ -161,13 +170,12 @@ export default {
         4.5: '18px',
       },
       borderRadius: {
-        // Bumped per Zurich spec — cards/buttons read as 6-8 px so
-        // the platform feels less "ops-terminal" and more enterprise.
-        sm: '4px',
-        DEFAULT: '6px',
-        md: '6px',
-        lg: '8px',
-        xl: '10px',
+        // Basedash split: badge 2px · btn 6px · card 12px · modal 16px.
+        sm: '2px', // badge / status pill / tag
+        DEFAULT: '6px', // button / input
+        md: '8px',
+        lg: '12px', // card / panel
+        xl: '16px', // modal / overlay
       },
       // ── Animations consumed by shadcn primitives (Dialog, Sheet,
       // Tooltip, Tabs). Provided via tailwindcss-animate plugin below;
@@ -188,14 +196,13 @@ export default {
         'accordion-up': 'accordion-up 200ms cubic-bezier(0.23, 1, 0.32, 1)',
       },
       boxShadow: {
-        // Zurich spec · more lift than the previous tight pairs. The
-        // rgba uses navy (15, 27, 53) so the cast tint integrates with
-        // the brand rather than reading as cold grey shadow.
-        sm: '0 1px 2px rgba(15,27,53,0.05), 0 0 0 1px rgba(15,27,53,0.04)',
-        DEFAULT:
-          '0 4px 6px -1px rgba(15,27,53,0.05), 0 0 0 1px rgba(15,27,53,0.04)',
-        md: '0 10px 15px -3px rgba(15,27,53,0.08), 0 0 0 1px rgba(15,27,53,0.04)',
-        lg: '0 20px 25px -5px rgba(15,27,53,0.10), 0 0 0 1px rgba(15,27,53,0.04)',
+        // Linear inset-border elevation system. On dark, depth comes
+        // from a 1px inset hairline, not a cast shadow. Raised/overlay
+        // add a real drop only where it lifts off the canvas.
+        sm: 'inset 0 0 0 1px #23252a',
+        DEFAULT: 'inset 0 0 0 1px #23252a',
+        md: 'inset 0 0 0 1px #23252a, 0 2px 4px rgba(0,0,0,0.4)',
+        lg: '0 4px 32px rgba(8,9,10,0.6)',
       },
     },
   },

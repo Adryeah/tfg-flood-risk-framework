@@ -1,95 +1,81 @@
 /* ─────────────────────────────────────────────────────────────────────
- * FLOOD RISK × ZURICH DESIGN SYSTEM · Enterprise Edition
+ * FLOOD RISK · HYBRID LINEAR × BASEDASH (dark data-terminal)
  *
- * Visual-only token layer. Components consume these vars (or the
- * Tailwind equivalents in tailwind.config.js) so a token tweak ripples
- * through the entire platform without touching JSX.
+ * REDESIGN BRANCH. Token foundation. Two layers:
+ *   1. New spec names (--surface-*, --accent-*, --shadow-*, --radius-*).
+ *   2. Legacy names (--bg-*, --text-*, --border-*, --brand-*, sidebar-*,
+ *      shadcn HSL) REMAPPED to the dark values so the whole existing app
+ *      cascades to dark without touching every component.
  *
- * Source of truth: design-system spec passed by stakeholder (Apr 2026).
- * Mapping rationale next to each block.
+ * Surfaces from Linear. Card radius + terminal restraint from Basedash.
+ * Acid-lime replaced by FLOOD-RISK semantic accents (color = meaning).
  * ───────────────────────────────────────────────────────────────────── */
 
-:root {
-  /* ── Workspace surfaces ───────────────────────────────────────────
-   * Lighter, cleaner whites. The previous F3F5F7 base read as too
-   * warm/grey; Zurich's enterprise spec uses neutral-50 #F9FAFB. */
-  --bg-base: #f9fafb;
-  --bg-surface: #ffffff;
-  --bg-subtle: #f3f4f6;
-  --bg-hover: #f3f4f6;
-  --bg-elevated: #ffffff;
+:root,
+.dark {
+  /* === SURFACES (Linear) ============================================= */
+  --surface-canvas: #08090a; /* page background */
+  --surface-nav: #0f1011; /* sidebar + topbar */
+  --surface-card: #161718; /* KPI cards, panels */
+  --surface-elevated: #1e2022; /* dropdowns, tooltips */
+  --surface-input: #383b3f; /* form inputs */
 
-  /* ── Institutional dark sidebar (Zurich Blue · #0F1B35) ──────────
-   * Deeper, more saturated navy than the previous #1E2B4A. Carries
-   * "Authority" register per design spec section 1. */
-  --sidebar-bg: #0f1b35;
-  --sidebar-hover: #1a2a4a;
-  --sidebar-active: #243759;
-  --sidebar-text: #d6def0;
-  --sidebar-text-muted: #8b97b3;
+  /* === BORDERS (Linear) ============================================== */
+  --border-hairline: #23252a; /* card inset edges */
+  --border-medium: #323334; /* dividers */
+  --border-strong: #62666d; /* active states */
 
-  /* ── Text ─────────────────────────────────────────────────────────
-   * Neutral-900 / 600 / 400 from spec. Slightly more contrast than
-   * the previous #1F2937 family. */
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-tertiary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-inverse: #f9fafb;
+  /* === TEXT (Linear) ================================================= */
+  --text-primary: #f7f8f8; /* headings, values */
+  --text-secondary: #8a8f98; /* labels, captions */
+  --text-muted: #62666d; /* timestamps, metadata */
 
-  /* ── Borders — slightly tighter than before so cards read as
-   * "delineated" rather than dissolved into the background. */
-  --border-default: #e5e7eb;
-  --border-strong: #d1d5db;
-  --border-subtle: rgba(15, 27, 53, 0.06);
+  /* === SEMANTIC ACCENTS · FLOOD RISK ================================= */
+  --accent-sar: #1d6fa8; /* SAR signal, prediction layers */
+  --accent-sar-glow: rgba(29, 111, 168, 0.15);
+  --accent-sar-border: rgba(29, 111, 168, 0.35);
 
-  /* ── Brand · primary navy (Zurich Authority) ─────────────────────
-   * Primary CTA / nav-active / KPI value colour. Per spec section 4
-   * Buttons → Primary uses --primary-navy as background. */
-  --brand-50: #eef1f8;
-  --brand-100: #d4dcec;
-  --brand-500: #0f1b35;
-  --brand-700: #0a1428;
-  --brand-900: #060d1c;
+  --accent-risk: #c0392b; /* flood risk, danger zones */
+  --accent-risk-glow: rgba(192, 57, 43, 0.12);
+  --accent-risk-border: rgba(192, 57, 43, 0.35);
 
-  /* ── Interactive accent · status-info blue ───────────────────────
-   * For links, data-viz primary series, focus glow. Kept distinct
-   * from navy so charts/links don't read as "dead" navy slabs. */
-  --accent-info: #3b82f6;
+  --accent-valid: #0f6e56; /* validated, ground truth, AUC positive */
+  --accent-valid-glow: rgba(15, 110, 86, 0.12);
+  --accent-valid-border: rgba(15, 110, 86, 0.35);
 
-  /* ── Risk semantics (spec section 1 · semantic colors) ───────────
-   * Critical (#DC2626) → very_high category in models
-   * High     (#E74C3C) → high
-   * Moderate (#F39C12) → moderate
-   * Low      (#A8D5BA) → low (softer green so it reads as "safe") */
-  --risk-critical: #dc2626;
-  --risk-high: #e74c3c;
-  --risk-medium: #f39c12;
-  --risk-low: #10b981;
-  --risk-low-soft: #a8d5ba;
+  --accent-warn: #854f0b; /* feature importance, caution */
+  --accent-warn-glow: rgba(133, 79, 11, 0.12);
+  --accent-warn-border: rgba(133, 79, 11, 0.35);
 
-  /* ── Status colours ──────────────────────────────────────────────
-   * Live / warning / error / info — used by topbar pills, sidebar
-   * health dot, banners. */
-  --status-live: #10b981;
-  --status-warning: #f59e0b;
-  --status-error: #ef4444;
-  --status-info: #3b82f6;
+  --accent-purple: #534ab7; /* pixels / scale metrics */
 
-  /* ── Typography (spec section 2 · font stack) ────────────────────
-   * Inter for body + UI (the corporate-default sans-serif designed
-   * for screen rendering at small sizes). IBM Plex Serif for
-   * displays and editorial headers — replaces Newsreader. The mono
-   * stays JetBrains Mono. */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    system-ui, sans-serif;
-  --font-serif: 'IBM Plex Serif', Georgia, Cambria, serif;
-  --font-mono: 'JetBrains Mono', Menlo, monospace;
+  /* Readable text variants of the accents on dark surfaces. The base
+   * accents above are deep (for fills/borders); these are the legible
+   * text tints. */
+  --accent-sar-text: #5aa9dc;
+  --accent-risk-text: #f87171;
+  --accent-valid-text: #5dcaa5;
+  --accent-warn-text: #d2a24a;
 
-  /* ── Spacing (spec section 3) ────────────────────────────────────
-   * Tailwind already has a 4px-unit scale; we expose a few common
-   * values as CSS vars so plain-CSS surfaces (AG-Grid theme, scroll
-   * patterns, MapLibre controls) can stay in lockstep. */
+  /* === TYPOGRAPHY =================================================== */
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-ui);
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', Menlo, monospace;
+  --font-serif: 'IBM Plex Serif', Georgia, serif; /* editorial registers retained */
+
+  /* === ELEVATION (Linear inset-border system) ====================== */
+  --shadow-card: inset 0 0 0 1px #23252a;
+  --shadow-raised: inset 0 0 0 1px #23252a, 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-overlay: 0 4px 32px rgba(8, 9, 10, 0.6);
+
+  /* === RADIUS (Basedash split) ===================================== */
+  --radius-badge: 2px; /* status pills, tags */
+  --radius-btn: 6px; /* buttons, inputs */
+  --radius-card: 12px; /* KPI cards, panels */
+  --radius-modal: 16px; /* overlays */
+  --radius-pill: 9999px; /* live status indicator */
+
+  /* === SPACING (kept) ============================================== */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -101,108 +87,117 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* ── Shadows (spec section 1 · surface tokens) ───────────────────
-   * More lift than the previous tight pairs. Each shadow uses the
-   * Zurich-navy rgba so the cast tint integrates with the brand
-   * rather than reading as cold grey. */
-  --shadow-sm: 0 1px 2px rgba(15, 27, 53, 0.05),
-    0 0 0 1px rgba(15, 27, 53, 0.04);
-  --shadow-default: 0 4px 6px -1px rgba(15, 27, 53, 0.05),
-    0 0 0 1px rgba(15, 27, 53, 0.04);
-  --shadow-md: 0 10px 15px -3px rgba(15, 27, 53, 0.08),
-    0 0 0 1px rgba(15, 27, 53, 0.04);
-  --shadow-lg: 0 20px 25px -5px rgba(15, 27, 53, 0.10),
-    0 0 0 1px rgba(15, 27, 53, 0.04);
-
-  /* ── Transitions (spec section 5) ────────────────────────────────
-   * Three speeds. Components reference --transition-fast / -medium
-   * / -slow so motion timing stays consistent across the platform. */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-medium: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* ── shadcn/ui tokens — remapped to the new Zurich palette ───────
-   *   background  ← bg-base #F9FAFB
-   *   foreground  ← text-primary #111827
-   *   card        ← bg-surface #FFFFFF (pure white now)
-   *   primary     ← brand-500 #0F1B35 (Zurich navy — was bright blue)
-   *   secondary   ← bg-subtle #F3F4F6
-   *   muted       ← bg-subtle  + muted-fg ← text-secondary #4B5563
-   *   destructive ← risk-critical #DC2626
-   *   border      ← #E5E7EB (now solid, not transparent)
-   *   ring        ← accent-info #3B82F6 (focus ring stays bright so
-   *                 the navy primary doesn't disappear into the
-   *                 button it sits inside)
-   *   radius      ← 0.375rem (6 px, matches spec card/button radius) */
-  --background: 220 14% 96%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --primary: 222 56% 13%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 215 14% 34%;
-  --accent: 220 14% 96%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 217 91% 60%;
-  --radius: 0.375rem;
+  /* ═══════════════════════════════════════════════════════════════
+   * LEGACY TOKEN REMAP · the existing app reads these names. Pointing
+   * them at the dark values flips the whole platform without editing
+   * every component. New work should prefer the spec names above.
+   * ═══════════════════════════════════════════════════════════════ */
 
-  /* ── Chart palette (data-viz series) ─────────────────────────────
-   * First series is interactive blue (not navy) so the most
-   * frequent series reads as a vivid data point against the white
-   * surface. */
-  --chart-1: 217 91% 60%;
-  --chart-2: 175 84% 32%;
-  --chart-3: 30 89% 44%;
-  --chart-4: 261 75% 56%;
-  --chart-5: 330 84% 50%;
+  /* Workspace surfaces */
+  --bg-base: var(--surface-canvas);
+  --bg-surface: var(--surface-card);
+  --bg-subtle: var(--surface-elevated);
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --bg-elevated: var(--surface-elevated);
 
-  /* ── KPI hierarchy (TIER system · 3 niveles de prominencia) ─────
-   * TIER 1 = anchor (TIV, PML). Navy border + gradient + deep shadow.
-   *          Reads as "the two numbers Ricard checks first".
-   * TIER 2 = operational (EAL, High-risk). Variant-colored accent
-   *          border + standard shadow. Standard prominence.
-   * TIER 3 = drill-down (Affected count). Subtle gray border, opacity
-   *          reduced, compact density.
-   * Layout: TIER 1 gets grid-column: span 2 in the KPI bar to give
-   * it visual weight; TIER 2/3 occupy 1 column each. */
-  --kpi-tier1-border: var(--brand-500);
+  /* Sidebar band → nav surface */
+  --sidebar-bg: var(--surface-nav);
+  --sidebar-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-active: rgba(255, 255, 255, 0.06);
+  --sidebar-text: var(--text-primary);
+  --sidebar-text-muted: var(--text-secondary);
+
+  --text-tertiary: var(--text-muted);
+  --text-inverse: var(--surface-canvas);
+
+  /* Borders */
+  --border-default: var(--border-hairline);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+
+  /* Brand → SAR accent (the interactive primary is now SAR blue) */
+  --brand-50: var(--accent-sar-glow);
+  --brand-100: rgba(29, 111, 168, 0.22);
+  --brand-500: var(--accent-sar);
+  --brand-700: #155a86;
+  --brand-900: #0c3b59;
+  --accent-info: var(--accent-sar);
+
+  /* Risk semantics → spec accents */
+  --risk-critical: var(--accent-risk);
+  --risk-high: #c0392b;
+  --risk-medium: var(--accent-warn);
+  --risk-low: var(--accent-valid);
+  --risk-low-soft: #0f6e56;
+
+  --status-live: var(--accent-valid);
+  --status-warning: var(--accent-warn);
+  --status-error: var(--accent-risk);
+  --status-info: var(--accent-sar);
+
+  /* Layered shadows kept (used by some cards) — dark inset variants */
+  --shadow-sm: var(--shadow-card);
+  --shadow-default: var(--shadow-card);
+  --shadow-md: var(--shadow-raised);
+  --shadow-lg: var(--shadow-overlay);
+
+  /* ── shadcn/ui tokens flipped to dark ─────────────────────────────
+   * Format: H S% L% raw triplets. Mapped from the dark hexes above so
+   * every shadcn component (Button, Card, Dialog, Select, Tooltip,
+   * Tabs…) renders dark instead of the old light zinc theme. */
+  --background: 210 11% 4%; /* #08090a */
+  --foreground: 180 5% 97%; /* #f7f8f8 */
+  --card: 200 4% 9%; /* #161718 */
+  --card-foreground: 180 5% 97%;
+  --popover: 200 6% 13%; /* #1e2022 */
+  --popover-foreground: 180 5% 97%;
+  --primary: 203 70% 39%; /* #1d6fa8 SAR */
+  --primary-foreground: 180 5% 97%;
+  --secondary: 200 6% 13%;
+  --secondary-foreground: 180 5% 97%;
+  --muted: 200 4% 9%;
+  --muted-foreground: 214 7% 57%; /* #8a8f98 */
+  --accent: 200 6% 13%;
+  --accent-foreground: 180 5% 97%;
+  --destructive: 6 64% 50%; /* #c0392b */
+  --destructive-foreground: 180 5% 97%;
+  --border: 223 9% 15%; /* #23252a */
+  --input: 214 5% 23%; /* #383b3f */
+  --ring: 203 70% 39%;
+  --radius: 0.75rem; /* 12px card radius */
+
+  /* Chart palette → semantic accents (dark) */
+  --chart-1: 203 70% 45%; /* SAR */
+  --chart-2: 162 76% 27%; /* valid */
+  --chart-3: 36 85% 28%; /* warn */
+  --chart-4: 244 42% 51%; /* purple */
+  --chart-5: 6 64% 50%; /* risk */
+
+  /* KPI tier system kept (re-tinted for dark) */
+  --kpi-tier1-border: var(--accent-sar);
   --kpi-tier1-bg: linear-gradient(
     135deg,
-    #ffffff 0%,
-    rgba(238, 241, 248, 0.7) 100%
+    var(--surface-card) 0%,
+    rgba(29, 111, 168, 0.10) 100%
   );
-  --kpi-tier1-shadow: 0 10px 15px -3px rgba(15, 27, 53, 0.08),
-    0 0 0 1px rgba(15, 27, 53, 0.06);
-  --kpi-tier1-shadow-hover: 0 20px 25px -5px rgba(15, 27, 53, 0.12),
-    0 0 0 1px rgba(15, 27, 53, 0.10);
-
-  --kpi-tier2-border: var(--border-default);
-  --kpi-tier2-bg: var(--bg-surface);
-  --kpi-tier2-shadow: var(--shadow-default);
-  --kpi-tier2-shadow-hover: var(--shadow-md);
-
-  --kpi-tier3-border: var(--border-default);
-  --kpi-tier3-bg: var(--bg-surface);
-  --kpi-tier3-shadow: var(--shadow-sm);
-  --kpi-tier3-shadow-hover: var(--shadow-default);
+  --kpi-tier1-shadow: var(--shadow-raised);
+  --kpi-tier1-shadow-hover: var(--shadow-raised);
+  --kpi-tier2-border: var(--border-hairline);
+  --kpi-tier2-bg: var(--surface-card);
+  --kpi-tier2-shadow: var(--shadow-card);
+  --kpi-tier2-shadow-hover: var(--shadow-raised);
+  --kpi-tier3-border: var(--border-hairline);
+  --kpi-tier3-bg: var(--surface-card);
+  --kpi-tier3-shadow: var(--shadow-card);
+  --kpi-tier3-shadow-hover: var(--shadow-raised);
   --kpi-tier3-opacity: 0.92;
 
-  /* ── Change indicators ──────────────────────────────────────────
-   * Used by the optional `change` prop on KPI cards. Green for
-   * favorable movement, red for unfavorable. Glyphs ▲ / ▼ rendered
-   * in the same color as the delta value. */
-  --change-positive: #10b981;
-  --change-positive-bg: rgba(16, 185, 129, 0.10);
-  --change-negative: #dc2626;
-  --change-negative-bg: rgba(220, 38, 38, 0.10);
-  --change-neutral: var(--text-tertiary);
+  --change-positive: var(--accent-valid-text);
+  --change-positive-bg: var(--accent-valid-glow);
+  --change-negative: var(--accent-risk-text);
+  --change-negative-bg: var(--accent-risk-glow);
+  --change-neutral: var(--text-muted);
 }

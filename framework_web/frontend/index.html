@@ -18,12 +18,15 @@
                          that distinguishes academic content from ops
                          dashboard chrome.
     -->
+    <!-- Inter as VARIABLE axis (300..700) so font-weight:510 resolves
+         exactly per the Linear×Basedash spec. JetBrains Mono for all
+         technical IDs/values. IBM Plex Serif kept for editorial registers. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
       rel="stylesheet"
     />
   </head>
-  <body class="bg-bg-base text-text-primary font-sans antialiased">
+  <body class="dark bg-bg-base text-text-primary font-sans antialiased">
     <div id="app"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

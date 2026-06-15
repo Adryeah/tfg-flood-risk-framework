@@ -14,28 +14,27 @@
  *   });
  */
 
-// Paleta sincronizada con Flood Risk × Zurich Design System.
-// primary = accent-info (azul brillante para data series — el navy
-// del brand queda reservado para chrome estructural). amber/green
-// alineados con risk-medium / status-live. textPrimary/Secondary
-// pasan a neutral-900/600. rgbas pasan al tinte navy (15,27,53).
+// Paleta sincronizada con HYBRID LINEAR × BASEDASH (dark).
+// Data series usan los accent semánticos del spec (SAR / valid / warn
+// / purple / risk). Ejes y splitlines en blanco translúcido sobre el
+// canvas oscuro. Tooltip sobre surface-elevated.
 export const CHART_COLORS = {
-  primary: '#3B82F6',      // accent-info — data series 1
-  primaryDeep: '#0F1B35',  // Zurich navy — énfasis / encabezados
-  secondary: '#10B981',    // emerald — data series 2 / OK
-  amber: '#F39C12',        // spec amber — warning
-  red: '#E74C3C',          // spec flood red — risk high
-  green: '#10B981',        // spec status-live green
-  axis: '#9CA3AF',         // neutral-400
-  axisLine: 'rgba(15,27,53,0.10)',
-  splitLine: 'rgba(15,27,53,0.06)',
-  tooltipBorder: 'rgba(15,27,53,0.10)',
-  tooltipBg: '#FFFFFF',
-  textPrimary: '#111827',  // neutral-900
-  textSecondary: '#4B5563', // neutral-600
+  primary: '#1D6FA8',      // SAR — data series 1
+  primaryDeep: '#155A86',  // SAR deep — énfasis
+  secondary: '#0F6E56',    // valid green — data series 2
+  amber: '#854F0B',        // warn amber
+  red: '#C0392B',          // flood risk red
+  green: '#0F6E56',        // valid
+  axis: '#62666d',         // text-muted
+  axisLine: 'rgba(255,255,255,0.08)',
+  splitLine: 'rgba(255,255,255,0.05)',
+  tooltipBorder: '#23252a',
+  tooltipBg: '#1e2022',
+  textPrimary: '#f7f8f8',  // text-primary
+  textSecondary: '#8a8f98', // text-secondary
   zone: {
-    valencia: '#0F1B35',   // Zurich navy
-    algemesi: '#F39C12',   // spec amber
+    valencia: '#1D6FA8',   // SAR
+    algemesi: '#854F0B',   // warn
   },
 };
 
