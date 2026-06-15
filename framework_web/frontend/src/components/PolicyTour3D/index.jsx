@@ -78,7 +78,7 @@ function shortFloorLabel(i) {
  *           onClose: () => void }} props
  */
 export function PolicyTour3D({ policy, onClose }) {
-  const { map, isLoaded } = useMap();
+  const { map } = useMap();
 
   const risk = useFloorRisk({
     floorIndex: policy.floorIndex,
@@ -92,7 +92,7 @@ export function PolicyTour3D({ policy, onClose }) {
   });
 
   useEffect(() => {
-    if (!map || !isLoaded) return undefined;
+    if (!map) return undefined;
 
     let cancelled = false;
     const sourceId = `ptour-src-${policy.id}`;
@@ -123,9 +123,6 @@ export function PolicyTour3D({ policy, onClose }) {
       return true;
     };
 
-    flyToPolicy(map, policy);
-
-    // Espera al final del vuelo (spec: NO setTimeout fijo → evento moveend).
     const onMoveEnd = () => {
       map.off('moveend', onMoveEnd);
       if (!placeFloor()) {
@@ -133,18 +130,31 @@ export function PolicyTour3D({ policy, onClose }) {
         map.once('idle', placeFloor);
       }
     };
-    map.on('moveend', onMoveEnd);
+
+    // Arranca el vuelo + el placement. Gateamos en la propia disponibilidad
+    // del mapa (map.loaded()), NO en el isLoaded del contexto: ese combina
+    // isStyleLoaded y puede quedar colgado en false, bloqueando el flyTo.
+    const begin = () => {
+      if (cancelled) return;
+      flyToPolicy(map, policy);
+      // Espera al final del vuelo (spec: NO setTimeout fijo → moveend).
+      map.on('moveend', onMoveEnd);
+    };
+
+    if (map.loaded()) begin();
+    else map.once('load', begin);
 
     // Cleanup: SIEMPRE elimina layer + source + listeners para que no se
     // acumulen al navegar entre pólizas (spec §LIMPIEZA).
     return () => {
       cancelled = true;
+      map.off('load', begin);
       map.off('moveend', onMoveEnd);
       map.off('idle', placeFloor);
       if (map.getLayer(layerId)) map.removeLayer(layerId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
     };
-  }, [map, isLoaded, policy, risk.riskColor]);
+  }, [map, policy, risk.riskColor]);
 
   return (
     <>

@@ -20,6 +20,10 @@ import { LoadErrorState } from '@/components/load-error-state.jsx';
 // eso la consola usa OpenFreeMap liberty: sobre él queryRenderedFeatures
 // devuelve geometría real de edificios para extruir la planta.
 const OFM_LIBERTY = 'https://tiles.openfreemap.org/styles/liberty';
+// Identidad ESTABLE (módulo, no inline): si se pasa un objeto nuevo cada
+// render, Map.tsx re-dispara su efecto de estilo y deja isStyleLoaded —y
+// por tanto el isLoaded del contexto— colgado en false.
+const OFM_STYLES = { light: OFM_LIBERTY, dark: OFM_LIBERTY };
 
 // Categoría de riesgo → color del marcador (paleta del risk-surface).
 const RISK_COLORS = {
@@ -269,7 +273,7 @@ export function UnderwriterConsole() {
       <div className="flex-1 min-h-0 relative bg-bg-base">
         {tourPolicies.length > 0 ? (
           <Map
-            styles={{ light: OFM_LIBERTY, dark: OFM_LIBERTY }}
+            styles={OFM_STYLES}
             center={mapCenter}
             zoom={11}
             minZoom={9}
