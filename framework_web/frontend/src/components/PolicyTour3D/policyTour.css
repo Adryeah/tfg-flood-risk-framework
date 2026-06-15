@@ -1,0 +1,135 @@
+/* PolicyTour3D — estilos co-localizados. El color de riesgo es dinámico
+ * por póliza, así que entra como custom property --risk (no inline color
+ * hardcodeado) y las reglas lo consumen. */
+
+/* ── Marcador pulsante flotante ─────────────────────────────────────── */
+.ptour-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.ptour-marker__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--risk, #f87171);
+  box-shadow: 0 0 0 0 var(--risk, #f87171);
+  animation: ptour-pulse 1.6s ease-out infinite;
+}
+.ptour-marker__tether {
+  width: 1px;
+  background: linear-gradient(to bottom, var(--risk, #f87171), transparent);
+  opacity: 0.7;
+}
+.ptour-marker__label {
+  position: absolute;
+  top: -22px;
+  white-space: nowrap;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--risk, #f87171);
+  background: rgba(8, 9, 10, 0.82);
+  border: 1px solid var(--risk, #f87171);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+@keyframes ptour-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--risk, #f87171) 55%, transparent); }
+  70% { box-shadow: 0 0 0 12px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Indicador de plantas (barra vertical con lámina de agua) ────────── */
+.ptour-floors {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ptour-floor {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border-hairline, #23252a);
+  background: var(--surface-elevated, #1e2022);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary, #8a8f98);
+}
+.ptour-floor--wet {
+  background: color-mix(in srgb, var(--risk, #5aa9dc) 16%, var(--surface-elevated, #1e2022));
+}
+.ptour-floor--active {
+  border-color: var(--risk, #f87171);
+  border-width: 1.5px;
+  color: var(--text-primary, #f7f8f8);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--risk, #f87171) 40%, transparent);
+}
+.ptour-floor__tag {
+  font-weight: 600;
+}
+.ptour-floor__depth {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+/* Línea de lámina de agua T500 — superpuesta sobre la pila de plantas. */
+.ptour-waterline {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 0;
+  border-top: 1.5px dashed #5aa9dc;
+  pointer-events: none;
+}
+.ptour-waterline__tag {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #5aa9dc;
+  background: rgba(8, 9, 10, 0.8);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+/* ── Panel lateral ──────────────────────────────────────────────────── */
+.ptour-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border-hairline, #23252a);
+  background: var(--surface-card, #161718);
+  box-shadow: 0 8px 40px rgba(8, 9, 10, 0.6);
+  animation: ptour-panel-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes ptour-panel-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptour-marker__dot { animation: none; }
+  .ptour-panel { animation: none; }
+}

@@ -12,7 +12,7 @@ import { Transferability } from './views/transferability.jsx';
 import { LeakageAudit } from './views/leakage-audit.jsx';
 import { DanaTimeline } from './views/dana-timeline.jsx';
 import { DataDownloads } from './views/data-downloads.jsx';
-import { PolicyTour3D } from './views/policy-tour-3d.jsx';
+import { UnderwriterConsole } from './views/policy-tour-3d.jsx';
 
 const SECTIONS = {
   '/': Overview,
@@ -23,7 +23,7 @@ const SECTIONS = {
   '/portfolio': PortfolioExplorer,
   '/policy-map': PolicyMap,
   '/exposure': ExposureDashboard,
-  '/tour': PolicyTour3D,
+  '/tour': UnderwriterConsole,
   '/validation': ModelValidation,
   '/transferability': Transferability,
   '/leakage': LeakageAudit,

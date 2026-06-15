@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import {
@@ -9,19 +9,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { Map, MapMarker, MarkerContent } from '@/components/Map';
+import { PolicyTour3D } from '@/components/PolicyTour3D';
+import { adaptClientToPolicy } from '@/types/policyTour.types.js';
 import { TourDock } from '@/components/tour-dock.jsx';
 import { LoadErrorState } from '@/components/load-error-state.jsx';
 
-// Lazy-load del TourMap porque importa CesiumJS (~3 MB). Sólo se
-// descarga cuando el usuario navega realmente a /tour; el resto de
-// vistas (Overview, Maps, Portfolio, etc.) no cargan Cesium.
-const TourMap = React.lazy(() =>
-  import('@/components/tour-map.jsx').then((m) => ({ default: m.TourMap }))
-);
+// Basemap con footprints OSM + extrusión (OpenMapTiles schema: source-layer
+// 'building' con render_height). CARTO dark-matter NO trae edificios, por
+// eso la consola usa OpenFreeMap liberty: sobre él queryRenderedFeatures
+// devuelve geometría real de edificios para extruir la planta.
+const OFM_LIBERTY = 'https://tiles.openfreemap.org/styles/liberty';
 
-// Mapeo categoría de riesgo → color del halo y de la fila del dock.
-// Coincide con la paleta del risk-surface raster (YlOrRd) para que un
-// edificio en zona roja del mapa muestre un halo del mismo rojo.
+// Categoría de riesgo → color del marcador (paleta del risk-surface).
 const RISK_COLORS = {
   low: '#FBBF24',
   moderate: '#F87171',
@@ -29,11 +29,41 @@ const RISK_COLORS = {
   very_high: '#7F1D1D',
 };
 
-export function PolicyTour3D() {
+const VALENCIA_CENTER = [-0.38, 39.47];
+
+/** Marcadores de todas las pólizas del tour; click → selecciona. */
+function ConsoleMarkers({ policies, activeIndex, onSelect }) {
+  return policies.map((p, i) => (
+    <MapMarker key={p.id} longitude={p.lon} latitude={p.lat}>
+      <MarkerContent>
+        <button
+          type="button"
+          onClick={() => onSelect(i)}
+          aria-label={`Póliza ${p.id}`}
+          className="block rounded-full transition-transform hover:scale-125"
+          style={{
+            width: i === activeIndex ? 15 : 10,
+            height: i === activeIndex ? 15 : 10,
+            background: p._color,
+            border:
+              i === activeIndex
+                ? '2px solid #f7f8f8'
+                : '1px solid rgba(8,9,10,0.6)',
+            boxShadow:
+              i === activeIndex ? '0 0 0 3px rgba(247,248,248,0.18)' : 'none',
+          }}
+        />
+      </MarkerContent>
+    </MapMarker>
+  ));
+}
+
+export function UnderwriterConsole() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedId, setSelectedId] = useState('wide_distribution');
   const [portfolio, setPortfolio] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [productFilter, setProductFilter] = useState({
@@ -49,14 +79,12 @@ export function PolicyTour3D() {
     let mounted = true;
     api.portfolio
       .getPredefined()
-      .then((res) => {
-        if (!mounted) return;
-        setPortfolios(res?.portfolios || []);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        setLoadError(err?.message || 'No se pudo cargar el índice de carteras');
-      });
+      .then((res) => mounted && setPortfolios(res?.portfolios || []))
+      .catch(
+        (err) =>
+          mounted &&
+          setLoadError(err?.message || 'No se pudo cargar el índice de carteras')
+      );
     return () => {
       mounted = false;
     };
@@ -64,7 +92,7 @@ export function PolicyTour3D() {
 
   // 2) Cartera seleccionada
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId) return undefined;
     let mounted = true;
     api.portfolio
       .getById(selectedId)
@@ -73,57 +101,48 @@ export function PolicyTour3D() {
         setPortfolio(p);
         setActiveIndex(0);
       })
-      .catch((err) => {
-        if (!mounted) return;
-        setLoadError(err?.message || 'No se pudo cargar la cartera seleccionada');
-      });
+      .catch(
+        (err) =>
+          mounted &&
+          setLoadError(err?.message || 'No se pudo cargar la cartera seleccionada')
+      );
     return () => {
       mounted = false;
     };
   }, [selectedId]);
 
-  // 3) Pólizas del tour: filtradas por producto, ordenadas por riesgo
-  // descendente, top-20 (o top-100 si showAll). Cada póliza recibe un
-  // color derivado de su categoría para que TourMap y TourDock usen
-  // la misma paleta sin recomputar.
+  // 3) Pólizas del tour: filtradas por producto, top-N por riesgo desc.
   const tourPolicies = useMemo(() => {
     if (!portfolio?.clients) return [];
     return portfolio.clients
       .filter((c) => productFilter[c.product])
       .sort((a, b) => (b.risk_probability ?? 0) - (a.risk_probability ?? 0))
       .slice(0, showAll ? 100 : 20)
-      .map((c) => ({
-        ...c,
-        _color: RISK_COLORS[c.risk_category] || '#94A3B8',
-      }));
+      .map((c) => ({ ...c, _color: RISK_COLORS[c.risk_category] || '#94A3B8' }));
   }, [portfolio, productFilter, showAll]);
 
-  // 4) Auto-play: avanza al siguiente cada 5/speed segundos.
+  // 4) Auto-play: avanza al siguiente cada 5/speed s.
   useEffect(() => {
-    if (!isPlaying || tourPolicies.length === 0) return;
-    const id = setTimeout(() => {
-      setActiveIndex((i) => (i + 1) % tourPolicies.length);
-    }, 5000 / speed);
+    if (!isPlaying || tourPolicies.length === 0) return undefined;
+    const id = setTimeout(
+      () => setActiveIndex((i) => (i + 1) % tourPolicies.length),
+      5000 / speed
+    );
     return () => clearTimeout(id);
   }, [isPlaying, activeIndex, tourPolicies.length, speed]);
 
-  // 5) Teclado: ← → para navegar, espacio para play/pause.
+  // 5) Teclado: ← → navegar, espacio play/pause.
   useEffect(() => {
     const handler = (e) => {
-      // Ignorar si el foco está en un input
       const tag = (e.target?.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea') return;
       if (e.key === 'ArrowRight') {
         e.preventDefault();
-        setActiveIndex((i) =>
-          tourPolicies.length ? (i + 1) % tourPolicies.length : 0
-        );
+        setActiveIndex((i) => (tourPolicies.length ? (i + 1) % tourPolicies.length : 0));
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setActiveIndex((i) =>
-          tourPolicies.length
-            ? (i - 1 + tourPolicies.length) % tourPolicies.length
-            : 0
+          tourPolicies.length ? (i - 1 + tourPolicies.length) % tourPolicies.length : 0
         );
       } else if (e.key === ' ') {
         e.preventDefault();
@@ -139,9 +158,30 @@ export function PolicyTour3D() {
     setActiveIndex(0);
   }, [productFilter, showAll, selectedId]);
 
-  if (loadError) {
-    return <LoadErrorState message={loadError} />;
-  }
+  // 7) Cualquier cambio de selección reabre el panel (lo cierra onClose).
+  useEffect(() => {
+    setPanelOpen(true);
+  }, [activeIndex]);
+
+  const selectedClient = tourPolicies[activeIndex] || null;
+  const policy3d = useMemo(
+    () => (selectedClient ? adaptClientToPolicy(selectedClient) : null),
+    [selectedClient]
+  );
+
+  const mapCenter = useMemo(() => {
+    if (!tourPolicies.length) return VALENCIA_CENTER;
+    const sx = tourPolicies.reduce((s, p) => s + Number(p.lon), 0);
+    const sy = tourPolicies.reduce((s, p) => s + Number(p.lat), 0);
+    return [sx / tourPolicies.length, sy / tourPolicies.length];
+  }, [tourPolicies]);
+
+  const selectPolicy = (i) => {
+    setActiveIndex(i);
+    setPanelOpen(true);
+  };
+
+  if (loadError) return <LoadErrorState message={loadError} />;
 
   if (!portfolio) {
     return (
@@ -153,21 +193,14 @@ export function PolicyTour3D() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-3.5rem)]">
-      {/* Banner desktop-recommended · sólo aparece en mobile (md:hidden).
-       *  El console es un instrumento denso: las pills F1-F5 a 36 px,
-       *  el ASSET REGISTRY de 340 px, el tactical minimap esquina arriba
-       *  derecha — todo cabe mal en 375 px. En vez de degradar la
-       *  consola entera mostramos un aviso editorial y mantenemos el
-       *  mapa renderizando (consulta visual sigue siendo útil). */}
-      <div className="md:hidden shrink-0 m-3 p-3 rounded-md border border-amber-200 bg-amber-50/80 text-amber-900">
-        <div className="text-10 font-mono uppercase tracking-[0.16em] mb-1">
+      {/* Aviso desktop — la consola es densa; el mapa sigue renderizando. */}
+      <div className="md:hidden shrink-0 m-3 p-3 rounded-md border border-border-default bg-bg-surface text-text-secondary">
+        <div className="text-10 font-mono uppercase tracking-[0.16em] mb-1 text-text-tertiary">
           Consola pensada para desktop
         </div>
         <p className="font-serif italic text-12 leading-snug">
-          La Underwriter Console usa una densidad informativa pensada
-          para 1280 px+ (HUD chrome, mode bank F1-F5, tactical minimap).
-          Funciona en móvil pero la lectura es mucho más cómoda en
-          portátil o tablet horizontal.
+          La Underwriter Console usa una densidad informativa pensada para
+          1280 px+. Funciona en móvil pero se lee mucho mejor en portátil.
         </p>
       </div>
 
@@ -188,9 +221,6 @@ export function PolicyTour3D() {
             ))}
           </SelectContent>
         </Select>
-        {/* Segmented control de tamaño del tour. Toggle entre Top-20
-         *  (default, demo concisa) y Top-100 (tour completo). El
-         *  número se ordena por riesgo descendente. */}
         <div
           className="inline-flex items-center border border-border-default rounded overflow-hidden h-8 text-10 font-mono uppercase tracking-wider shrink-0"
           role="group"
@@ -206,7 +236,7 @@ export function PolicyTour3D() {
               className={
                 'px-2 h-8 transition-colors ' +
                 (showAll === opt.v
-                  ? 'bg-corporate-navy text-white'
+                  ? 'bg-brand-500 text-white'
                   : 'text-text-secondary hover:bg-bg-hover')
               }
             >
@@ -221,13 +251,11 @@ export function PolicyTour3D() {
           {['particulares', 'pymes', 'autos'].map((p) => (
             <button
               key={p}
-              onClick={() =>
-                setProductFilter((f) => ({ ...f, [p]: !f[p] }))
-              }
+              onClick={() => setProductFilter((f) => ({ ...f, [p]: !f[p] }))}
               className={
                 'text-10 font-mono uppercase tracking-wider px-2 py-1 rounded border transition-colors ' +
                 (productFilter[p]
-                  ? 'border-corporate-navy text-corporate-navy bg-corporate-navy-light'
+                  ? 'border-brand-500 text-brand-700 bg-brand-50'
                   : 'border-border-default text-text-tertiary hover:bg-bg-hover')
               }
             >
@@ -237,26 +265,27 @@ export function PolicyTour3D() {
         </div>
       </div>
 
-      {/* Mapa 3D · llena el espacio disponible. Suspense fallback es
-       *  el mismo loading state que usa el TourMap internamente para
-       *  inicializar Cesium — sensación visual consistente. */}
+      {/* Mapa · MapLibre + extrusión por planta. Llena el espacio. */}
       <div className="flex-1 min-h-0 relative bg-bg-base">
         {tourPolicies.length > 0 ? (
-          <Suspense
-            fallback={
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-13 font-mono uppercase tracking-[0.18em] text-text-secondary animate-pulse">
-                  Inicializando motor 3D…
-                </div>
-              </div>
-            }
+          <Map
+            styles={{ light: OFM_LIBERTY, dark: OFM_LIBERTY }}
+            center={mapCenter}
+            zoom={11}
+            minZoom={9}
+            maxZoom={19}
+            maxPitch={70}
+            className="h-full w-full"
           >
-            <TourMap
+            <ConsoleMarkers
               policies={tourPolicies}
               activeIndex={activeIndex}
-              onSelectPolicy={setActiveIndex}
+              onSelect={selectPolicy}
             />
-          </Suspense>
+            {policy3d && panelOpen && (
+              <PolicyTour3D policy={policy3d} onClose={() => setPanelOpen(false)} />
+            )}
+          </Map>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-text-tertiary text-13">
             Sin pólizas que mostrar con los filtros actuales.
@@ -264,11 +293,11 @@ export function PolicyTour3D() {
         )}
       </div>
 
-      {/* Dock · controles de tour + lista horizontal */}
+      {/* Dock · lista de pólizas + play/pause/speed (drive activeIndex). */}
       <TourDock
         policies={tourPolicies}
         activeIndex={activeIndex}
-        onSelect={setActiveIndex}
+        onSelect={selectPolicy}
         isPlaying={isPlaying}
         onTogglePlay={() => setIsPlaying((p) => !p)}
         speed={speed}
