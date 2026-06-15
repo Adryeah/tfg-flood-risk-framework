@@ -167,17 +167,15 @@ export function DanaTimeline() {
 
       {/* ─── COMPARACIÓN SWIPE · PREDICCIÓN ↔ GROUND TRUTH ────────── */}
       <RevealSection delay={0}>
-        <div className="flex items-baseline gap-3 mb-3">
-          <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary">
-            La comparación que hace el caso
-          </div>
-          <div
-            className="h-px flex-1 max-w-[120px]"
-            style={{ background: 'var(--border-default)' }}
-          />
-          <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary">
-            arrastra para ver
-          </div>
+        {/* Eyebrow Agent 5: línea de acento SAR + label simple. */}
+        <div className="flex items-center gap-3 mb-3">
+          <span style={{ width: 20, height: 1.5, background: 'var(--accent-sar)' }} />
+          <span
+            className="text-10 font-mono uppercase"
+            style={{ color: 'var(--text-muted)', fontWeight: 510, letterSpacing: '0.07em' }}
+          >
+            Evidencia · Modelo vs Evento
+          </span>
         </div>
         <DanaSwipeCompare zone="valencia" height={460} />
         <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">

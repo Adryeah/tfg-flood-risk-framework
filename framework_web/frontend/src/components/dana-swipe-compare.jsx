@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { RiskZoneMap } from './RiskZoneMap.jsx';
 
@@ -129,17 +128,17 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
       <div
         className="swipe-divider-line absolute top-0 bottom-0 pointer-events-none"
         style={{
-          left: `calc(${pos}% - 1px)`,
-          width: 2,
-          background: 'rgba(255,255,255,0.95)',
-          boxShadow: '0 0 8px rgba(15,27,53,0.5)',
+          left: `calc(${pos}% - 0.5px)`,
+          width: 1,
+          background: 'rgba(255,255,255,0.85)',
+          boxShadow: '0 0 8px rgba(255,255,255,0.2)',
           zIndex: 40,
         }}
         aria-hidden="true"
       />
 
-      {/* Handle circular con flechas — único elemento que recibe pointer
-       *  events para drag. role="slider" para accesibilidad básica. */}
+      {/* Handle · círculo blanco 36px con flecha bidireccional custom
+       *  (spec Agent 5, no chevrons). Único elemento con pointer events. */}
       <button
         type="button"
         onMouseDown={onHandleDown}
@@ -150,75 +149,84 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
         aria-valuenow={Math.round(pos)}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="swipe-divider-handle absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-border-strong shadow-lg flex items-center justify-center cursor-ew-resize hover:scale-105 active:scale-95 transition-transform duration-150"
-        style={{ left: `${pos}%`, zIndex: 50 }}
+        className="swipe-divider-handle absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center cursor-ew-resize hover:scale-105 active:scale-95 transition-transform duration-150"
+        style={{
+          left: `${pos}%`,
+          zIndex: 50,
+          background: '#f7f8f8',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+        }}
       >
-        <ChevronLeft className="w-4 h-4 text-text-primary -mr-1" strokeWidth={2.5} />
-        <ChevronRight className="w-4 h-4 text-text-primary -ml-1" strokeWidth={2.5} />
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M4 8H12M4 8L6.5 5.5M4 8L6.5 10.5M12 8L9.5 5.5M12 8L9.5 10.5"
+            stroke="#0a0e14"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
       </button>
 
-      {/* Etiquetas izquierda · ground truth */}
+      {/* Etiqueta izquierda · ground truth (valid teal, badge 2px) */}
       <div className="absolute top-3 left-3 z-30 pointer-events-none">
         <div
-          className="rounded-md px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-md"
+          className="rounded-sm px-2 py-1 flex items-center gap-1.5"
           style={{
-            background: 'rgba(15,27,53,0.85)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            background: 'var(--accent-valid-glow)',
+            border: '0.5px solid var(--accent-valid-border)',
           }}
         >
           <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: '#0EA5E9' }}
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ background: 'var(--accent-valid)' }}
             aria-hidden="true"
           />
-          <span className="text-10 font-mono uppercase tracking-[0.16em] text-white">
+          <span
+            className="text-10 uppercase tracking-[0.06em]"
+            style={{ color: 'var(--accent-valid-text)', fontWeight: 600 }}
+          >
             Ground Truth · EMSR773
           </span>
         </div>
       </div>
 
-      {/* Etiqueta derecha · predicción */}
+      {/* Etiqueta derecha · predicción (risk red, badge 2px) */}
       <div className="absolute top-3 right-3 z-30 pointer-events-none">
         <div
-          className="rounded-md px-2.5 py-1.5 flex items-center gap-2 backdrop-blur-md"
+          className="rounded-sm px-2 py-1 flex items-center gap-1.5"
           style={{
-            background: 'rgba(15,27,53,0.85)',
-            border: '1px solid rgba(255,255,255,0.10)',
+            background: 'var(--accent-risk-glow)',
+            border: '0.5px solid var(--accent-risk-border)',
           }}
         >
           <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: '#E74C3C' }}
+            className="inline-block w-1.5 h-1.5 rounded-full"
+            style={{ background: 'var(--accent-risk)' }}
             aria-hidden="true"
           />
-          <span className="text-10 font-mono uppercase tracking-[0.16em] text-white">
-            Predicción · Random Forest v2
+          <span
+            className="text-10 uppercase tracking-[0.06em]"
+            style={{ color: 'var(--accent-risk-text)', fontWeight: 600 }}
+          >
+            Predicción · RF v2
           </span>
         </div>
       </div>
 
-      {/* Hint inferior — visible solo cuando el divisor está cerca del
-       *  centro para no contaminar visualmente cuando el usuario ya
-       *  está usando el control. Fade-out cuando pos < 20 o pos > 80. */}
+      {/* Footer instruction (spec Agent 5): texto + ornamentos de línea,
+       *  sin botón ni chevrons. Fade-out cuando ya se está usando. */}
       <div
-        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-opacity duration-300"
-        style={{
-          opacity: pos > 20 && pos < 80 ? 1 : 0,
-        }}
+        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none transition-opacity duration-300 flex items-center gap-2"
+        style={{ opacity: pos > 20 && pos < 80 ? 1 : 0 }}
       >
-        <div
-          className="rounded-full px-2.5 py-1 flex items-center gap-1.5 backdrop-blur-md"
-          style={{
-            background: 'rgba(15,27,53,0.78)',
-            border: '1px solid rgba(255,255,255,0.10)',
-          }}
+        <span style={{ width: 18, height: 1, background: 'rgba(255,255,255,0.25)' }} />
+        <span
+          className="text-10 font-mono uppercase"
+          style={{ color: 'var(--text-muted)', letterSpacing: '0.05em' }}
         >
-          <ChevronLeft className="w-3 h-3 text-white" />
-          <span className="text-10 font-mono uppercase tracking-wider text-white">
-            Arrastra el divisor
-          </span>
-          <ChevronRight className="w-3 h-3 text-white" />
-        </div>
+          arrastra para comparar
+        </span>
+        <span style={{ width: 18, height: 1, background: 'rgba(255,255,255,0.25)' }} />
       </div>
     </div>
   );
