@@ -14,6 +14,7 @@ import {
   floodReachesFloor,
   getExposureFactor,
   inflatePolygon,
+  squareFootprint,
 } from './floodGeometry.js';
 
 let passed = 0;
@@ -100,6 +101,18 @@ ok('inflatePolygon ignora geometrías no-polígono', () => {
   const pt = { type: 'Point', coordinates: [1, 1] };
   assert.deepEqual(inflatePolygon(pt), pt);
   assert.equal(inflatePolygon(null), null);
+});
+
+ok('squareFootprint: ~16×20 m cerrado y centrado', () => {
+  const fp = squareFootprint(-0.36, 39.4, 16, 20);
+  const ring = fp.coordinates[0];
+  assert.equal(ring.length, 5); // cerrado
+  assert.deepEqual(ring[0], ring[4]);
+  // ancho real ≈ 16 m (±1 m), alto ≈ 20 m
+  const wM = (ring[1][0] - ring[0][0]) * 111320 * Math.cos((39.4 * Math.PI) / 180);
+  const hM = (ring[2][1] - ring[1][1]) * 111320;
+  assert.ok(Math.abs(wM - 16) < 1, `ancho ${wM}`);
+  assert.ok(Math.abs(hM - 20) < 1, `alto ${hM}`);
 });
 
 console.log(`\nfloodGeometry: ${passed} casos OK`);

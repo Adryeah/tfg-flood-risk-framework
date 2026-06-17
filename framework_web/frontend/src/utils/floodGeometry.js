@@ -94,6 +94,30 @@ export function getExposureFactor(assetType, floorIndex) {
  * @param {number} factor 1.0 = sin cambio; 1.04 = +4 %
  * @returns {{type:string, coordinates:any}} nueva geometría (inmutable)
  */
+/**
+ * Footprint rectangular esquemático centrado en [lon,lat]. La cartera es
+ * sintética (coords no geocodificadas a edificios reales), así que se
+ * extruye un bloque neutro en el punto en vez de fingir que un edificio
+ * OSM concreto está asegurado.
+ * ponytail: esquemático; cambiar a snap de queryRenderedFeatures(building)
+ * si llegan coords geocodificadas reales.
+ * @returns {{type:'Polygon', coordinates:number[][][]}}
+ */
+export function squareFootprint(lon, lat, wMeters = 16, hMeters = 20) {
+  const dLat = hMeters / 2 / 111320;
+  const dLon = wMeters / 2 / (111320 * Math.cos((lat * Math.PI) / 180));
+  return {
+    type: 'Polygon',
+    coordinates: [[
+      [lon - dLon, lat - dLat],
+      [lon + dLon, lat - dLat],
+      [lon + dLon, lat + dLat],
+      [lon - dLon, lat + dLat],
+      [lon - dLon, lat - dLat],
+    ]],
+  };
+}
+
 export function inflatePolygon(geometry, factor = 1.04) {
   if (!geometry || (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon')) {
     return geometry;
