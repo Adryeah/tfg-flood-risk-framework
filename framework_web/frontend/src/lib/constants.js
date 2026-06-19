@@ -6,10 +6,16 @@ export const RISK_THRESHOLDS = {
   high: 0.85,
 };
 
+// Paleta canónica de categoría de riesgo (esquema de 4 bins del modelo) para
+// superficies sobre fondo CLARO (dashboards, mapas Positron). El tour 3D usa
+// una paleta distinta sobre mapa oscuro: TOUR_RISK_COLORS en policy-tour-3d.jsx.
+// `medium` es un alias defensivo por si algo pasa la key del esquema viejo.
 export const RISK_COLORS = {
   low: '#16A34A',
-  medium: '#EAB308',
+  moderate: '#D97706',
+  medium: '#D97706',
   high: '#DC2626',
+  very_high: '#991B1B',
 };
 
 // bbox tuples are [lon_min, lat_min, lon_max, lat_max] in WGS84, matching the

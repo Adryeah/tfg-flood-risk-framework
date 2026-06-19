@@ -20,7 +20,7 @@ import { Map, MapClusterLayer, MapControls, useMap } from '@/components/Map.tsx'
 import { ExposureKpi } from '@/components/exposure-kpi.jsx';
 import { InfoHint } from '@/components/info-hint.jsx';
 import { api } from '@/lib/api.js';
-import { ZONES } from '@/lib/constants.js';
+import { ZONES, RISK_COLORS } from '@/lib/constants.js';
 import { t, useLang } from '@/lib/i18n.js';
 import {
   useReturnPeriod,
@@ -36,12 +36,6 @@ import {
 } from '@/components/return-period-selector.jsx';
 import { SnczNoticeBar } from '@/components/sncz-notice.jsx';
 
-const RISK_COLORS = {
-  low: '#16A34A',
-  moderate: '#D97706',
-  high: '#DC2626',
-  very_high: '#991B1B',
-};
 
 export function ExposureDashboard() {
   const [portfolios, setPortfolios] = useState([]);

@@ -37,6 +37,7 @@ import { InfoHint } from '@/components/info-hint';
 
 import { api } from '@/lib/api.js';
 import { ZONES } from '@/lib/constants.js';
+import { productOf } from '@/lib/portfolio-utils.js';
 import { useHashParams } from '@/lib/hash-params.js';
 import { formatMoney } from '@/lib/format.js';
 
@@ -51,12 +52,6 @@ const PRODUCT_LABEL = {
   pymes: 'Pymes',
   autos: 'Autos',
 };
-const RISK_COLORS = {
-  low: '#16A34A',
-  moderate: '#D97706',
-  high: '#DC2626',
-  very_high: '#991B1B',
-};
 const RISK_BG = {
   low: 'rgba(22,163,74,0.14)',
   moderate: 'rgba(217,119,6,0.15)',
@@ -64,16 +59,6 @@ const RISK_BG = {
   very_high: 'rgba(220,38,38,0.14)',
 };
 
-// ─── Backwards-compat helper ─────────────────────────────────
-// Old clients pre-C1 only had `type` (residential/commercial/industrial).
-// New clients have `product` directly. We coerce here so the view doesn't
-// have to branch everywhere.
-function productOf(client) {
-  if (client.product) return client.product;
-  if (client.type === 'residential') return 'particulares';
-  if (client.type === 'auto') return 'autos';
-  return 'pymes'; // commercial + industrial collapse here
-}
 
 // ─── Haversine distance in km (no external dep) ──────────────
 function haversineKm(a, b) {

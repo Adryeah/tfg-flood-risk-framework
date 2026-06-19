@@ -24,6 +24,8 @@ import { ExposureKpi } from '@/components/exposure-kpi.jsx';
 import { CreateCustomPortfolioDialog } from '@/components/create-custom-portfolio-dialog.jsx';
 
 import { api } from '@/lib/api.js';
+import { RISK_COLORS } from '@/lib/constants.js';
+import { productOf } from '@/lib/portfolio-utils.js';
 import { useHashParams } from '@/lib/hash-params.js';
 import { t, useLang } from '@/lib/i18n.js';
 // Money formatter compartido — alias local fmtMoney para no tocar las
@@ -70,14 +72,6 @@ function computeLocalExposure(portfolio) {
 // safe even if another view also registered.
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// 4 backend categories → 3 colour buckets for the UI.
-const RISK_COLORS = {
-  low: '#16A34A',
-  moderate: '#D97706',
-  medium: '#D97706', // alias when something passes "medium"
-  high: '#DC2626',
-  very_high: '#991B1B',
-};
 const RISK_BG = {
   low: 'rgba(22,163,74,0.14)',
   moderate: 'rgba(217,119,6,0.15)',
@@ -145,15 +139,6 @@ function RiskBadgeCell(params) {
       {cat.replace('_', ' ')}
     </span>
   );
-}
-
-// Maps client → product (post-C1 the backend ships `product` directly).
-// Old client records that only had `type` get coerced for back-compat.
-function productOf(client) {
-  if (client.product) return client.product;
-  if (client.type === 'residential') return 'particulares';
-  if (client.type === 'auto') return 'autos';
-  return 'pymes';
 }
 
 // Mapping between filter UI buckets ↔ backend categories. The Medium filter

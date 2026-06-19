@@ -25,8 +25,10 @@ const OFM_LIBERTY = 'https://tiles.openfreemap.org/styles/liberty';
 // por tanto el isLoaded del contexto— colgado en false.
 const OFM_STYLES = { light: OFM_LIBERTY, dark: OFM_LIBERTY };
 
-// Categoría de riesgo → color del marcador (paleta del risk-surface).
-const RISK_COLORS = {
+// Categoría de riesgo → color del marcador. Paleta OSCURA propia del tour
+// (marcadores sobre basemap oscuro): ámbar→rojo oscuro, NO el verde-low de
+// los dashboards. Distinta a propósito de RISK_COLORS (lib/constants.js).
+const TOUR_RISK_COLORS = {
   low: '#FBBF24',
   moderate: '#F87171',
   high: '#DC2626',
@@ -122,7 +124,7 @@ export function UnderwriterConsole() {
       .filter((c) => productFilter[c.product])
       .sort((a, b) => (b.risk_probability ?? 0) - (a.risk_probability ?? 0))
       .slice(0, showAll ? 100 : 20)
-      .map((c) => ({ ...c, _color: RISK_COLORS[c.risk_category] || '#94A3B8' }));
+      .map((c) => ({ ...c, _color: TOUR_RISK_COLORS[c.risk_category] || '#94A3B8' }));
   }, [portfolio, productFilter, showAll]);
 
   // 4) Auto-play: avanza al siguiente cada 5/speed s.
