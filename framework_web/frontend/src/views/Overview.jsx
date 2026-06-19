@@ -212,7 +212,7 @@ export function Overview() {
           format={(v) => v.toFixed(3)}
           delta={m.auc_std != null ? `±${m.auc_std.toFixed(3)}` : null}
           trend="up"
-          subInfo={`5-fold spatial CV · ±${(m.auc_std ?? 0).toFixed(3)}`}
+          subInfo={`CV espacial 5-fold · ±${(m.auc_std ?? 0).toFixed(3)}`}
           accent="sar"
           scale={{
             value: m.auc_mean,
@@ -225,7 +225,7 @@ export function Overview() {
           objective="Maximizar — capacidad de ranking del modelo."
           animationDelay={0}
           info={{
-            what: 'Area under the ROC curve for the Random Forest v2 model on the Valencia OOF set, averaged across 5 spatial GroupKFold folds (1×1 km blocks).',
+            what: 'Área bajo la curva ROC del modelo Random Forest v2 en el conjunto out-of-fold de Valencia, promediada sobre 5 folds espaciales GroupKFold (bloques de 1×1 km).',
             source: 'GET /api/metrics/valencia → model_metrics.auc_mean / .auc_std',
           }}
         />
@@ -236,7 +236,7 @@ export function Overview() {
           format={(v) => formatPercent(v, 1)}
           delta="+1.1%"
           trend="up"
-          subInfo="Block-level on EMSR773"
+          subInfo="A nivel de bloque · EMSR773"
           accent="valid"
           scale={{
             value: recall100,
@@ -251,7 +251,7 @@ export function Overview() {
           objective="Maximizar — no perder inundaciones reales."
           animationDelay={70}
           info={{
-            what: 'Fraction of EMSR773 flooded pixels found within 100 m of any predicted high-risk pixel — neighbourhood-scale operational metric.',
+            what: 'Fracción de píxeles inundados de EMSR773 hallados a menos de 100 m de cualquier píxel predicho como de alto riesgo — métrica operacional a escala de vecindad.',
             source: 'GET /api/metrics/valencia → buffer_metrics[buffer_m=100].recall',
           }}
         />
@@ -266,7 +266,7 @@ export function Overview() {
           objective="Contexto — escala del grid analizado."
           animationDelay={140}
           info={{
-            what: 'Total Sentinel-1 / Sentinel-2 grid cells scored by the model across the Valencia bbox at 10 m × 10 m resolution.',
+            what: 'Total de celdas de la malla Sentinel-1 / Sentinel-2 evaluadas por el modelo en el bbox de Valencia a resolución 10×10 m.',
             source: 'GET /api/metrics/valencia → n_pixels',
           }}
         />
@@ -280,7 +280,7 @@ export function Overview() {
           objective="Contexto — entradas al modelo Random Forest."
           animationDelay={210}
           info={{
-            what: '6 SAR temporal (σ⁰ VV mean/std/min/cv, VV/VH ratio, water count) + 4 DEM (elevation, slope, distance_to_stream, flow_accumulation) + 1 NDVI + 3 hydro-geomorphological (distance_to_coast, TWI, HAND).',
+            what: '6 SAR temporales (σ⁰ VV media/std/min/cv, ratio VV/VH, conteo de agua) + 4 DEM (elevación, pendiente, distancia a cauce, acumulación de flujo) + 1 NDVI + 3 hidro-geomorfológicas (distancia a costa, TWI, HAND).',
             source: 'config/params.yaml + scripts/features/build_dataset_v2.py',
           }}
         />
@@ -322,12 +322,12 @@ export function Overview() {
             value={formatEur(tiv)}
             numeric={tiv}
             format={(v) => formatEur(v)}
-            subInfo={`${exposure?.n_clients || 0} active policies · ${highCount} high-risk`}
+            subInfo={`${exposure?.n_clients || 0} pólizas activas · ${highCount} alto riesgo`}
             accent="sar"
             objective="Contexto — capital total bajo análisis."
             animationDelay={280}
             info={{
-              what: 'Total insured value across all policies in the active portfolio — sum of every contract\'s sum-insured at simulation start.',
+              what: 'Valor total asegurado de todas las pólizas de la cartera activa — suma del capital asegurado de cada contrato al inicio de la simulación.',
               source: `GET /api/portfolios/${PORTFOLIO_ID}/exposure → total_insured_value`,
             }}
           />
@@ -338,7 +338,7 @@ export function Overview() {
             value={formatEur(exposedTiv)}
             numeric={exposedTiv}
             format={(v) => formatEur(v)}
-            subInfo={`${formatPercent(tiv > 0 ? exposedTiv / tiv : 0, 1)} of portfolio · P > 0.5`}
+            subInfo={`${formatPercent(tiv > 0 ? exposedTiv / tiv : 0, 1)} de la cartera · P > 0.5`}
             accent="risk"
             scale={{
               value: exposedTiv,
@@ -350,7 +350,7 @@ export function Overview() {
             objective="Vigilar — exposición por encima del umbral."
             animationDelay={340}
             info={{
-              what: 'Sum of insured values for policies whose pixel-level flood probability exceeds the operational threshold.',
+              what: 'Suma de los valores asegurados de las pólizas cuya probabilidad de inundación a nivel de píxel supera el umbral operacional.',
               source: `GET /api/portfolios/${PORTFOLIO_ID}/exposure → value_at_risk`,
             }}
           />
@@ -361,12 +361,12 @@ export function Overview() {
             value={formatEur(eal)}
             numeric={eal}
             format={(v) => formatEur(v)}
-            subInfo={`${formatPercent(tiv > 0 ? eal / tiv : 0, 2)} of portfolio`}
+            subInfo={`${formatPercent(tiv > 0 ? eal / tiv : 0, 2)} de la cartera`}
             accent="warn"
             objective="Minimizar — pérdida esperada anual."
             animationDelay={400}
             info={{
-              what: 'Expected Annual Loss — long-run yearly loss expectation under the current portfolio and modelled hazard frequency.',
+              what: 'Pérdida Esperada Anual — expectativa de pérdida anual a largo plazo bajo la cartera actual y la frecuencia de peligro modelada.',
               source: `GET /api/portfolios/${PORTFOLIO_ID}/exposure → expected_total_loss`,
             }}
           />
@@ -377,7 +377,7 @@ export function Overview() {
             value={formatEur(pml)}
             numeric={pml}
             format={(v) => formatEur(v)}
-            subInfo={`${formatPercent(tiv > 0 ? pml / tiv : 0, 1)} of portfolio · 1-event basis`}
+            subInfo={`${formatPercent(tiv > 0 ? pml / tiv : 0, 1)} de la cartera · base 1 evento`}
             accent="risk"
             scale={{
               value: pml,
@@ -389,7 +389,7 @@ export function Overview() {
             objective="Vigilar — capital requerido (Solvencia II)."
             animationDelay={460}
             info={{
-              what: 'Probable Maximum Loss estimated by simulating the DANA event on the current portfolio (per-pixel probability × insured value × vulnerability function).',
+              what: 'Pérdida Máxima Probable estimada simulando el evento DANA sobre la cartera actual (probabilidad por píxel × valor asegurado × función de vulnerabilidad).',
               source: `GET /api/portfolios/${PORTFOLIO_ID}/exposure → estimated_total_loss_dana`,
             }}
           />

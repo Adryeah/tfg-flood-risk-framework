@@ -156,7 +156,7 @@ export function ModelValidation() {
               AUC ROC · 5-fold spatial CV
             </span>
             <InfoHint cite="Pedregosa et al. 2011 · sklearn.metrics.roc_auc_score">
-              {`Area under the Receiver Operating Characteristic curve. Measures how well the model ranks a random positive (flooded pixel) above a random negative. 1.0 = perfect ranking, 0.5 = random chance. The "± value" is the standard deviation across the 5 spatial folds.`}
+              {`Área bajo la curva ROC (Receiver Operating Characteristic). Mide cómo de bien el modelo ordena un positivo aleatorio (píxel inundado) por encima de un negativo aleatorio. 1.0 = ranking perfecto, 0.5 = azar. El «± valor» es la desviación estándar entre los 5 folds espaciales.`}
             </InfoHint>
           </div>
           <AucHero auc={m.auc_mean} std={m.auc_std} />
@@ -183,7 +183,7 @@ export function ModelValidation() {
             objective="Maximizar — equilibrio precisión / recall."
             hint={
               <InfoHint cite="sklearn.metrics.f1_score">
-                {`Harmonic mean of precision and recall at the operational decision threshold (${THRESHOLD_OPERATIONAL}). Picked by maximising F1 on the validation folds — balances false alarms vs missed floods.`}
+                {`Media armónica de precisión y recall en el umbral de decisión operacional (${THRESHOLD_OPERATIONAL}). Elegido maximizando F1 en los folds de validación — equilibra falsas alarmas frente a inundaciones no detectadas.`}
               </InfoHint>
             }
           />
@@ -203,7 +203,7 @@ export function ModelValidation() {
             objective="Maximizar — no perder inundaciones reales."
             hint={
               <InfoHint cite="sklearn.metrics.recall_score">
-                {`Fraction of actual flooded pixels the model correctly flags (TP / (TP + FN)). Critical for risk products — a missed flood is worse than a false alarm. The "100 m buffer" value is recall when a prediction within 100 m of a true positive counts as a hit, following the Tellman et al. (2021) operational convention.`}
+                {`Fracción de píxeles realmente inundados que el modelo marca correctamente (TP / (TP + FN)). Crítico para productos de riesgo — una inundación no detectada es peor que una falsa alarma. El valor «buffer 100 m» es el recall cuando una predicción a menos de 100 m de un verdadero positivo cuenta como acierto, siguiendo la convención operacional de Tellman et al. (2021).`}
               </InfoHint>
             }
           />
@@ -214,7 +214,7 @@ export function ModelValidation() {
             objective="Minimizar — calibración de probabilidades."
             hint={
               <InfoHint cite="Brier 1950">
-                {`Mean squared error of the predicted probabilities vs the true binary outcome. Measures calibration — a model that says "0.8" for a pixel should be right 80 % of the time. Range [0, 1]; lower is better. Random Forest baseline is typically around 0.1.`}
+                {`Error cuadrático medio de las probabilidades predichas frente al resultado binario real. Mide la calibración — un modelo que dice «0.8» para un píxel debería acertar el 80 % de las veces. Rango [0, 1]; menor es mejor. La baseline de Random Forest suele rondar 0.1.`}
               </InfoHint>
             }
           />
@@ -229,7 +229,7 @@ export function ModelValidation() {
             title="Curvas ROC · reconstrucción 5-fold CV"
             info={
               <InfoHint cite="Hanley & McNeil 1982" side="right">
-                {`Each curve plots True Positive Rate vs False Positive Rate as the decision threshold sweeps from 0 to 1. The area under each curve is the fold's AUC. The dashed diagonal is random guessing (AUC 0.5). Curves shown are reconstructed from per-fold AUC mean ± std — when per-fold ROC points are exported they will replace this approximation.`}
+                {`Cada curva traza la Tasa de Verdaderos Positivos frente a la de Falsos Positivos según el umbral de decisión barre de 0 a 1. El área bajo cada curva es el AUC del fold. La diagonal discontinua es el azar (AUC 0.5). Las curvas mostradas se reconstruyen del AUC medio ± std por fold — cuando se exporten los puntos ROC por fold sustituirán esta aproximación.`}
               </InfoHint>
             }
           />
@@ -263,10 +263,10 @@ export function ModelValidation() {
       <div>
         <SectionIndex
           n={3}
-          title="Importancia de features"
+          title="Importancia de variables"
           info={
             <InfoHint cite="Breiman 2001 · Altmann et al. 2010">
-              {`Permutation importance: for each feature, randomly shuffle its column on the validation set and measure how much the AUC drops. A large drop means the model relied heavily on that feature; a drop near zero means the feature is redundant or noisy. Top 5 are highlighted in deep blue. The exact unit is ΔAUC averaged over the 5 spatial folds.`}
+              {`Importancia por permutación: para cada variable, se baraja aleatoriamente su columna en el conjunto de validación y se mide cuánto cae el AUC. Una caída grande significa que el modelo dependía mucho de esa variable; una caída cercana a cero, que es redundante o ruidosa. Las 5 primeras se resaltan en azul oscuro. La unidad exacta es ΔAUC promediado sobre los 5 folds espaciales.`}
             </InfoHint>
           }
         />
@@ -1088,7 +1088,7 @@ function FeatureGlossary({ features }) {
                       href={`#/transferability?feature=${encodeURIComponent(f.feature)}`}
                       className="text-10 font-mono uppercase tracking-wider text-brand-700 hover:underline opacity-0 group-hover:opacity-100"
                       style={{ opacity: 1 }}
-                      title="Ver esta feature en Transferibilidad"
+                      title="Ver esta variable en Transferibilidad"
                     >
                       drift →
                     </a>

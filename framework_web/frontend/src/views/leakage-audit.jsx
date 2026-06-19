@@ -174,17 +174,17 @@ export function LeakageAudit() {
       status: 'fail',
       content: (
         <p>
-          {`Test 1: AUC with vs without urban_mask identical (ΔAUC = -0.0004). Not leakage. Test 2: bug located in ${bugLocation}. The path-based filter "${bugPattern}" failed to exclude October 2024 event scenes from winter feature aggregation. winter_min_sigma0_vv max abs diff vs the clean version: 16.34 dB.`}
+          {`Test 1: AUC con vs sin urban_mask idéntico (ΔAUC = -0.0004). No es fuga. Test 2: bug localizado en ${bugLocation}. El filtro por ruta «${bugPattern}» no excluyó las escenas del evento de octubre 2024 de la agregación de features de invierno. winter_min_sigma0_vv máx. dif. abs. vs la versión limpia: 16.34 dB.`}
         </p>
       ),
     },
     {
       label: 'Phase 4',
-      title: 'Decision · XGBoost v3 rejected',
+      title: 'Decisión · XGBoost v3 rechazado',
       status: 'fail',
       content: (
         <p>
-          {`Per the stopping rule, XGBoost v3 was discarded. models/xgboost_v3_DEPRECATED.joblib preserved for traceability but excluded from the pipeline. Final model: Random Forest v2 — 14 features, no temporal leakage possible by construction. Documented in scripts/models/README_leakage_finding.md.`}
+          {`Según la regla de parada, XGBoost v3 fue descartado. models/xgboost_v3_DEPRECATED.joblib se conserva para trazabilidad pero excluido del pipeline. Modelo final: Random Forest v2 — 14 variables, sin fuga temporal posible por construcción. Documentado en scripts/models/README_leakage_finding.md.`}
         </p>
       ),
     },
@@ -200,18 +200,18 @@ export function LeakageAudit() {
       <header className="border-b border-border-default pb-6">
         <div className="flex items-center gap-3 text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-3">
           <FileSearch className="w-3.5 h-3.5" strokeWidth={1.75} />
-          <span>Case file</span>
+          <span>Expediente</span>
           <span className="text-border-strong">·</span>
           <span className="text-text-secondary tabular-nums">{CASE_ID}</span>
           <span className="text-border-strong">·</span>
           <span>{CASE_FRAMEWORK}</span>
         </div>
         <h1 className="text-24 font-semibold text-text-primary tracking-tight">
-          Leakage Audit
+          Auditoría de fuga
         </h1>
         <p className="text-13 text-text-secondary mt-1.5 max-w-[68ch]">
-          Temporal leakage detection in XGBoost v3 exploratory iteration ·
-          Methodological contribution
+          Detección de fuga temporal en la iteración exploratoria XGBoost v3 ·
+          Contribución metodológica
         </p>
       </header>
 
@@ -223,7 +223,7 @@ export function LeakageAudit() {
        *  as a generic alert.
        * ─────────────────────────────────────────────────────────── */}
       <section
-        aria-label="Audit verdict"
+        aria-label="Veredicto de auditoría"
         className="grid grid-cols-[auto_1fr_auto] gap-6 items-start bg-risk-high-bg border border-risk-high/25 rounded-md px-6 py-5"
       >
         <Ban
@@ -232,13 +232,13 @@ export function LeakageAudit() {
         />
         <div className="min-w-0">
           <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-risk-high-soft/80 mb-1">
-            Verdict
+            Veredicto
           </div>
           <div className="text-20 font-semibold text-risk-high-soft tracking-tight">
-            Rejected
+            Rechazado
           </div>
           <p className="text-13 text-text-secondary leading-relaxed mt-2 max-w-[60ch]">
-            {`An exploratory XGBoost iteration reported AUC ${AUC_SUSPECTED.toFixed(3)}, a +${AUC_DELTA.toFixed(3)} jump over the Random Forest v2 baseline. The 4-test audit halted at Test 2: temporal leakage confirmed. Per the stop-on-fail rule, the model was removed from the pipeline.`}
+            {`Una iteración exploratoria de XGBoost reportó AUC ${AUC_SUSPECTED.toFixed(3)}, un salto de +${AUC_DELTA.toFixed(3)} sobre la baseline Random Forest v2. La auditoría de 4 tests se detuvo en el Test 2: fuga temporal confirmada. Según la regla de parar-al-fallar, el modelo se retiró del pipeline.`}
           </p>
         </div>
         <dl className="hidden md:grid grid-cols-[auto_auto] gap-x-4 gap-y-1.5 text-11 font-mono">

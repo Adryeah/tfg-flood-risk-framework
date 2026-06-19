@@ -176,7 +176,7 @@ export function ExposureDashboard() {
               register="context"
               title="Concentración geográfica"
               subtitle="Dónde se agrupa la cartera sobre la superficie de riesgo del modelo."
-              badge="clustered · 2 study areas"
+              badge="agrupado · 2 zonas de estudio"
               hint={
                 <>
                   Burbujas agrupando las pólizas que caen en el mismo bloque
@@ -198,7 +198,7 @@ export function ExposureDashboard() {
               register="composition"
               title="Distribución de riesgo"
               subtitle="Reparto de pólizas por bucket de riesgo del Random Forest."
-              badge={`${portfolio.n_clients} policies`}
+              badge={`${portfolio.n_clients} pólizas`}
               hint={
                 <>
                   Reparto de las pólizas por categoría de riesgo derivada de
@@ -218,7 +218,7 @@ export function ExposureDashboard() {
               register="mix"
               title="Exposición por producto"
               subtitle="Capital asegurado por línea de negocio, sin aplicar probabilidad."
-              badge="€ insured value"
+              badge="valor asegurado"
               hint={
                 <>
                   Suma del valor asegurado por producto (Particulares ·
@@ -264,7 +264,7 @@ export function ExposureDashboard() {
               register="attribution"
               title="Desglose de pérdidas"
               subtitle="Descomposición de la PML del escenario DANA en sus 4 buckets."
-              badge="DANA scenario"
+              badge="escenario DANA"
               hint={
                 <>
                   Descomposición de la pérdida esperada total por categoría
@@ -282,9 +282,9 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="CONCENTRACIÓN · TOP 10"
               register="concentration"
-              title="Top 10 highest risk"
+              title="Top 10 mayor riesgo"
               subtitle="Pólizas que cargan más € sobre el PML — los nombres del review pile."
-              badge="sorted by est. loss"
+              badge="por pérdida estimada"
               hint={
                 <>
                   Las 10 pólizas con mayor pérdida estimada en escenario
@@ -362,21 +362,21 @@ function MethodologyFooter() {
     <div className="border border-border-default rounded bg-bg-subtle/40 px-4 py-3 text-11 text-text-secondary space-y-1.5">
       <div className="flex items-center gap-2">
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">
-          Methodology
+          Metodología
         </span>
       </div>
       <p>
         <span className="font-mono text-text-primary">PML</span> = Σ
-        <code className="px-1">insured_value × P(flood) × damage_ratio</code>
-        over all policies, computed per the Oasis LMF Probable Maximum Loss
-        convention (single-event loss given hazard footprint). <span className="font-mono text-text-primary">EAL</span> = PML ×{' '}
-        <code className="px-1">prob_event_year</code> (5% — return period ≈ 20y for DANA-class events).
+        <code className="px-1">valor_asegurado × P(flood) × damage_ratio</code>
+        sobre todas las pólizas, calculada según la convención de Pérdida Máxima
+        Probable de Oasis LMF (pérdida single-event dada la huella de peligro). <span className="font-mono text-text-primary">EAL</span> = PML ×{' '}
+        <code className="px-1">prob_evento_año</code> (5% — periodo de retorno ≈ 20 años para eventos tipo DANA).
       </p>
       <p>
-        Hazard layer: <span className="font-mono text-text-primary">P(flood)</span> from
-        Random Forest v2 (14 features, GroupKFold 5×1km, operational threshold 0.614)
-        trained on Sentinel-1 SAR backscatter pre/post DANA Valencia 2024 and validated
-        against Copernicus EMS EMSR773.
+        Capa de peligro: <span className="font-mono text-text-primary">P(flood)</span> del
+        Random Forest v2 (14 variables, GroupKFold 5×1 km, umbral operacional 0.614)
+        entrenado sobre retrodispersión SAR Sentinel-1 pre/post DANA Valencia 2024 y validado
+        contra Copernicus EMS EMSR773.
       </p>
     </div>
   );
