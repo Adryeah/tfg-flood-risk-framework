@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { InfoTooltip } from './InfoTooltip.jsx';
+import { ScaleRail } from './scale-rail.jsx';
 import { useInView, useCountUp } from '@/lib/animations.js';
 
 /**
@@ -45,6 +46,13 @@ export function KpiCard({
   /** Linear×Basedash dark: acento semántico → top-border 2px (color =
    *  significado). sar/valid/purple/warn/risk. Sustituye al severity rail. */
   accent = null,
+  /**
+   * Rail de escala (firma unificada). Forma:
+   *   { value, min?, max?, threshold?, thresholdLabel?, leftLabel?, rightLabel?, color? }
+   * Opt-in: sin scale la card no lo muestra (métricas tipo count). Convierte
+   * el número en lectura de instrumento (dónde cae en su escala).
+   */
+  scale = null,
 }) {
   const sparkRef = useRef(null);
 
@@ -184,6 +192,14 @@ export function KpiCard({
          *  path only when no accent (legacy light usage). */}
         {!accent && sparkline && sparkline.length > 1 && <div ref={sparkRef} className="shrink-0" />}
       </div>
+
+      {/* Rail de escala — firma unificada de los KPIs. */}
+      {scale && (
+        <ScaleRail
+          {...scale}
+          color={scale.color || severityColors[severity] || 'var(--accent-sar-text)'}
+        />
+      )}
 
       {/* Separator 20px del spec, en el accent color */}
       {topBorder && (

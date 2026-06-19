@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { ScaleRail } from './scale-rail.jsx';
 import { useInView, useCountUp } from '@/lib/animations.js';
 
 /**
@@ -75,6 +76,12 @@ export function ExposureKpi({
    */
   numeric = null,
   format = null,
+  /**
+   * Rail de escala (firma unificada). Para ExposureKpi suele ser una cuota:
+   *   { value: parte, max: total, leftLabel, rightLabel } → fill = parte/total.
+   * Opt-in: sin scale no se muestra.
+   */
+  scale = null,
 }) {
   const accent = VARIANT_ACCENT[variant] || VARIANT_ACCENT.default;
 
@@ -143,6 +150,9 @@ export function ExposureKpi({
           <span className="text-12 text-text-secondary font-mono">{unit}</span>
         )}
       </div>
+
+      {/* Rail de escala — firma unificada de los KPIs (cuota del total). */}
+      {scale && <ScaleRail {...scale} color={scale.color || accent} />}
 
       {/* Change indicator opcional · ▲ verde / ▼ rojo / ◦ neutral
        *

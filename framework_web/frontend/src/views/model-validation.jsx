@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-import MetricTile from '@/components/metric-tile';
+import { ScaleRail } from '@/components/scale-rail.jsx';
 import { InfoHint } from '@/components/info-hint';
 import { MethodologySources } from '@/components/methodology-sources';
 import { LoadErrorState } from '@/components/load-error-state.jsx';
@@ -179,6 +179,7 @@ export function ModelValidation() {
             label="F1 Score"
             value={m.f1.toFixed(3)}
             descr={`umbral ${THRESHOLD_OPERATIONAL}`}
+            scale={{ value: m.f1, min: 0, max: 1, leftLabel: '0', rightLabel: '1.0' }}
             objective="Maximizar — equilibrio precisión / recall."
             hint={
               <InfoHint cite="sklearn.metrics.f1_score">
@@ -190,6 +191,15 @@ export function ModelValidation() {
             label="Recall"
             value={m.recall.toFixed(3)}
             descr={`${recall100m.toFixed(3)} a 100 m de buffer`}
+            scale={{
+              value: m.recall,
+              min: 0,
+              max: 1,
+              threshold: 0.75,
+              thresholdLabel: '▲ 0.75',
+              leftLabel: '0',
+              rightLabel: '1.0',
+            }}
             objective="Maximizar — no perder inundaciones reales."
             hint={
               <InfoHint cite="sklearn.metrics.recall_score">
@@ -366,7 +376,7 @@ function SectionIndex({ n, title, info }) {
 // objective). The objective sits at the row's bottom-right so the eye
 // scans Label → Number → Goal in one motion.
 // ────────────────────────────────────────────────────────────────
-function SecondaryMetric({ label, value, descr, hint, objective }) {
+function SecondaryMetric({ label, value, descr, hint, objective, scale = null }) {
   return (
     <div className="py-2.5">
       <div className="flex items-start justify-between gap-3">
@@ -387,6 +397,9 @@ function SecondaryMetric({ label, value, descr, hint, objective }) {
           )}
         </div>
       </div>
+      {scale && (
+        <ScaleRail {...scale} color={scale.color || 'var(--accent-valid-text)'} />
+      )}
       {objective && (
         <div className="font-serif italic text-11 text-text-tertiary leading-snug mt-1.5">
           {objective}
@@ -1198,13 +1211,25 @@ function AucHero({ auc, std }) {
     duration: 1600,
   });
   return (
-    <div ref={ref} className="flex items-baseline gap-3">
-      <span className="font-mono text-[80px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
-        {animated.toFixed(3)}
-      </span>
-      <span className="font-mono text-18 text-text-tertiary tabular-nums">
-        ± {std.toFixed(3)}
-      </span>
+    <div ref={ref}>
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-[80px] leading-none font-semibold text-text-primary tabular-nums tracking-tight">
+          {animated.toFixed(3)}
+        </span>
+        <span className="font-mono text-18 text-text-tertiary tabular-nums">
+          ± {std.toFixed(3)}
+        </span>
+      </div>
+      <div className="max-w-[260px] mt-3">
+        <ScaleRail
+          value={auc}
+          min={0.5}
+          max={1}
+          leftLabel="0.5 azar"
+          rightLabel="1.0 perfecto"
+          color="var(--accent-valid-text)"
+        />
+      </div>
     </div>
   );
 }

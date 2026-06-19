@@ -739,6 +739,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         format={(v) => fmtMoney(v)}
         sub="If a DANA hits today"
         variant="risk"
+        scale={{ value: pml, max: tiv, leftLabel: '0', rightLabel: 'TIV', color: 'var(--accent-risk-text)' }}
         objective="Vigilar — peor caso single-event para capital."
         animationDelay={160}
       />
@@ -749,6 +750,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         format={(v) => fmtMoney(v)}
         sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
         variant="risk"
+        scale={{ value: highValue, max: tiv, leftLabel: '0', rightLabel: 'TIV', color: 'var(--accent-risk-text)' }}
         objective="Reducir — concentración en píxeles de alto riesgo."
         animationDelay={240}
       />
@@ -760,6 +762,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         unit={`/ ${totalCount.toLocaleString()}`}
         sub={`${t('Value at risk')} ${fmtMoney(vaR)}`}
         variant="risk"
+        scale={{ value: highCount, max: totalCount, leftLabel: '0', rightLabel: 'total', color: 'var(--accent-risk-text)' }}
         animationDelay={320}
       />
       <Card className="overflow-hidden">

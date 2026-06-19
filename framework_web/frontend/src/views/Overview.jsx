@@ -214,6 +214,14 @@ export function Overview() {
           trend="up"
           subInfo={`5-fold spatial CV · ±${(m.auc_std ?? 0).toFixed(3)}`}
           accent="sar"
+          scale={{
+            value: m.auc_mean,
+            min: 0.5,
+            max: 1,
+            leftLabel: '0.5 azar',
+            rightLabel: '1.0',
+            color: 'var(--accent-sar-text)',
+          }}
           objective="Maximizar — capacidad de ranking del modelo."
           animationDelay={0}
           info={{
@@ -230,6 +238,16 @@ export function Overview() {
           trend="up"
           subInfo="Block-level on EMSR773"
           accent="valid"
+          scale={{
+            value: recall100,
+            min: 0,
+            max: 1,
+            threshold: 0.75,
+            thresholdLabel: '▲ 0.75',
+            leftLabel: '0',
+            rightLabel: '1.0',
+            color: 'var(--accent-valid-text)',
+          }}
           objective="Maximizar — no perder inundaciones reales."
           animationDelay={70}
           info={{
@@ -322,6 +340,13 @@ export function Overview() {
             format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? exposedTiv / tiv : 0, 1)} of portfolio · P > 0.5`}
             accent="risk"
+            scale={{
+              value: exposedTiv,
+              max: tiv,
+              leftLabel: '0',
+              rightLabel: 'TIV',
+              color: 'var(--accent-risk-text)',
+            }}
             objective="Vigilar — exposición por encima del umbral."
             animationDelay={340}
             info={{
@@ -354,6 +379,13 @@ export function Overview() {
             format={(v) => formatEur(v)}
             subInfo={`${formatPercent(tiv > 0 ? pml / tiv : 0, 1)} of portfolio · 1-event basis`}
             accent="risk"
+            scale={{
+              value: pml,
+              max: tiv,
+              leftLabel: '0',
+              rightLabel: 'TIV',
+              color: 'var(--accent-risk-text)',
+            }}
             objective="Vigilar — capital requerido (Solvencia II)."
             animationDelay={460}
             info={{

@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { ScaleRail } from './scale-rail.jsx';
 import { useInView, useCountUp } from '@/lib/animations.js';
 
 /**
@@ -31,6 +32,12 @@ export default function MetricTile({
   animationDelay = 0,
   numeric = null,
   format = null,
+  /**
+   * Rail de escala (firma unificada). Métricas de modelo en [0,1] con tick del
+   * umbral operacional: { value, threshold?, thresholdLabel?, leftLabel?, rightLabel?, color? }.
+   * Opt-in: sin scale no se muestra.
+   */
+  scale = null,
 }) {
   const sizeClasses = {
     sm: { value: 'text-16', padding: 'p-2.5' },
@@ -95,6 +102,11 @@ export default function MetricTile({
           <span className="text-12 text-text-tertiary font-mono">{unit}</span>
         )}
       </div>
+
+      {/* Rail de escala — firma unificada de los KPIs (umbral operacional). */}
+      {scale && (
+        <ScaleRail {...scale} color={scale.color || 'var(--accent-valid-text)'} />
+      )}
 
       {/* Sub-description */}
       {description && (
