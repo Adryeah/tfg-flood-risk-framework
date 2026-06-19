@@ -31,7 +31,9 @@ class Settings(BaseSettings):
         "Random Forest v2 (AUC 0.922 Valencia, AUC 0.817 Algemesi)."
     )
 
-    DEBUG: bool = True
+    # Default seguro: produccion no abre CORS. Activar DEBUG=true solo en local
+    # (en local el validador de main.py pone allow_origins=["*"]).
+    DEBUG: bool = False
     API_PORT: int = 8000
 
     DATA_PROCESSED_DIR: Path = REPO_ROOT / "framework_web" / "backend" / "data_processed"

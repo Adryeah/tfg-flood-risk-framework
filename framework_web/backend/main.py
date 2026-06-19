@@ -100,10 +100,13 @@ app = FastAPI(
 allow_origins = settings.CORS_ORIGINS
 if settings.DEBUG:
     allow_origins = ["*"]
+# allow_credentials=False: la API no usa cookies ni auth, asi que no hay
+# credenciales que enviar. Mantenerlo en False evita la combinacion invalida
+# allow_origins=["*"] + credentials y reduce superficie con origenes wildcard.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

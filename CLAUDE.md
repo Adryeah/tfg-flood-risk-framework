@@ -179,69 +179,48 @@ ratio VV/VH distingue agua abierta de vegetación inundada. Usar ambas como feat
 La fuente única de verdad del lenguaje visual está en `framework_web/frontend/DESIGN.md` (formato AI-readable estilo refero.design). **Cualquier agente que genere componentes UI debe leerlo antes.** Consolida: paleta navy-authority + bright-blue interactive, pairing Inter/JetBrains Mono/IBM Plex Serif, sistema de registros editoriales por widget, jerarquía TIER de KPIs, recipe del eyebrow+rail, y los anti-patterns que delatan "AI-generated". Validado como sistema "Column-class" (light fintech + mono accent); NO importar un DESIGN.md externo wholesale porque los registros, tiers, RP selectors y HUD son domain-specific (flood underwriting).
 
 ## UNDERWRITER CONSOLE · /tour
-Consola de inteligencia de cartera en `framework_web/frontend/src/` inspirada en el lenguaje visual de Palantir/Bloomberg adaptada a insurance underwriting.
+Consola de inteligencia de cartera (`/tour` → `UnderwriterConsole` en `src/views/policy-tour-3d.jsx`). Fly-through de las pólizas de una cartera, edificio a edificio, sobre mapa MapLibre con extrusión 3D de la planta asegurada.
 
-### Vocabulario
-Términos militares en inglés usados como jerga técnica con tooltips que traducen a términos underwriter. Ejemplo: "TARGET" = póliza monitorizada, "ASSET" = póliza, "MONITORED" = bajo supervisión activa.
+> **Nota de arquitectura (jun 2026):** existió un prototipo previo de "tactical HUD" con deck.gl + Tile3DLayer + modos visuales F1-F5 (`components/tour/`, `lib/tour/`, `tour-map.jsx`). Fue **retirado** (código muerto sin importadores) y sustituido por la implementación MapLibre descrita aquí. No reintroducir deck.gl/Cesium para el tour.
 
 ### Stack
-- deck.gl 9.3.2 + Tile3DLayer (Google Photorealistic 3D Tiles o OpenFreeMap como fallback)
-- MapLibre para basemap (sin Google key = OpenFreeMap Liberty)
-- CSS filter postprocessing para modos visuales (thermal/night/archive)
-- React Context para estado centralizado (mode, hud, activeIndex, speed, incidentTime)
+- **MapLibre** vía `src/components/Map.tsx` (wrapper imperativo: `useMap`, `MapMarker`, `MarkerContent`). Sin deck.gl ni Cesium.
+- Basemap **OpenFreeMap Liberty** (`tiles.openfreemap.org/styles/liberty`): trae footprints de edificios OSM (`source-layer 'building'`), necesarios para extruir la planta. CARTO dark-matter no trae edificios.
+- Estado local en el componente (`useState`/`useMemo`), no Context global.
 
-### Modos visuales
-| Modo | Filtro CSS | Uso |
-|------|-----------|-----|
-| photo | none | Fly-through normal |
-| thermal | saturate(2.2) sepia(0.8) hue-rotate(-10deg) | Mapa de calor de riesgo |
-| night | saturate(0) brightness(0.85) | NVG monocromo verde |
-| archive | contrast(1.15) brightness(0.92) | Dossier / evidence |
+### Flujo
+1. Carga el índice de carteras predefinidas (`/api/portfolios/predefined`) y la cartera seleccionada (`/api/portfolios/{id}`).
+2. Filtra por producto (`particulares`/`pymes`/`autos`), ordena por riesgo desc y recorta a Top 20 / Top 100.
+3. Renderiza un marcador por póliza, coloreado por `risk_category` (paleta `RISK_COLORS`: low→very_high).
+4. La póliza activa monta `<PolicyTour3D>`: vuela al edificio (`flyTo` zoom 18, pitch 55, bearing −20), extruye la banda de la planta asegurada (`fill-extrusion`) en color de riesgo, flota un `PulsingMarker` a la altura de la planta y abre `PolicyRiskPanel`.
+5. Auto-play avanza a la siguiente póliza cada `5000/speed` ms.
 
-### Arquitectura
+### Arquitectura (archivos vivos)
 
 ```
 src/
-├── components/tour/
-│   ├── hud-overlay.jsx      # Orquestador de paneles HUD
-│   ├── target-registry.jsx # Panel izquierdo: ID·€TIV·P(flood)
-│   ├── mode-bank.jsx       # F1-F5 shortcuts + useKeyboardModeSwitcher
-│   ├── tactical-minimap.jsx # Minimap con grid WGS84 + N arrow
-│   ├── status-strip.jsx    # Bottom bar: assets/monitored/mode/speed
-│   ├── incident-timeline.jsx # Scrubber 19 oct → 31 oct con play/pause
-│   ├── center-reticle.jsx  # Retícula SVG que cambia por modo
-│   └── help-overlay.jsx    # Keyboard shortcuts (?) help
-└── lib/tour/
-    ├── tour-state.jsx      # Context provider + reducer (mode, hud, etc)
-    ├── deck-effects.js    # getShaderCssFilter(mode)
-    ├── shader-thermal.js  # GLSL pseudocolor JET (no usado aún)
-    ├── shader-night.js     # GLSL green boost (no usado aún)
-    ├── shader-archive.js  # GLSL scanlines + viñeta (no usado aún)
-    ├── incident-replay.js # DANA_TIMELINE, MODEL_METRICS, polygon helpers
-    └── trace-layer.js     # PathLayer factory para trace geodésico
+├── views/policy-tour-3d.jsx          # UnderwriterConsole (ruta /tour) + top strip
+├── components/
+│   ├── Map.tsx                       # wrapper MapLibre (useMap, MapMarker, MarkerContent)
+│   ├── tour-dock.jsx                 # dock inferior: lista pólizas + prev/next + play/pause/speed
+│   └── PolicyTour3D/
+│       ├── index.jsx                 # overlay: flyTo edificio + extrusión planta + cleanup
+│       ├── PolicyRiskPanel.jsx       # panel vertical de riesgo de la póliza
+│       ├── FloorRiskIndicator.jsx    # indicador de riesgo por planta
+│       └── PulsingMarker.jsx         # marcador pulsante a la altura de la planta
+├── hooks/useFloorRisk.js             # riesgo por planta → color + altitud
+├── utils/floodGeometry.js            # squareFootprint, getFloorMin/MaxHeight
+└── types/policyTour.types.js         # adaptClientToPolicy(client) → policy 3D
 ```
 
 ### Teclas
 - ← → : Navegar pólizas
 - Space : Play/Pause
-- F1-F5 : Cambiar modo visual
-- ? / h : Toggle help overlay
-- Esc : Cerrar help overlay
 
-### Accesibilidad (Fase 6)
-- `prefers-reduced-motion` respetado vía `usePrefersReducedMotion` hook en `src/lib/animations.js`:
-  - Fly-throughs entre pólizas → jump instantáneo (`transitionDuration: 0`)
-  - CSS filter crossfade entre modos → switch instantáneo (`transition: none`)
-- Mobile (< md breakpoint, 768 px) muestra banner "Consola pensada para desktop" pero el mapa sigue renderizando — degradación graceful, no bloqueo total.
+### Accesibilidad / responsive
+- `< md` (768 px) muestra banner "Consola pensada para desktop"; el mapa sigue renderizando (degradación graceful, no bloqueo).
+- `prefers-reduced-motion` (hook `usePrefersReducedMotion` en `src/lib/animations.js`) se respeta en KPIs/reveal de las vistas de dashboard; el fly-through del tour usa `flyTo` de MapLibre.
 - Focus visible global (2 px outline accent-info) heredado de `main.css :focus-visible`.
-
-### Defaults HUD
-`HUD_DEFAULTS` en `tour-state.jsx`:
-- callsigns: true (TargetRegistry visible)
-- reticle: true (CenterReticle por modo)
-- grid: true (TacticalMiniMap esquina superior derecha)
-- trace: false (opt-in; sweep mode lo activa)
-- scanlines: false (opt-in; archive mode lo activa)
 
 ### Return Period · escalado AEP global (Fase 7)
 Estado global persistido en `localStorage['frfw.return_period']` con valores T10, T50, T100 (default), T250, T500. Implementado en `src/lib/return-period.js` con hook `useReturnPeriod()` que cualquier consumer puede leer.
@@ -284,19 +263,7 @@ Endpoint backend `/api/return-periods/sources` lista las fuentes disponibles par
 4. Servir desde Render como capa raster `/api/return-periods/snczi/{zone}/{rp}/{z}/{x}/{y}.png`.
 5. Alternativa WMS: proxy del WMS INSPIRE de MITECO desde el backend para evitar CORS.
 
-**Visual feedback por RP** (Fase 8.A): el risk surface aplica un filtro CSS según el RP activo — saturación/brillo modulados para reflejar la intensidad del escenario sin falsificar datos. T100 baseline = filtro vacío. T10 desatura/aclara (escenario menos extremo), T500 satura/oscurece (escenario más extremo). Implementado en `getRPVisualFilter(rp)` en `src/lib/return-period.js`, aplicado al wrapper del canvas en `tour-map.jsx` y al wrapper de `GeographicMap` en `/exposure`.
+**Visual feedback por RP** (Fase 8.A): el risk surface aplica un filtro CSS según el RP activo — saturación/brillo modulados para reflejar la intensidad del escenario sin falsificar datos. T100 baseline = filtro vacío. T10 desatura/aclara (escenario menos extremo), T500 satura/oscurece (escenario más extremo). Implementado en `getRPVisualFilter(rp)` en `src/lib/return-period.js`, aplicado al wrapper de `GeographicMap` en `/exposure`.
 
 Componentes:
-- `ReturnPeriodSelector` (variants 'console' y 'dashboard') — `src/components/return-period-selector.jsx`
-- Integrado en StatusStrip de /tour (variant console) y en /exposure como scenario bar (variant dashboard) + en TargetRegistry para recalcular Pérdida est. + pill verdict EXPOSED/MONITORED/SAFE.
-
-### Mode bank tintes semánticos
-| Modo | Pill activa tint | Fondo glifo | Lectura |
-|------|------------------|-------------|---------|
-| F1 PHOTO   | #22D3EE cyan   | dark navy | analítica neutra |
-| F2 THERMAL | #E74C3C red    | white | heat-map register |
-| F3 NIGHT   | #22C55E green  | dark green | NVG low-light |
-| F4 ARCHIVE | #F39C12 amber  | dark | evidence dossier |
-| F5 SWEEP   | #FBBF24 gold   | dark | god-mode panoptic |
-
-Sin estos tintes el modo activo se confunde con el resto cuando el ojo no está mirando la pill directamente — el chrome del HUD lleva paleta navy uniforme así que la pill activa es la única señal cromática.
+- `ReturnPeriodSelector` — `src/components/return-period-selector.jsx`. Integrado en `/exposure` como scenario bar (variant dashboard) para recalcular la pérdida estimada según el RP activo.

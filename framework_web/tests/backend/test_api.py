@@ -29,7 +29,8 @@ def test_root(client):
     assert r.status_code == 200
     body = r.json()
     assert "endpoints" in body
-    assert len(body["endpoints"]) == 8
+    # >= en vez de == fijo: el listado crece al añadir routers (return-periods, etc.)
+    assert len(body["endpoints"]) >= 8
 
 
 def test_health_endpoint(client):
@@ -88,10 +89,12 @@ def test_get_predefined_portfolios(client):
     assert r.status_code == 200, r.text
     body = r.json()
     assert "portfolios" in body
-    assert len(body["portfolios"]) == 3
+    # >= y subset: se pueden añadir carteras (p.ej. autos_fleet) sin romper el test,
+    # pero las 3 canónicas deben seguir presentes.
+    assert len(body["portfolios"]) >= 3
     ids = {p["id"] for p in body["portfolios"]}
-    assert ids == {"premium_residential", "wide_distribution",
-                   "industrial_focus"}
+    assert {"premium_residential", "wide_distribution",
+            "industrial_focus"} <= ids
 
 
 def test_get_portfolio_detail(client):
