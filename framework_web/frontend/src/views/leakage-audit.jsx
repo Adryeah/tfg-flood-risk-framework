@@ -149,28 +149,28 @@ export function LeakageAudit() {
   // makes translation viable.
   const phases = [
     {
-      label: 'Phase 1',
-      title: 'The suspicious result',
+      label: 'Fase1',
+      title: 'El resultado sospechoso',
       status: 'warning',
       content: (
         <p>
-          {`XGBoost v3 with 24 features reported AUC 0.966 ± 0.011, a jump of +0.044 over Random Forest v2. In a remote sensing problem with correctly validated spatial cross-validation, such improvements are rare unless explained by (a) fundamentally different architecture, (b) qualitatively new features, or (c) leakage.`}
+          {`XGBoost v3 con 24 features reportó AUC 0.966 ± 0.011, un salto de +0.044 sobre Random Forest v2. En un problema de teledetección con validación cruzada espacial correctamente validada, tales mejoras son raras salvo que se expliquen por (a) arquitectura fundamentalmente distinta, (b) features cualitativamente nuevas, o (c) fuga.`}
         </p>
       ),
     },
     {
-      label: 'Phase 2',
-      title: 'Audit design · 4 tests, stop-on-fail',
+      label: 'Fase2',
+      title: 'Diseño de auditoría · 4 tests, parar-al-fallar',
       status: null,
       content: (
         <p>
-          {`Four sequential tests with a stopping rule: if any test fails, halt and reject the model. Test 1: urban_mask as leakage proxy. Test 2: temporal leakage in seasonal features. Test 3: validation of spatial CV identical to RF v2. Test 4: transferability to Algemesí.`}
+          {`Cuatro tests secuenciales con regla de parada: si algún test falla, detener y rechazar el modelo. Test 1: urban_mask como proxy de fuga. Test 2: fuga temporal en features estacionales. Test 3: validación de la CV espacial idéntica a RF v2. Test 4: transferibilidad a Algemesí.`}
         </p>
       ),
     },
     {
-      label: 'Phase 3',
-      title: 'Test 1 PASS · Test 2 FAIL',
+      label: 'Fase3',
+      title: 'Test 1 OK · Test 2 FALLO',
       status: 'fail',
       content: (
         <p>
@@ -179,7 +179,7 @@ export function LeakageAudit() {
       ),
     },
     {
-      label: 'Phase 4',
+      label: 'Fase4',
       title: 'Decisión · XGBoost v3 rechazado',
       status: 'fail',
       content: (
@@ -243,15 +243,15 @@ export function LeakageAudit() {
         </div>
         <dl className="hidden md:grid grid-cols-[auto_auto] gap-x-4 gap-y-1.5 text-11 font-mono">
           <dt className="text-text-tertiary uppercase tracking-wider">
-            Decided by
+            Decidido por
           </dt>
-          <dd className="text-text-primary text-right">Test 2 fail</dd>
+          <dd className="text-text-primary text-right">Test 2 fallo</dd>
           <dt className="text-text-tertiary uppercase tracking-wider">
-            Stopping rule
+            Regla de parada
           </dt>
-          <dd className="text-text-primary text-right">Stop-on-fail</dd>
+          <dd className="text-text-primary text-right">Parar-al-fallar</dd>
           <dt className="text-text-tertiary uppercase tracking-wider">
-            Artefact
+            Artefacto
           </dt>
           <dd className="text-text-primary text-right">
             xgboost_v3_DEPRECATED
@@ -274,12 +274,12 @@ export function LeakageAudit() {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2 text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.14em] mb-1">
-            <span>Evidence A</span>
+            <span>Evidencia A</span>
             <span className="text-border-strong">·</span>
-            <span>Reported vs verifiable AUC</span>
+            <span>AUC reportado vs verificable</span>
           </div>
           <CardTitle className="text-14">
-            The +0.044 jump that prompted the audit
+            El salto de +0.044 que disparó la auditoría
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -287,7 +287,7 @@ export function LeakageAudit() {
             {/* Suspected */}
             <div className="text-center md:text-right">
               <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
-                Suspected
+                Sospechado
               </div>
               <div className="text-11 text-text-secondary mb-3">
                 XGBoost v3 · 24 features
@@ -301,7 +301,7 @@ export function LeakageAudit() {
                 </span>
               </div>
               <div className="mt-3 text-11 text-text-secondary max-w-[28ch] mx-auto md:ml-auto md:mr-0 leading-relaxed">
-                Inflated by event-date scenes leaking into winter aggregates
+                Inflado por escenas con fecha de evento filtradas a los agregados de invierno
               </div>
             </div>
 
@@ -325,7 +325,7 @@ export function LeakageAudit() {
             {/* Verified */}
             <div className="text-center md:text-left">
               <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
-                Verified
+                Verificado
               </div>
               <div className="text-11 text-text-secondary mb-3">
                 Random Forest v2 · 14 features
@@ -341,20 +341,20 @@ export function LeakageAudit() {
                 />
               </div>
               <div className="mt-3 text-11 text-text-secondary max-w-[28ch] mx-auto md:mr-auto md:ml-0 leading-relaxed">
-                Static DEM + baseline-period aggregates only; no temporal
-                leakage by construction
+                Solo DEM estático + agregados del periodo baseline; sin fuga
+                temporal por construcción
               </div>
             </div>
           </div>
 
           <div className="mt-5 pt-4 border-t border-border-default text-12 text-text-secondary leading-relaxed">
             <span className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mr-2">
-              Auditor's note:
+              Nota del auditor:
             </span>
-            A +0.044 AUC step between two correctly cross-validated models, with
-            no qualitatively new feature family added, is the canonical signal
-            of leakage in remote-sensing classification. Audit was triggered on
-            that prior alone.
+            Un salto de +0.044 AUC entre dos modelos correctamente validados con
+            CV, sin añadir ninguna familia de features cualitativamente nueva, es
+            la señal canónica de fuga en clasificación de teledetección. La
+            auditoría se disparó solo con ese indicio previo.
           </div>
         </CardContent>
       </Card>
@@ -366,8 +366,8 @@ export function LeakageAudit() {
        *  framing so it reads as procedure rather than a status feed.
        * ─────────────────────────────────────────────────────────── */}
       <section>
-        <SectionLabel index="01" eyebrow="Methodology">
-          Four-phase audit · stop-on-fail rule
+        <SectionLabel index="01" eyebrow="Metodología">
+          Auditoría de cuatro fases · regla parar-al-fallar
         </SectionLabel>
         <Card>
           <CardContent className="pt-5">
@@ -383,8 +383,8 @@ export function LeakageAudit() {
        *  annotation below. CodeBlock signature is preserved.
        * ─────────────────────────────────────────────────────────── */}
       <section>
-        <SectionLabel index="02" eyebrow="Exhibit A">
-          The bug · path-based filter
+        <SectionLabel index="02" eyebrow="Prueba A">
+          El bug · filtro por ruta
         </SectionLabel>
         <Card>
           <CardHeader className="pb-3 border-b border-border-default">
@@ -410,7 +410,7 @@ export function LeakageAudit() {
                 strokeWidth={1.75}
               />
               <p>
-                {`October 2024 event scenes (S1_sigma0_20241019.tif and S1_sigma0_20241031.tif) were located directly in data/sentinel1/processed/, not in processed/event/. The path filter missed them. October falls inside the winter aggregation window in the seasonal logic, so both scenes leaked into the winter feature stack alongside the 12 baseline winter scenes.`}
+                {`Las escenas del evento de octubre 2024 (S1_sigma0_20241019.tif y S1_sigma0_20241031.tif) estaban directamente en data/sentinel1/processed/, no en processed/event/. El filtro de ruta no las detectó. Octubre cae dentro de la ventana de agregación de invierno en la lógica estacional, así que ambas escenas se filtraron al stack de features de invierno junto a las 12 escenas baseline de invierno.`}
               </p>
             </div>
           </CardContent>
@@ -425,14 +425,14 @@ export function LeakageAudit() {
        *  scrolls. No side-stripe border (banned).
        * ─────────────────────────────────────────────────────────── */}
       <section>
-        <SectionLabel index="03" eyebrow="Exhibit B">
-          Contamination magnitude · winter feature stack
+        <SectionLabel index="03" eyebrow="Prueba B">
+          Magnitud de contaminación · stack de features de invierno
         </SectionLabel>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="text-12">
-              Differences between leaked and re-derived clean features. Values in
-              dB unless stated otherwise.
+              Diferencias entre las features filtradas y las limpias re-derivadas.
+              Valores en dB salvo que se indique lo contrario.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -449,8 +449,8 @@ export function LeakageAudit() {
        *  divider separates them on md+.
        * ─────────────────────────────────────────────────────────── */}
       <section>
-        <SectionLabel index="04" eyebrow="Regulatory anchor">
-          Why this is a production control, not a thesis exercise
+        <SectionLabel index="04" eyebrow="Ancla regulatoria">
+          Por qué es un control de producción, no un ejercicio de tesis
         </SectionLabel>
         <Card>
           <CardContent className="pt-5 pb-5">
@@ -466,10 +466,10 @@ export function LeakageAudit() {
                   </span>
                 </div>
                 <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
-                  Directive 2009/138/EC · Internal Model Validation
+                  Directiva 2009/138/CE · Validación de modelo interno
                 </div>
                 <p className="text-12 text-text-secondary leading-relaxed">
-                  {`Insurers using internal models for capital adequacy must demonstrate that those models pass rigorous validation and backtesting. A model that reports a +0.044 AUC jump without methodological explanation would fail validation. This audit is the documented backtesting that justifies the Random Forest v2 choice.`}
+                  {`Las aseguradoras que usan modelos internos para adecuación de capital deben demostrar que esos modelos pasan validación y backtesting rigurosos. Un modelo que reporta un salto de +0.044 AUC sin explicación metodológica no pasaría la validación. Esta auditoría es el backtesting documentado que justifica la elección de Random Forest v2.`}
                 </p>
               </div>
               <div className="md:pl-6 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-border-default">
@@ -483,10 +483,10 @@ export function LeakageAudit() {
                   </span>
                 </div>
                 <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
-                  Regulation 2024/1689 · Annex III §5
+                  Reglamento 2024/1689 · Anexo III §5
                 </div>
                 <p className="text-12 text-text-secondary leading-relaxed">
-                  {`AI systems used for insurance risk scoring are classified high-risk. Providers must keep technical documentation, an audit trail of model decisions, and evidence of human oversight. This page is the audit log: hypothesis, tests run, outcome, and why the suspect model was rejected.`}
+                  {`Los sistemas de IA usados para scoring de riesgo en seguros se clasifican como de alto riesgo. Los proveedores deben mantener documentación técnica, un registro de auditoría de las decisiones del modelo, y evidencia de supervisión humana. Esta página es ese registro: hipótesis, tests ejecutados, resultado, y por qué se rechazó el modelo sospechoso.`}
                 </p>
               </div>
             </div>
@@ -505,19 +505,19 @@ export function LeakageAudit() {
           strokeWidth={1.5}
         />
         <p className="text-14 text-text-primary leading-relaxed">
-          Always filter time series by date, not by path. Path-based filters
-          depend on directory organisation, which is fragile; date-based filters
-          are explicit about temporal intent.
+          Filtra siempre las series temporales por fecha, no por ruta. Los filtros
+          por ruta dependen de la organización de directorios, que es frágil; los
+          filtros por fecha son explícitos sobre la intención temporal.
         </p>
         <p className="text-12 text-text-secondary leading-relaxed mt-3">
-          Significant metric improvements without an underlying methodological
-          change deserve scrutiny. The final TFG model (Random Forest v2) is
-          robust by construction: features are static DEM, baseline-period SAR
-          aggregates, and baseline NDVI. No temporal leakage is possible.
+          Las mejoras significativas de métricas sin un cambio metodológico
+          subyacente merecen escrutinio. El modelo final del TFG (Random Forest v2)
+          es robusto por construcción: sus features son DEM estático, agregados SAR
+          del periodo baseline y NDVI baseline. No es posible fuga temporal.
         </p>
         <div className="mt-3 flex items-center gap-2 text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary">
           <BookOpen className="w-3.5 h-3.5" strokeWidth={1.75} />
-          <span>Methodological appendix · TFG memoria, Ch. 7</span>
+          <span>Apéndice metodológico · memoria TFG, cap. 7</span>
         </div>
       </section>
 
@@ -559,7 +559,7 @@ function WinterDiffTable({ rows, maxDiff }) {
   if (!rows || rows.length === 0) {
     return (
       <div className="text-12 text-text-tertiary italic">
-        No diff data available.
+        Sin datos de diferencias.
       </div>
     );
   }
@@ -568,14 +568,14 @@ function WinterDiffTable({ rows, maxDiff }) {
       <table className="w-full text-12">
         <thead>
           <tr className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.12em]">
-            <th className="text-left py-2 px-3 font-medium">Feature</th>
+            <th className="text-left py-2 px-3 font-medium">Variable</th>
             <th className="text-right py-2 px-3 font-medium">
-              Median diff · flooded
+              Dif. mediana · inundado
             </th>
             <th className="text-right py-2 px-3 font-medium">
-              Median diff · not-flooded
+              Dif. mediana · no inundado
             </th>
-            <th className="text-right py-2 px-3 font-medium">Max abs diff</th>
+            <th className="text-right py-2 px-3 font-medium">Máx. dif. abs.</th>
           </tr>
         </thead>
         <tbody>
@@ -612,7 +612,7 @@ function WinterDiffTable({ rows, maxDiff }) {
                     </span>
                     {isCritical && (
                       <Badge className="ml-1 text-10 font-mono bg-risk-high text-white hover:bg-risk-high">
-                        smoking gun
+                        prueba clave
                       </Badge>
                     )}
                   </div>

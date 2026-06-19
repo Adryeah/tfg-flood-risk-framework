@@ -973,25 +973,25 @@ function DockPositionCell({ client, stats }) {
     <div className="px-4 py-3 flex flex-col gap-1.5 min-w-0">
       <div className="flex items-center gap-1 mb-0.5">
         <span className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">
-          Position in portfolio
+          Posición en la cartera
         </span>
         <InfoHint side="bottom">
-          {`How this single policy sits relative to the other ${stats.n.toLocaleString()} in the same cartera. Risk rank: sorted by P(flood). Percentile: 100 % = worst. PML share / TIV share: this policy's contribution to the total PML / total insured value. Nearest HR: Haversine distance to the nearest other high-risk policy — "< 50 m" means an effective cluster, useful to detect concentration risk.`}
+          {`Cómo se sitúa esta póliza respecto a las otras ${stats.n.toLocaleString()} de la misma cartera. Rango de riesgo: ordenado por P(flood). Percentil: 100 % = peor. Cuota PML / cuota TIV: contribución de esta póliza al PML total / valor asegurado total. AR más cercana: distancia Haversine a la póliza de alto riesgo más cercana — «< 50 m» indica un clúster efectivo, útil para detectar riesgo de concentración.`}
         </InfoHint>
       </div>
       <DockRow
-        k="Risk rank"
+        k="Rango de riesgo"
         v={'#' + rank.toLocaleString() + ' / ' + stats.n.toLocaleString()}
       />
-      <DockRow k="Percentile" v={percentile.toFixed(1) + ' %'} />
+      <DockRow k="Percentil" v={percentile.toFixed(1) + ' %'} />
       <DockRow
-        k="PML share"
+        k="Cuota PML"
         v={pmlShare.toFixed(2) + ' %'}
         highlight={pmlShare > 1}
       />
-      <DockRow k="TIV share" v={tivShare.toFixed(2) + ' %'} />
+      <DockRow k="Cuota TIV" v={tivShare.toFixed(2) + ' %'} />
       <DockRow
-        k="Nearest HR"
+        k="AR más cercana"
         v={
           nearestHrKm == null
             ? '—'
