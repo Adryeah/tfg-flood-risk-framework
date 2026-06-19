@@ -249,7 +249,7 @@ export function UnderwriterConsole() {
         </div>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger className="w-[200px] sm:w-[240px] h-8 text-12">
-            <SelectValue placeholder="Select portfolio" />
+            <SelectValue placeholder="Selecciona cartera" />
           </SelectTrigger>
           <SelectContent>
             {portfolios.map((p) => (
@@ -304,7 +304,7 @@ export function UnderwriterConsole() {
       </div>
 
       {/* Mapa · MapLibre + extrusión por planta. Llena el espacio. */}
-      <div className="flex-1 min-h-0 relative bg-bg-base">
+      <div className="flex-1 min-h-0 relative overflow-hidden bg-bg-base">
         {tourPolicies.length > 0 ? (
           <Map
             styles={OFM_STYLES}

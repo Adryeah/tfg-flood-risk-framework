@@ -302,7 +302,7 @@ export function AlgemesiMap() {
           </Card>
 
           <Card
-            title="Pixel inspection"
+            title="Inspección de píxel"
             actions={
               pixelInfo && (
                 <button

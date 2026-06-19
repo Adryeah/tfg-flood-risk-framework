@@ -177,7 +177,7 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
               }}
             >
               <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
+                className="inline-block w-[3px] h-3 rounded-[1px]"
                 style={{ background: section.accent }}
                 aria-hidden="true"
               />

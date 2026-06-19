@@ -711,10 +711,10 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
   }, [filteredClients]);
 
   return (
-    <div className="shrink-0 grid grid-cols-[repeat(7,minmax(0,1fr))_220px] gap-3">
+    <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_minmax(180px,220px)] gap-3">
       <ExposureKpi
         tier={1}
-        label="Portfolio TIV"
+        label="TIV de la cartera"
         numeric={tiv}
         format={(v) => fmtMoney(v)}
         sub={`${totalCount.toLocaleString()} ${t('active')} · ${filteredCount.toLocaleString()} ${t('shown')}`}
@@ -724,20 +724,20 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       />
       <ExposureKpi
         tier={2}
-        label="EAL · annual"
+        label="EAL · anual"
         numeric={eal}
         format={(v) => fmtMoney(v)}
-        sub="Expected annual loss"
+        sub="Pérdida esperada anual"
         variant="warning"
         objective="Minimizar — pérdida esperada en un año medio."
         animationDelay={80}
       />
       <ExposureKpi
         tier={1}
-        label="PML · DANA scenario"
+        label="PML · escenario DANA"
         numeric={pml}
         format={(v) => fmtMoney(v)}
-        sub="If a DANA hits today"
+        sub="Si una DANA golpea hoy"
         variant="risk"
         scale={{ value: pml, max: tiv, leftLabel: '0', rightLabel: 'TIV', color: 'var(--accent-risk-text)' }}
         objective="Vigilar — peor caso single-event para capital."
@@ -745,7 +745,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       />
       <ExposureKpi
         tier={2}
-        label="High-risk exposure"
+        label="Exposición de alto riesgo"
         numeric={highValue}
         format={(v) => fmtMoney(v)}
         sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
@@ -756,7 +756,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
       />
       <ExposureKpi
         tier={3}
-        label="Affected policies"
+        label="Pólizas afectadas"
         numeric={highCount}
         format={(v) => Math.round(v).toLocaleString()}
         unit={`/ ${totalCount.toLocaleString()}`}
@@ -765,10 +765,10 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         scale={{ value: highCount, max: totalCount, leftLabel: '0', rightLabel: 'total', color: 'var(--accent-risk-text)' }}
         animationDelay={320}
       />
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden col-span-2 sm:col-span-3 xl:col-span-1">
         <CardHeader className="py-1.5 px-3 border-b border-border-default">
           <CardTitle className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
-            Risk distribution
+            Distribución de riesgo
           </CardTitle>
         </CardHeader>
         <CardContent className="p-1">

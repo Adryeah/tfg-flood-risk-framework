@@ -36,9 +36,12 @@ export function TourDock({
     const strip = stripRef.current;
     if (!strip) return;
     const chip = strip.querySelector(`[data-idx="${activeIndex}"]`);
-    if (chip) {
-      chip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
+    if (!chip) return;
+    // scrollLeft del PROPIO strip, no scrollIntoView: este último escala a
+    // todos los ancestros scrollables (incl. la página) y la hace saltar /
+    // "romperse" al navegar entre pólizas. Aquí solo se mueve la cinta.
+    const target = chip.offsetLeft - strip.clientWidth / 2 + chip.clientWidth / 2;
+    strip.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
   }, [activeIndex]);
 
   return (

@@ -206,7 +206,7 @@ export function Overview() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         <KpiCard
-          label="Model AUC"
+          label="AUC del modelo"
           value={m.auc_mean?.toFixed(3) ?? '—'}
           numeric={m.auc_mean}
           format={(v) => v.toFixed(3)}
@@ -230,7 +230,7 @@ export function Overview() {
           }}
         />
         <KpiCard
-          label="Recall @ 100m"
+          label="Recall · 100 m"
           value={recall100 != null ? formatPercent(recall100, 1) : '—'}
           numeric={recall100}
           format={(v) => formatPercent(v, 1)}
@@ -256,7 +256,7 @@ export function Overview() {
           }}
         />
         <KpiCard
-          label="Pixels analyzed"
+          label="Píxeles analizados"
           value={((valMetrics?.n_pixels || 0) / 1_000_000).toFixed(1)}
           numeric={(valMetrics?.n_pixels || 0) / 1_000_000}
           format={(v) => v.toFixed(1)}
@@ -271,7 +271,7 @@ export function Overview() {
           }}
         />
         <KpiCard
-          label="Features"
+          label="Variables"
           value="14"
           numeric={14}
           format={(v) => Math.round(v).toString()}
@@ -318,7 +318,7 @@ export function Overview() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2">
         <div className="lg:col-span-4">
           <KpiCard
-            label="Portfolio TIV"
+            label="TIV de la cartera"
             value={formatEur(tiv)}
             numeric={tiv}
             format={(v) => formatEur(v)}
@@ -334,7 +334,7 @@ export function Overview() {
         </div>
         <div className="lg:col-span-3">
           <KpiCard
-            label="TIV at risk"
+            label="TIV en riesgo"
             value={formatEur(exposedTiv)}
             numeric={exposedTiv}
             format={(v) => formatEur(v)}
@@ -357,7 +357,7 @@ export function Overview() {
         </div>
         <div className="lg:col-span-2">
           <KpiCard
-            label="EAL · annual"
+            label="EAL · anual"
             value={formatEur(eal)}
             numeric={eal}
             format={(v) => formatEur(v)}
@@ -373,7 +373,7 @@ export function Overview() {
         </div>
         <div className="lg:col-span-3">
           <KpiCard
-            label="PML · DANA scenario"
+            label="PML · escenario DANA"
             value={formatEur(pml)}
             numeric={pml}
             format={(v) => formatEur(v)}

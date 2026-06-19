@@ -324,7 +324,7 @@ export function PolicyMap() {
             onValueChange={(v) => v && setSelectedPortfolioId(v)}
           >
             <SelectTrigger className="w-full sm:w-[240px] h-8 text-12">
-              <SelectValue placeholder="Select portfolio" />
+              <SelectValue placeholder="Selecciona cartera" />
             </SelectTrigger>
             <SelectContent>
               {portfolios.map((p) => (

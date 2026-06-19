@@ -129,7 +129,7 @@ export function ExposureDashboard() {
           onValueChange={(v) => v && setSelectedId(v)}
         >
           <SelectTrigger className="w-full sm:w-[260px] h-8 text-12">
-            <SelectValue placeholder="Select portfolio" />
+            <SelectValue placeholder="Selecciona cartera" />
           </SelectTrigger>
           <SelectContent>
             {portfolios.map((p) => (
@@ -174,7 +174,7 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="ESPACIAL · 01"
               register="context"
-              title="Geographic concentration"
+              title="Concentración geográfica"
               subtitle="Dónde se agrupa la cartera sobre la superficie de riesgo del modelo."
               badge="clustered · 2 study areas"
               hint={
@@ -196,7 +196,7 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="DENSIDAD · 01"
               register="composition"
-              title="Risk distribution"
+              title="Distribución de riesgo"
               subtitle="Reparto de pólizas por bucket de riesgo del Random Forest."
               badge={`${portfolio.n_clients} policies`}
               hint={
@@ -216,7 +216,7 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="DENSIDAD · 02"
               register="mix"
-              title="Exposure by product"
+              title="Exposición por producto"
               subtitle="Capital asegurado por línea de negocio, sin aplicar probabilidad."
               badge="€ insured value"
               hint={
@@ -240,7 +240,7 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="COLA · ESTILO OEP"
               register="tail"
-              title="Loss exceedance curve"
+              title="Curva de excedencia de pérdidas"
               subtitle="Capital acumulado por encima de cada umbral de pérdida — donde vive el riesgo de cola."
               badge="Oasis OEP-style"
               hint={
@@ -262,7 +262,7 @@ export function ExposureDashboard() {
             <Widget
               eyebrow="ATRIBUCIÓN · POR CATEGORÍA"
               register="attribution"
-              title="Loss breakdown"
+              title="Desglose de pérdidas"
               subtitle="Descomposición de la PML del escenario DANA en sus 4 buckets."
               badge="DANA scenario"
               hint={
