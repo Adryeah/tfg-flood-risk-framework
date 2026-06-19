@@ -781,14 +781,13 @@ function GeographicMap({ clients }) {
 function ConcentrationRiskBackdrop() {
   const { map, isLoaded } = useMap();
   useEffect(() => {
-    if (!map || !isLoaded) return;
-    const zones = ['valencia', 'algemesi'];
-    for (const zone of zones) {
-      const id = `exposure-risk-${zone}`;
-      if (map.getSource(id)) continue;
+    if (!map || !isLoaded) return undefined;
+    const ids = ['valencia', 'algemesi'].map((z) => `exposure-risk-${z}`);
+    ids.forEach((id, i) => {
+      if (map.getSource(id)) return;
       map.addSource(id, {
         type: 'raster',
-        tiles: [api.risk.tilesUrl(zone)],
+        tiles: [api.risk.tilesUrl(['valencia', 'algemesi'][i])],
         tileSize: 256,
         minzoom: 10,
         maxzoom: 15,
@@ -803,7 +802,20 @@ function ConcentrationRiskBackdrop() {
           'raster-resampling': 'linear',
         },
       });
-    }
+    });
+    // Cleanup: quita capas+fuentes al desmontar para no acumularlas si el
+    // <Map> sobrevive a la navegación entre vistas (mismo patrón que
+    // PolicyTour3D). try/catch porque el estilo puede estar ya destruido.
+    return () => {
+      for (const id of ids) {
+        try {
+          if (map.getLayer(id)) map.removeLayer(id);
+          if (map.getSource(id)) map.removeSource(id);
+        } catch {
+          // mapa/estilo ya destruido — nada que limpiar.
+        }
+      }
+    };
   }, [map, isLoaded]);
   return null;
 }

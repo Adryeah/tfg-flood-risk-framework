@@ -32,17 +32,31 @@ import {
  * }}
  */
 export function useFloorRisk(input) {
+  // Desestructurar a primitivos: el consumer (PolicyTour3D) pasa un objeto
+  // literal nuevo en cada render, así que depender de `[input]` rompía la
+  // memoización (recalculaba ~60×/s durante el rAF del marcador pulsante).
+  // Con primitivos como deps, solo recalcula cuando cambia un valor real.
+  const {
+    floorIndex,
+    assetType,
+    pFlood,
+    eal,
+    pml,
+    terrainElevationM,
+    floodDepthT500M,
+  } = input;
+
   return useMemo(() => {
     const { reaches, marginMeters } = floodReachesFloor(
-      input.floorIndex,
-      input.terrainElevationM,
-      input.floodDepthT500M
+      floorIndex,
+      terrainElevationM,
+      floodDepthT500M
     );
-    const exposureFactor = getExposureFactor(input.assetType, input.floorIndex);
-    const adjustedEAL = Math.round(input.eal * exposureFactor);
-    const adjustedPML = Math.round(input.pml * exposureFactor);
+    const exposureFactor = getExposureFactor(assetType, floorIndex);
+    const adjustedEAL = Math.round(eal * exposureFactor);
+    const adjustedPML = Math.round(pml * exposureFactor);
     // Centro de la planta = base + 1.5 m (media de la banda de 3 m).
-    const floorAltitudeM = getFloorMinHeight(input.floorIndex) + 1.5;
+    const floorAltitudeM = getFloorMinHeight(floorIndex) + 1.5;
 
     return {
       reaches,
@@ -53,11 +67,7 @@ export function useFloorRisk(input) {
       floorAltitudeM,
       // Verde si el agua no llega; si llega, ámbar/rojo según P(flood).
       // Tokens del sistema dark: accent-valid / accent-warn-text / accent-risk-text.
-      riskColor: reaches
-        ? input.pFlood > 0.7
-          ? '#f87171'
-          : '#d2a24a'
-        : '#5DCAA5',
+      riskColor: reaches ? (pFlood > 0.7 ? '#f87171' : '#d2a24a') : '#5DCAA5',
     };
-  }, [input]);
+  }, [floorIndex, assetType, pFlood, eal, pml, terrainElevationM, floodDepthT500M]);
 }

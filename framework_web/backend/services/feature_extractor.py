@@ -21,6 +21,21 @@ BBOX_VALENCIA  = (-0.55, 39.30, -0.25, 39.55)
 BBOX_ALGEMESI  = (-0.698, 39.007, -0.166, 39.555)
 
 
+def planar_distance_m(lat1: float, lon1: float,
+                      lat2: float, lon2: float) -> float:
+    """Distancia metrica aproximada con correccion cos(lat) en longitud.
+
+    El KDTree mide distancia euclidea en grados (isotropa); multiplicar el
+    resultado por 111 km trata un grado de longitud como uno de latitud y
+    sobreestima ~30% la componente E-W a la latitud de Valencia (39.4 ->
+    cos ~ 0.77). Aqui se corrige la longitud por cos(lat) sobre el vecino
+    encontrado. Exacta a nivel sub-km (el rango del threshold)."""
+    dlat = lat1 - lat2
+    dlon = lon1 - lon2
+    lat_ref = math.radians((lat1 + lat2) / 2.0)
+    return math.hypot(dlat * 111_000.0, dlon * 111_000.0 * math.cos(lat_ref))
+
+
 class FeatureExtractor:
     """Singleton que carga lookups en memoria al iniciar."""
 
@@ -81,13 +96,14 @@ class FeatureExtractor:
             return None
         df = self._lookups[zone]
         tree = self._trees[zone]
-        dist_deg, idx = tree.query([lat, lon], k=1)
-        # 1 grado de lat ~111 km. Para lon depende de lat. Usamos
-        # aproximacion isotropa para el threshold (suficiente).
-        dist_m = float(dist_deg * 111000)
+        _dist_deg, idx = tree.query([lat, lon], k=1)
+        row = df.iloc[int(idx)]
+        # La query localiza el vecino (euclidea en grados); el threshold
+        # necesita metros reales con correccion cos(lat), no 111 km isotropos.
+        dist_m = planar_distance_m(lat, lon,
+                                   float(row["lat"]), float(row["lon"]))
         if dist_m > max_distance_m:
             return None
-        row = df.iloc[int(idx)]
         features = {f: float(row[f]) for f in FEATURE_NAMES_V2}
         return {
             "zone": zone,
