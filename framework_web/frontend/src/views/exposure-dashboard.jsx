@@ -816,10 +816,14 @@ function ConcentrationRiskBackdrop() {
 // ────────────────────────────────────────────────────────────────
 function LossExceedanceCurve({ clients }) {
   const ref = useRef(null);
+  // Escala al RP activo igual que los Hero KPIs: si no, la curva (T100
+  // baseline) contradice el PML del KPI cuando se cambia de escenario.
+  const [rp] = useReturnPeriod();
+  const mult = getLossMultiplier(rp);
 
   const points = useMemo(() => {
     const losses = (clients || [])
-      .map((c) => c.estimated_loss_dana || 0)
+      .map((c) => (c.estimated_loss_dana || 0) * mult)
       .filter((x) => x > 0)
       .sort((a, b) => b - a);
     if (!losses.length) return [];
@@ -829,7 +833,7 @@ function LossExceedanceCurve({ clients }) {
       cum += loss;
       return [loss, cum];
     });
-  }, [clients]);
+  }, [clients, mult]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -961,15 +965,18 @@ function LossExceedanceCurve({ clients }) {
 // ────────────────────────────────────────────────────────────────
 function LossBreakdownChart({ clients }) {
   const ref = useRef(null);
+  // Escala al RP activo (coherencia con el PML del KPI y la OEP curve).
+  const [rp] = useReturnPeriod();
+  const mult = getLossMultiplier(rp);
 
   const data = useMemo(() => {
     const acc = { low: 0, moderate: 0, high: 0, very_high: 0 };
     (clients || []).forEach((c) => {
       const k = c.risk_category || 'low';
-      if (k in acc) acc[k] += c.estimated_loss_dana || 0;
+      if (k in acc) acc[k] += (c.estimated_loss_dana || 0) * mult;
     });
     return acc;
-  }, [clients]);
+  }, [clients, mult]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -1104,6 +1111,12 @@ function LossBreakdownChart({ clients }) {
 // Widget 6 — Top 10 highest-risk clients table (sorted by est. loss DANA)
 // ────────────────────────────────────────────────────────────────
 function TopRiskClientsTable({ clients }) {
+  // Escala al RP activo (coherencia con el PML del KPI). El ranking no
+  // cambia (mult > 0 preserva el orden); solo el € mostrado refleja el
+  // escenario. Las barras son relativas (loss/maxLoss), invariantes al mult.
+  const [rp] = useReturnPeriod();
+  const mult = getLossMultiplier(rp);
+
   const top = useMemo(() => {
     return [...(clients || [])]
       .sort(
@@ -1115,7 +1128,7 @@ function TopRiskClientsTable({ clients }) {
 
   // Max est. loss in the top-10 — drives the inline bar normalisation
   // so the #1 row renders a 100 % bar and everyone else scales down.
-  const maxLoss = top[0]?.estimated_loss_dana || 1;
+  const maxLoss = ((top[0]?.estimated_loss_dana || 0) * mult) || 1;
 
   // Local money formatter (M for ≥ 1M, K below). Same convention as
   // Portfolio Explorer's fmtMoney — keeps the two views aligned.
@@ -1145,7 +1158,7 @@ function TopRiskClientsTable({ clients }) {
           {top.map((c, idx) => {
             const cat = c.risk_category || 'low';
             const fg = RISK_COLORS[cat] || '#52525B';
-            const loss = c.estimated_loss_dana || 0;
+            const loss = (c.estimated_loss_dana || 0) * mult;
             const pct = Math.min(100, (loss / maxLoss) * 100);
             // Sequential entry animation — each row fades + slides in
             // 60ms after the previous. Total: top-10 fully visible in

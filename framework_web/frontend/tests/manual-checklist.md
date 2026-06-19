@@ -49,6 +49,25 @@ Carry out these checks after `npm run dev` from `framework_web/frontend/`.
 - [ ] No emojis in headings.
 - [ ] Looks closer to Linear / Datadog than to a SaaS template.
 
+## Integridad de datos (jun 2026)
+
+### Model Validation · curvas ROC honestas
+
+- [ ] La card ROC se titula **"Curvas ROC · reconstrucción 5-fold CV"** (no "5 folds").
+- [ ] La leyenda muestra `Fold 1`…`Fold 5` **sin** un AUC por fold (antes ponía `Fold 1 (AUC 0.923)` — valor inventado).
+- [ ] El gráfico lleva un footnote on-canvas: *"Ilustrativo · reconstruido de AUC media ± σ"* (visible aunque se recorte el chart para una diapositiva).
+- [ ] El AUC real (media ± σ) sigue mostrándose en el AucHero superior.
+
+### Exposure Dashboard · escenario RP coherente
+
+Con el `ReturnPeriodSelector` cambia el RP (T10 → T500) y comprueba que TODO escala junto:
+
+- [ ] Hero KPIs (PML / EAL) escalan con el RP (ya funcionaba).
+- [ ] **Loss exceedance curve**: el eje € y el tooltip crecen ×1.75 en T500 vs T100, ×0.46 en T10.
+- [ ] **Loss breakdown**: las barras por categoría escalan igual.
+- [ ] **Top 10 highest risk**: la columna "Est. loss" escala (las barras relativas NO cambian — es correcto).
+- [ ] En T500 ningún número de pérdida del dashboard contradice el PML del KPI.
+
 ## DevTools
 
 - [ ] 0 errors and 0 warnings in console.

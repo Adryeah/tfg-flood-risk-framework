@@ -216,7 +216,7 @@ export function ModelValidation() {
         <div>
           <SectionIndex
             n={1}
-            title="Curvas ROC · 5 folds"
+            title="Curvas ROC · reconstrucción 5-fold CV"
             info={
               <InfoHint cite="Hanley & McNeil 1982" side="right">
                 {`Each curve plots True Positive Rate vs False Positive Rate as the decision threshold sweeps from 0 to 1. The area under each curve is the fold's AUC. The dashed diagonal is random guessing (AUC 0.5). Curves shown are reconstructed from per-fold AUC mean ± std — when per-fold ROC points are exported they will replace this approximation.`}
@@ -224,8 +224,9 @@ export function ModelValidation() {
             }
           />
           <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-            Validación cruzada espacial con bloques de 1 × 1 km — cada
-            curva representa un fold.
+            Validación cruzada espacial con bloques de 1 × 1 km. Curvas
+            ilustrativas reconstruidas de AUC media ± σ — no son puntos ROC
+            por fold medidos (el backend solo expone media y desviación).
           </p>
           <ROCChart auc={m.auc_mean} stdAuc={m.auc_std} />
         </div>
@@ -396,13 +397,15 @@ function SecondaryMetric({ label, value, descr, hint, objective }) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// ROC chart — 5 fold curves + random baseline.
-// We don't have the per-fold curves in the API; the backend exposes
-// auc_mean and auc_std only. We *simulate* 5 curves with their AUC
-// jittered around mean by std (deterministic seed for stable render).
-// A short footnote in the card description makes the "5 folds" claim
-// honest. If the backend later exposes per-fold ROC points, drop the
-// generator and feed real data in.
+// ROC chart — ILUSTRATIVO. El backend solo expone auc_mean y auc_std
+// (no los puntos ROC por fold). Reconstruimos 5 curvas sintéticas con
+// AUC muestreado del envelope media±std para ilustrar la dispersión
+// entre folds — NO son curvas medidas. Por eso las etiquetas NO llevan
+// un AUC por fold (sería inventar un valor "medido"); el AUC real
+// (media ± σ) se muestra en el AucHero de arriba. El chart lleva un
+// footnote on-canvas + título "reconstrucción" para que el aviso viaje
+// si se recorta el gráfico. Si el backend exporta los puntos ROC por
+// fold, sustituir el generador por datos reales.
 // ────────────────────────────────────────────────────────────────
 function ROCChart({ auc, stdAuc }) {
   const ref = useRef(null);
@@ -463,7 +466,7 @@ function ROCChart({ auc, stdAuc }) {
 
       // ─── Layer A — the analytical line ──────────────────────
       folds.push({
-        name: `Fold ${i + 1} (AUC ${foldAuc.toFixed(3)})`,
+        name: `Fold ${i + 1}`,
         type: 'line',
         data: curve,
         smooth: false,
@@ -499,7 +502,7 @@ function ROCChart({ auc, stdAuc }) {
       // the 5 dots don't visually beat in sync (each fold gets a
       // slightly different cadence).
       flows.push({
-        name: `Fold ${i + 1} (AUC ${foldAuc.toFixed(3)})`,
+        name: `Fold ${i + 1}`,
         type: 'lines',
         coordinateSystem: 'cartesian2d',
         polyline: true,
@@ -528,7 +531,22 @@ function ROCChart({ auc, stdAuc }) {
       animation: true,
       animationDuration: 1200,
       animationEasing: 'cubicOut',
-      grid: { left: 56, right: 16, top: 16, bottom: 70, containLabel: false },
+      grid: { left: 56, right: 16, top: 30, bottom: 70, containLabel: false },
+      // Footnote on-canvas: viaja con el chart si se recorta para una
+      // diapositiva, donde el disclaimer de la card no aparece.
+      graphic: [
+        {
+          type: 'text',
+          right: 8,
+          top: 4,
+          style: {
+            text: 'Ilustrativo · reconstruido de AUC media ± σ (5-fold CV)',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontSize: 9,
+            fill: '#A1A1AA',
+          },
+        },
+      ],
       tooltip: {
         trigger: 'item',
         backgroundColor: '#1e2022',
