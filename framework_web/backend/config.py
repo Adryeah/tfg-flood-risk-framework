@@ -56,6 +56,13 @@ class Settings(BaseSettings):
             "http://localhost:5173",
             "http://localhost:8080",
             "http://127.0.0.1:8080",
+            # Fail-safe de produccion: con DEBUG=False el CORS depende de esta
+            # lista. Se incluyen los dominios Vercel conocidos para que un
+            # redeploy sin CORS_ORIGINS en Render NO bloquee el frontend en
+            # vivo. Lo CORRECTO sigue siendo fijar CORS_ORIGINS en Render al
+            # dominio exacto (este default solo aplica si el env esta vacio).
+            "https://tfg-flood-risk.vercel.app",
+            "https://tfg-flood-risk-framework.vercel.app",
         ]
     )
 
