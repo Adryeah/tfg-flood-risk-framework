@@ -118,6 +118,43 @@ export function squareFootprint(lon, lat, wMeters = 16, hMeters = 20) {
   };
 }
 
+/**
+ * Ray-casting point-in-polygon sobre el anillo exterior. Soporta Polygon y
+ * MultiPolygon (cualquier sub-polígono que contenga el punto cuenta). Usado
+ * para elegir, entre los edificios bajo el cursor, el que realmente contiene
+ * la coordenada de la póliza.
+ *
+ * @param {number} lon
+ * @param {number} lat
+ * @param {{type:string, coordinates:any}} geometry
+ * @returns {boolean}
+ */
+export function pointInPolygon(lon, lat, geometry) {
+  if (!geometry) return false;
+  const rings =
+    geometry.type === 'Polygon'
+      ? [geometry.coordinates[0]]
+      : geometry.type === 'MultiPolygon'
+        ? geometry.coordinates.map((p) => p[0])
+        : [];
+  for (const ring of rings) {
+    if (!ring) continue;
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0];
+      const yi = ring[i][1];
+      const xj = ring[j][0];
+      const yj = ring[j][1];
+      const intersect =
+        yi > lat !== yj > lat &&
+        lon < ((xj - xi) * (lat - yi)) / (yj - yi || 1e-12) + xi;
+      if (intersect) inside = !inside;
+    }
+    if (inside) return true;
+  }
+  return false;
+}
+
 export function inflatePolygon(geometry, factor = 1.04) {
   if (!geometry || (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon')) {
     return geometry;

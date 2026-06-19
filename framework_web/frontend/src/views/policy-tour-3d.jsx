@@ -64,6 +64,38 @@ function ConsoleMarkers({ policies, activeIndex, onSelect }) {
   ));
 }
 
+/** Leyenda del mapa: escala de riesgo por planta + lámina T500. */
+function TourLegend() {
+  const items = [
+    ['Bajo', TOUR_RISK_COLORS.low],
+    ['Moderado', TOUR_RISK_COLORS.moderate],
+    ['Alto', TOUR_RISK_COLORS.high],
+    ['Muy alto', TOUR_RISK_COLORS.very_high],
+  ];
+  return (
+    <div className="absolute bottom-3 left-3 z-[2] rounded-md border border-border-default bg-bg-surface/85 backdrop-blur px-3 py-2.5 shadow-lg">
+      <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-1.5">
+        Riesgo por planta
+      </div>
+      <div className="flex flex-col gap-1">
+        {items.map(([label, color]) => (
+          <div key={label} className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-[2px]" style={{ background: color }} />
+            <span className="text-11 text-text-secondary">{label}</span>
+          </div>
+        ))}
+        <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-border-default">
+          <span
+            className="w-2.5 h-2.5 rounded-[2px]"
+            style={{ background: 'rgba(29,111,168,0.55)' }}
+          />
+          <span className="text-11 text-text-secondary">Lámina T500</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function UnderwriterConsole() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedId, setSelectedId] = useState('wide_distribution');
@@ -297,6 +329,7 @@ export function UnderwriterConsole() {
             Sin pólizas que mostrar con los filtros actuales.
           </div>
         )}
+        {tourPolicies.length > 0 && <TourLegend />}
       </div>
 
       {/* Dock · lista de pólizas + play/pause/speed (drive activeIndex). */}

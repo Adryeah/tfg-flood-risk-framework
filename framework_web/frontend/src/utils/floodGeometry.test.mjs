@@ -15,6 +15,7 @@ import {
   getExposureFactor,
   inflatePolygon,
   squareFootprint,
+  pointInPolygon,
 } from './floodGeometry.js';
 
 let passed = 0;
@@ -113,6 +114,32 @@ ok('squareFootprint: ~16×20 m cerrado y centrado', () => {
   const hM = (ring[2][1] - ring[1][1]) * 111320;
   assert.ok(Math.abs(wM - 16) < 1, `ancho ${wM}`);
   assert.ok(Math.abs(hM - 20) < 1, `alto ${hM}`);
+});
+
+// ── point-in-polygon (snap al edificio OSM que contiene la póliza) ──────
+ok('pointInPolygon: dentro del cuadrado → true', () => {
+  const sq = { type: 'Polygon', coordinates: [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]] };
+  assert.equal(pointInPolygon(1, 1, sq), true);
+});
+ok('pointInPolygon: fuera del cuadrado → false', () => {
+  const sq = { type: 'Polygon', coordinates: [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]] };
+  assert.equal(pointInPolygon(3, 1, sq), false);
+  assert.equal(pointInPolygon(1, -0.5, sq), false);
+});
+ok('pointInPolygon: MultiPolygon, dentro del 2º polígono → true', () => {
+  const mp = {
+    type: 'MultiPolygon',
+    coordinates: [
+      [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+      [[[5, 5], [5, 7], [7, 7], [7, 5], [5, 5]]],
+    ],
+  };
+  assert.equal(pointInPolygon(6, 6, mp), true);
+  assert.equal(pointInPolygon(3, 3, mp), false);
+});
+ok('pointInPolygon: geometría inválida → false', () => {
+  assert.equal(pointInPolygon(1, 1, null), false);
+  assert.equal(pointInPolygon(1, 1, { type: 'Point', coordinates: [1, 1] }), false);
 });
 
 console.log(`\nfloodGeometry: ${passed} casos OK`);
