@@ -68,6 +68,17 @@ Con el `ReturnPeriodSelector` cambia el RP (T10 → T500) y comprueba que TODO e
 - [ ] **Top 10 highest risk**: la columna "Est. loss" escala (las barras relativas NO cambian — es correcto).
 - [ ] En T500 ningún número de pérdida del dashboard contradice el PML del KPI.
 
+## Rendimiento · code-splitting (jun 2026)
+
+Con la pestaña Network abierta (`pnpm preview` o deploy):
+
+- [ ] El chunk de entrada (`index-*.js`) ronda ~84 KB gz, no ~770 KB.
+- [ ] Al entrar a `/portfolio` (y solo ahí) se baja `aggrid-*.js` (~300 KB gz).
+- [ ] Las rutas de mapa bajan `maplibre-*.js`; las de dashboard, `echarts-*.js`.
+- [ ] Rutas sin charts/mapa (`/data`, `/leakage`) NO bajan echarts/maplibre/aggrid.
+- [ ] Al navegar entre vistas aparece el spinner `Loading` (Suspense) sin error.
+- [ ] No se sirven ficheros `.map` (sourcemap desactivado en prod).
+
 ## DevTools
 
 - [ ] 0 errors and 0 warnings in console.

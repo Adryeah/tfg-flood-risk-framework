@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Layout } from './components/Layout.jsx';
-import { Overview } from './views/Overview.jsx';
-import { ValenciaMap } from './views/ValenciaMap.jsx';
-import { AlgemesiMap } from './views/AlgemesiMap.jsx';
-import { Comparison } from './views/Comparison.jsx';
-import { PortfolioExplorer } from './views/portfolio-explorer.jsx';
-import { PolicyMap } from './views/policy-map.jsx';
-import { ExposureDashboard } from './views/exposure-dashboard.jsx';
-import { ModelValidation } from './views/model-validation.jsx';
-import { Transferability } from './views/transferability.jsx';
-import { LeakageAudit } from './views/leakage-audit.jsx';
-import { DanaTimeline } from './views/dana-timeline.jsx';
-import { DataDownloads } from './views/data-downloads.jsx';
-import { UnderwriterConsole } from './views/policy-tour-3d.jsx';
+import { Loading } from './components/Loading.jsx';
+
+// Lazy por ruta: cada vista en su propio chunk, fuera del bundle de entrada.
+// Saca ag-grid (/portfolio), maplibre (mapas) y echarts (dashboards) del
+// entry. Las vistas exportan named, así que se mapean a `default`.
+const lazyView = (loader, name) =>
+  lazy(() => loader().then((m) => ({ default: m[name] })));
+
+const Overview = lazyView(() => import('./views/Overview.jsx'), 'Overview');
+const DanaTimeline = lazyView(() => import('./views/dana-timeline.jsx'), 'DanaTimeline');
+const ValenciaMap = lazyView(() => import('./views/ValenciaMap.jsx'), 'ValenciaMap');
+const AlgemesiMap = lazyView(() => import('./views/AlgemesiMap.jsx'), 'AlgemesiMap');
+const Comparison = lazyView(() => import('./views/Comparison.jsx'), 'Comparison');
+const PortfolioExplorer = lazyView(() => import('./views/portfolio-explorer.jsx'), 'PortfolioExplorer');
+const PolicyMap = lazyView(() => import('./views/policy-map.jsx'), 'PolicyMap');
+const ExposureDashboard = lazyView(() => import('./views/exposure-dashboard.jsx'), 'ExposureDashboard');
+const UnderwriterConsole = lazyView(() => import('./views/policy-tour-3d.jsx'), 'UnderwriterConsole');
+const ModelValidation = lazyView(() => import('./views/model-validation.jsx'), 'ModelValidation');
+const Transferability = lazyView(() => import('./views/transferability.jsx'), 'Transferability');
+const LeakageAudit = lazyView(() => import('./views/leakage-audit.jsx'), 'LeakageAudit');
+const DataDownloads = lazyView(() => import('./views/data-downloads.jsx'), 'DataDownloads');
 
 const SECTIONS = {
   '/': Overview,
@@ -51,7 +59,9 @@ export default function App() {
 
   return (
     <Layout>
-      <ViewComponent />
+      <Suspense fallback={<Loading />}>
+        <ViewComponent />
+      </Suspense>
     </Layout>
   );
 }

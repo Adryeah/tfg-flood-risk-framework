@@ -24,11 +24,20 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    sourcemap: true,
+    // false: no se publican ~13 MB de sourcemaps ni se expone el fuente.
+    // Cambiar a 'hidden' si se añade un error-tracker que los consuma.
+    sourcemap: false,
     rollupOptions: {
       output: {
+        // Separa las libs pesadas en chunks propios: cachean entre deploys
+        // y, con el lazy por ruta de App.jsx, maplibre solo lo bajan las
+        // rutas de mapa y ag-grid solo /portfolio.
         manualChunks: (id) => {
-          if (id.includes('echarts')) return 'echarts';
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('echarts') || id.includes('zrender')) return 'echarts';
+          if (id.includes('maplibre-gl')) return 'maplibre';
+          if (id.includes('ag-grid')) return 'aggrid';
+          return undefined;
         },
       },
     },
