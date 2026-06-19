@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Map, MapClusterLayer, MapControls, useMap } from '@/components/Map.tsx';
-import { ExposureKpi } from '@/components/exposure-kpi.jsx';
+import { CapitalExposureHero } from '@/components/capital-exposure-hero.jsx';
 import { InfoHint } from '@/components/info-hint.jsx';
 import { api } from '@/lib/api.js';
 import { ZONES, RISK_COLORS } from '@/lib/constants.js';
@@ -340,51 +340,15 @@ function HeroKpis({ portfolio, exposure }) {
   }, [portfolio]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-3">
-      <ExposureKpi
-        tier={1}
-        label="Total insured value"
-        numeric={tiv / 1e6}
-        format={(v) => `€${v.toFixed(1)}`}
-        unit="M"
-        sub={`${totalCount.toLocaleString()} ${t('policies in scope')}`}
-        variant="info"
-        objective="Contexto — capital total bajo análisis."
-        animationDelay={0}
-      />
-      <ExposureKpi
-        tier={2}
-        label={`EAL · ${rpLabel(rp)}`}
-        numeric={eal / 1000}
-        format={(v) => `€${v.toFixed(0)}`}
-        unit="K"
-        sub={`${t('Probability-weighted')} · escalado AEP a ${rpLabel(rp)}`}
-        variant="warning"
-        objective="Minimizar — base de prima técnica anual."
-        animationDelay={80}
-      />
-      <ExposureKpi
-        tier={1}
-        label={`PML · ${rpLabel(rp)} scenario`}
-        numeric={pml / 1e6}
-        format={(v) => `€${v.toFixed(1)}`}
-        unit="M"
-        sub={`Single-event loss at ${rpLabel(rp)} (Dottori 2018 elasticidad)`}
-        variant="risk"
-        objective="Vigilar — capital requerido por Solvencia II."
-        animationDelay={160}
-      />
-      <ExposureKpi
-        tier={3}
-        label="Affected policies"
-        numeric={highCount}
-        format={(v) => Math.round(v).toLocaleString()}
-        unit={`/ ${totalCount.toLocaleString()}`}
-        sub={`€${(highValue / 1e6).toFixed(1)}M ${t('high-risk exposure')}`}
-        variant="risk"
-        animationDelay={240}
-      />
-    </div>
+    <CapitalExposureHero
+      tiv={tiv}
+      pml={pml}
+      eal={eal}
+      totalCount={totalCount}
+      highCount={highCount}
+      highValue={highValue}
+      rpLabel={rpLabel(rp)}
+    />
   );
 }
 
