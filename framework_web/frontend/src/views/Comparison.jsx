@@ -16,11 +16,11 @@ import { api } from '../lib/api.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Area under the Receiver Operating Characteristic curve. Measures pure ranking: does the model assign higher probability to flooded pixels than to dry ones? Robust under prevalence shift — that's why it survives the transfer (0.922 → 0.817) better than F1 or precision.`,
+    body: `Area under the Receiver Operating Characteristic curve. Measures pure ranking: does the model assign higher probability to flooded pixels than to dry ones? Robust under prevalence shift — that's why it transfers well (0.840 → 0.788, Δ−0.05) with the v3-T transferable feature set.`,
   },
   'F1 score': {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision and recall at the decision threshold. Tied to a specific operating point, so it collapses when prevalence shifts. The 0.485 → 0.018 drop is mostly precision (prevalence is 27× lower in Algemesí).`,
+    body: `Harmonic mean of precision and recall at the decision threshold. Tied to a specific operating point, so it stays low under extreme prevalence shift (0.549 → 0.015), driven by precision — Algemesí has 27× lower prevalence. At pixel level F1 is structurally limited; the product aggregates to zone/policy level.`,
   },
   Precision: {
     cite: 'sklearn.metrics.precision_score',
@@ -28,11 +28,11 @@ const METRIC_DOCS = {
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). Fraction of actually-flooded pixels the model catches. Counter-intuitively IMPROVES on Algemesí (0.777 → 0.919) because the threshold was recalibrated to maximise F1 in the new prevalence regime.`,
+    body: `TP / (TP + FN). Fraction of actually-flooded pixels the model catches. With v3-T the recall transfers at the SAME threshold (0.736 → 0.626, no recalibration) — unlike the v2 model whose recall collapsed to 0 extrapolating. With a 100 m operational buffer it reaches 0.92.`,
   },
   Threshold: {
     cite: 'Operational decision point',
-    body: `Probability above which a pixel is classified as flood. Valencia: 0.614 (recall ≥ 0.75 criterion on spatial CV). Algemesí: 0.389 (recalibrated to max F1 because the prevalence is so much lower that the Valencia threshold misses too many positives).`,
+    body: `Probability above which a pixel is classified as flood. v3-T uses a SINGLE calibrated threshold (0.310, recall ≥ 0.75 criterion on Valencia spatial CV) applied to every zone without recalibration — the calibration makes the probability scale comparable across zones.`,
   },
   'Positive prevalence': {
     cite: 'EMSR773 ground truth',
@@ -306,8 +306,8 @@ export function Comparison() {
     { label: 'Recall', v: vm.recall, a: am.recall, deltaKind: 'metric' },
     {
       label: 'Threshold',
-      v: 0.614,
-      a: 0.389,
+      v: 0.31,
+      a: 0.31,
       raw: true,
       deltaKind: 'numeric',
     },
@@ -348,7 +348,7 @@ export function Comparison() {
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Geographic generalisation test: the same Random Forest v2 trained in l'Horta Sud, applied to Algemesí without retraining or recalibration.
+          Geographic generalisation test: the same Random Forest v3-T trained in l'Horta Sud, applied to Algemesí without retraining or recalibration.
         </p>
       </header>
 
@@ -531,16 +531,17 @@ export function Comparison() {
           Transferability insight
         </div>
         <p className="text-13 text-text-primary leading-relaxed">
-          The model trained exclusively on Valencia identifies{' '}
-          <span className="font-semibold">91.9 %</span> of flooded areas in
-          Algemesí without retraining. AUC drops from{' '}
-          <span className="font-mono">0.922</span> to{' '}
-          <span className="font-mono">0.817</span> but ranking remains highly
-          informative. Precision collapses (
-          <span className="font-mono">35.3 % → 0.9 %</span>) because positive
-          prevalence is <span className="font-mono">27×</span> lower and there
-          is feature drift on{' '}
-          <span className="font-mono">distance_to_coast</span>.
+          The v3-T model trained exclusively on Valencia identifies{' '}
+          <span className="font-semibold">92 %</span> of flooded areas in
+          Algemesí (100 m buffer) without retraining. AUC transfers from{' '}
+          <span className="font-mono">0.840</span> to{' '}
+          <span className="font-mono">0.788</span> and — unlike the prior v2
+          model — recall also transfers ({' '}
+          <span className="font-mono">0.74 → 0.63</span>) at the same calibrated
+          threshold. Precision stays low (
+          <span className="font-mono">0.9 %</span>) because positive prevalence
+          is <span className="font-mono">27×</span> lower; the product therefore
+          aggregates risk to zone/policy level rather than per pixel.
         </p>
       </div>
     </div>

@@ -135,6 +135,16 @@ data/
 # ---------------------------------------------------------------------------
 models/*
 !models/random_forest_v2.joblib
+# v3-T (modelo transferible final) + su calibrador — el backend los carga
+# en producción (Render), así que deben versionarse.
+!models/random_forest_v3t.joblib
+!models/v3t_calibrator.joblib
+
+# Backups e intermedios locales del swap a v3-T (NO versionar).
+framework_web/backend/data_processed/tiles_v2_backup_*/
+framework_web/backend/data_processed/*.v2backup
+framework_web/backend/data_processed/precomputed_metrics_v3t.json
+.claude-flow/
 
 # ---------------------------------------------------------------------------
 # Scratch / runtime

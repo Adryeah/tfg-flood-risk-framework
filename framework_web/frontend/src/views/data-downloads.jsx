@@ -88,7 +88,7 @@ const ARTIFACTS = [
     section: 'Modelo y datos sintéticos',
     items: [
       {
-        title: 'Random Forest v2 · modelo serializado',
+        title: 'Random Forest v3-T · modelo serializado',
         desc: 'Modelo final entrenado (joblib). 500 árboles, max_depth=15, class_weight=balanced. Compatible con scikit-learn 1.3+.',
         format: 'application/octet-stream · ~200 MB',
         href: `${GITHUB_RAW}/models/random_forest_v2.joblib`,

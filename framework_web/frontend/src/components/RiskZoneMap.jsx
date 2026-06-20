@@ -6,6 +6,12 @@ import { InfoTooltip } from './InfoTooltip.jsx';
 import { api } from '../lib/api.js';
 import { ZONES } from '../lib/constants.js';
 
+// Basemap oscuro fijo (CARTO dark-matter) para ambos slots de tema. El UI
+// es dark real; sobre fondo oscuro el heatmap YlOrRd destaca. Identidad
+// estable a nivel módulo para no re-disparar el efecto de estilo del Map.
+const DARK_MATTER = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+const DARK_BASEMAP = { light: DARK_MATTER, dark: DARK_MATTER };
+
 /**
  * Canonical risk-map widget used across the Daily Briefing bottom map and
  * the Valencia / Algemesí / Comparison views. Built on top of mapcn's
@@ -53,9 +59,10 @@ export function RiskZoneMap({
 }) {
   const targets = zone === 'both' ? ['valencia', 'algemesi'] : [zone];
 
-  // Bounds that comfortably encompass the selected zone(s) plus a small margin.
-  // MapLibre takes [[lng, lat], [lng, lat]] — keep that order.
-  const margin = 0.05;
+  // Bounds ceñidos al área de riesgo (delimitar la vista al mapa de riesgo):
+  // margen mínimo para que el borde del dato sea alcanzable sin dejar
+  // basemap vacío alrededor. MapLibre toma [[lng, lat], [lng, lat]].
+  const margin = 0.01;
   const lats = targets.flatMap((z) => [ZONES[z].bbox[1], ZONES[z].bbox[3]]);
   const lngs = targets.flatMap((z) => [ZONES[z].bbox[0], ZONES[z].bbox[2]]);
   const sw = [Math.min(...lngs) - margin, Math.min(...lats) - margin];
@@ -84,6 +91,11 @@ export function RiskZoneMap({
   return (
     <div className="relative" style={{ height }}>
       <Map
+        // Basemap SIEMPRE oscuro (CARTO dark-matter), no por tema del
+        // sistema: el UI es dark real y sobre fondo oscuro el heatmap de
+        // riesgo (YlOrRd) destaca; con positron claro se lavaba (igual que
+        // producción, que va dark). Forzamos ambos slots a dark-matter.
+        styles={DARK_BASEMAP}
         center={center}
         // 3D: start slightly closer (zoom 11.5) so the OpenFreeMap
         // building extrusions are already starting to render at first
@@ -92,11 +104,12 @@ export function RiskZoneMap({
         zoom={mode3d ? 11.5 : 10}
         minZoom={9}
         maxZoom={mode3d ? 17 : 14}
-        // No maxBounds in 3D — the user can pan freely beyond the
-        // affected zones so buildings outside the bbox are reachable
-        // (e.g. Valencia city centre, Cullera, Xàtiva). In 2D we keep
-        // the bounds tight to focus the eye on the modelled area.
-        maxBounds={mode3d ? undefined : [sw, ne]}
+        // SIN maxBounds: con bounds ceñidos al ráster, MapLibre dejaba de
+        // pintar el basemap fuera de ellos → aparecían zonas NEGRAS donde
+        // el contenedor (ancho) excede el bbox. El encuadre inicial ya lo
+        // da fitBounds(initialBounds) en RiskLayers; el basemap llena todo
+        // el canvas y la superficie de riesgo queda enmarcada sin negros.
+        maxBounds={undefined}
         // 3D camera tilt + slight bearing rotation when mode3d. Buildings
         // start emerging visually around zoom 13; the user can drag to
         // dolly in. maxPitch:70 keeps a sane horizon (above 75° the
@@ -284,7 +297,7 @@ function RiskLayers({
               tileSize: 256,
               minzoom: 10,
               maxzoom: 15,
-              attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+              attribution: 'Random Forest v3-T · TFG Vargas (UAB)',
             });
             map.addLayer({
               id,
@@ -718,8 +731,11 @@ function PixelInspectionContent({ inspection }) {
   // status === 'ready'
   const prob = Number(data.probability ?? 0);
   const cat = (data.category || categorize(prob)).toUpperCase();
-  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MEDIUM: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)' }[cat] || '#F3F5F7';
-  const sevFg = { LOW: '#15803D', MEDIUM: '#D97706', HIGH: '#DC2626' }[cat] || '#1F2937';
+  // 4 bandas alineadas con el backend (categorize_probability): low /
+  // moderate / high / very_high. Antes MODERATE y VERY_HIGH caían al
+  // gris por defecto porque el mapa solo tenía MEDIUM/HIGH.
+  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MODERATE: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)', VERY_HIGH: 'rgba(153,27,27,0.16)' }[cat] || '#F3F5F7';
+  const sevFg = { LOW: '#15803D', MODERATE: '#D97706', HIGH: '#DC2626', VERY_HIGH: '#991B1B' }[cat] || '#1F2937';
   const features = data.features || {};
   const topFeatures = Object.entries(features).slice(0, 5);
 
@@ -793,9 +809,11 @@ function Coords({ lat, lon }) {
 }
 
 function categorize(p) {
-  if (p < 0.3) return 'low';
-  if (p < 0.614) return 'medium';
-  return 'high';
+  // Mismas bandas que el backend (categorize_probability).
+  if (p < 0.25) return 'low';
+  if (p < 0.5) return 'moderate';
+  if (p < 0.75) return 'high';
+  return 'very_high';
 }
 
 // ─── Floating overlay panel ───────────────────────────────────────────

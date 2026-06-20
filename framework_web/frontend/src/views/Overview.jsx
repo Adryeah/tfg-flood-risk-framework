@@ -30,7 +30,7 @@ const PORTFOLIO_ID = 'wide_distribution';
 // historical scene retrieval is wired into the backend. Info tooltips on
 // each component disclose this so they can't be confused with measurements.
 const SPARK = {
-  auc:    [0.901, 0.908, 0.914, 0.911, 0.917, 0.922, 0.918, 0.922],
+  auc:    [0.821, 0.828, 0.834, 0.831, 0.838, 0.840, 0.837, 0.840],
   recall: [0.946, 0.951, 0.948, 0.953, 0.957, 0.955, 0.958, 0.958],
   pixels: [6.8, 6.9, 7.0, 7.1, 7.2, 7.3, 7.4, 7.5],
 };
@@ -136,11 +136,11 @@ export function Overview() {
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-11 font-mono text-text-tertiary">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
-            Random Forest v2 · 14 features
+            Random Forest v3-T · 9 features
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
-            AUC 0.922 · GroupKFold 5×1 km
+            AUC 0.840 · GroupKFold 5×1 km
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
@@ -225,7 +225,7 @@ export function Overview() {
           objective="Maximizar — capacidad de ranking del modelo."
           animationDelay={0}
           info={{
-            what: 'Área bajo la curva ROC del modelo Random Forest v2 en el conjunto out-of-fold de Valencia, promediada sobre 5 folds espaciales GroupKFold (bloques de 1×1 km).',
+            what: 'Área bajo la curva ROC del modelo Random Forest v3-T en el conjunto out-of-fold de Valencia, promediada sobre 5 folds espaciales GroupKFold (bloques de 1×1 km).',
             source: 'GET /api/metrics/valencia → model_metrics.auc_mean / .auc_std',
           }}
         />
@@ -412,7 +412,7 @@ export function Overview() {
             />
           </div>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-bg-subtle text-text-secondary text-10 font-mono uppercase tracking-wider shrink-0">
-            RF v2 · GROUPKFOLD
+            RF v3-T · GROUPKFOLD
           </span>
         </div>
         <RiskZoneMap zone="both" height={520} mode3d />
@@ -457,7 +457,7 @@ export function Overview() {
             register="attribution"
             title="Feature importance · Δ AUC"
             subtitle="Qué features sostienen el ranking del Random Forest."
-            badge="RF v2"
+            badge="RF v3-T"
             info={{
               what: 'Permutation importance of each model feature — the drop in AUC when its column is randomly shuffled on the Valencia OOF set.',
               source: 'GET /api/metrics/transferability → feature_drift[].importance_valencia',

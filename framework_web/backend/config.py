@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
 
     DATA_PROCESSED_DIR: Path = REPO_ROOT / "framework_web" / "backend" / "data_processed"
-    MODEL_PATH: Path = REPO_ROOT / "models" / "random_forest_v2.joblib"
+    MODEL_PATH: Path = REPO_ROOT / "models" / "random_forest_v3t.joblib"
+    CALIBRATOR_PATH: Path = REPO_ROOT / "models" / "v3t_calibrator.joblib"
 
     # Accept CORS_ORIGINS as a comma-separated env var so Render's UI
     # (single-line input) works without JSON escaping:
@@ -79,8 +80,10 @@ class Settings(BaseSettings):
             return [s.strip() for s in stripped.split(",") if s.strip()]
         return v
 
-    THRESHOLD_OPERATIONAL: float = 0.614
-    THRESHOLD_OPERATIONAL_ALGEMESI: float = 0.389
+    # v3-T: umbral operacional unico (calibrado, recall>=0,75 en holdout
+    # Valencia). El modelo transferible usa el mismo umbral en toda zona.
+    THRESHOLD_OPERATIONAL: float = 0.310
+    THRESHOLD_OPERATIONAL_ALGEMESI: float = 0.310
 
 
 settings = Settings()

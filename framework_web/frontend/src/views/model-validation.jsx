@@ -21,7 +21,7 @@ import { api } from '@/lib/api.js';
 import { useInView, useCountUp } from '@/lib/animations.js';
 import { FEATURE_DOCS, CATEGORY_META } from '@/lib/feature-docs.js';
 
-const THRESHOLD_OPERATIONAL = 0.614;
+const THRESHOLD_OPERATIONAL = 0.310;
 
 // ─── Methodology references shown at the bottom of the page ──────────
 // Curated list — each row maps directly to a metric or chart visible on
@@ -132,10 +132,10 @@ export function ModelValidation() {
             Model & Validation
           </h1>
           <Badge className="bg-brand-50 text-brand-700 hover:bg-brand-50 text-10 font-mono uppercase tracking-wider">
-            Random Forest v2
+            Random Forest v3-T
           </Badge>
           <Badge variant="outline" className="text-10 font-mono uppercase tracking-wider">
-            14 features
+            9 features
           </Badge>
         </div>
         <p className="font-serif italic text-15 text-text-secondary mt-2 max-w-2xl leading-snug">
@@ -161,9 +161,9 @@ export function ModelValidation() {
           </div>
           <AucHero auc={m.auc_mean} std={m.auc_std} />
           <p className="font-serif italic text-14 text-text-secondary mt-3 max-w-md leading-snug">
-            Random Forest v2 trained on 14 features over Sentinel-1 SAR
-            backscatter pre/post DANA Valencia 2024, validated against
-            Copernicus EMS EMSR773.
+            Random Forest v3-T trained on 9 transferable features over
+            Sentinel-1 SAR backscatter pre/post DANA Valencia 2024, validated
+            against Copernicus EMS EMSR773.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <div className="h-px w-7 bg-brand-500/60" />
@@ -337,6 +337,48 @@ export function ModelValidation() {
             </dt>
             <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
               {((metrics.n_pixels || 0) / 1e6).toFixed(1)}M
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* ─── 06 Methodology · pipeline transferible v3-T ─── */}
+      <div className="mt-8 pl-6 border-l border-brand-500/60">
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldCheck className="w-4 h-4 text-brand-700" strokeWidth={1.75} />
+          <span className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+            Metodología · modelo transferible v3-T
+          </span>
+        </div>
+        <h3 className="font-serif text-22 text-text-primary tracking-tight leading-tight mb-2">
+          De 14 features a 9: la cadena que hace el modelo transferible
+        </h3>
+        <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-2xl">
+          {`El v3-T no se ajusta a ojo. (1) Selección de features por ablación Leave-One-Zone-Out bidireccional: se quita cada feature y se mide el AUC cruzado Valencia↔Algemesí en ambos sentidos; las que dañan la transferencia —elevation, slope y, por su efecto sobre el punto de decisión, distance_to_coast— se eliminan, quedando 9. (2) Calibración isotónica ajustada en un hold-out disjunto de Valencia: hace que un "0,7" signifique de verdad ~70 % también en zona nueva (ECE 0,24 → 0,06). (3) Area of Applicability (Meyer & Pebesma 2021): el modelo delimita dónde es competente y dónde extrapola a ciegas.`}
+        </p>
+        <dl className="mt-4 grid grid-cols-3 gap-x-6 max-w-md">
+          <div>
+            <dt className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+              Features
+            </dt>
+            <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
+              9
+            </dd>
+          </div>
+          <div>
+            <dt className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+              Umbral calibrado
+            </dt>
+            <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
+              0,310
+            </dd>
+          </div>
+          <div>
+            <dt className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
+              ECE calibrado
+            </dt>
+            <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
+              0,06
             </dd>
           </div>
         </dl>
@@ -995,7 +1037,7 @@ function FeatureImportanceChart({ features }) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Feature glossary — all 14 features with category chip + unit +
+// Feature glossary — all 9 features with category chip + unit +
 // one-line "what it measures" description.
 //
 // Why a static glossary AND a chart tooltip? Different reading modes:

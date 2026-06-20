@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-quartz.css';
+import { ModuleRegistry, AllCommunityModule, themeQuartz } from 'ag-grid-community';
 import * as echarts from 'echarts';
 import { Download, Loader2 } from 'lucide-react';
 
@@ -71,6 +69,27 @@ function computeLocalExposure(portfolio) {
 // CSV export). Registration is idempotent — calling at module-load time is
 // safe even if another view also registered.
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Tema OSCURO vía Theming API (AG Grid 35). Más fiable que theme="legacy"
+// + CSS (que dejaba el body blanco): aquí el grid de Clients se inyecta en
+// negro coherente con el tema dark de la plataforma. NO importar las CSS
+// legacy de tema (entran en conflicto con la Theming API).
+const AG_DARK = themeQuartz.withParams({
+  backgroundColor: '#161718',
+  foregroundColor: '#f7f8f8',
+  headerBackgroundColor: '#0f1011',
+  headerTextColor: '#8a8f98',
+  oddRowBackgroundColor: '#161718',
+  evenRowBackgroundColor: '#131415',
+  rowHoverColor: 'rgba(255,255,255,0.04)',
+  selectedRowBackgroundColor: 'rgba(29,111,168,0.14)',
+  borderColor: '#23252a',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  fontSize: 12,
+  headerHeight: 32,
+  rowHeight: 32,
+  borderRadius: 0,
+});
 
 const RISK_BG = {
   low: 'rgba(22,163,74,0.14)',
@@ -618,20 +637,17 @@ export function PortfolioExplorer() {
               </span>
             </div>
           </CardHeader>
-          <div className="flex-1 min-h-0 ag-theme-quartz ag-theme-quartz-tight relative">
+          <div className="flex-1 min-h-0 relative">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-bg-base/50 z-[5]">
                 <Loader2 className="w-5 h-5 animate-spin text-text-tertiary" />
               </div>
             ) : null}
             <AgGridReact
-              /* v33+ usa la Theming API (JS) por defecto, que inyecta el
-               * Quartz light e IGNORA los overrides de --ag-* del
-               * .ag-theme-quartz en main.css (por eso el body salía blanco
-               * y solo el header — estilado por propiedad directa — iba
-               * dark). theme="legacy" reactiva el tema CSS + nuestras
-               * variables dark. */
-              theme="legacy"
+              /* Tema oscuro vía Theming API (AG_DARK arriba) — garantiza el
+               * grid en negro coherente con la plataforma, sin depender de
+               * CSS legacy que dejaba el body blanco. */
+              theme={AG_DARK}
               rowData={filteredClients}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
@@ -719,7 +735,6 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         format={(v) => fmtMoney(v)}
         sub={`${totalCount.toLocaleString()} ${t('active')} · ${filteredCount.toLocaleString()} ${t('shown')}`}
         variant="info"
-        objective="Contexto — base de exposición total de la cartera."
         animationDelay={0}
       />
       <ExposureKpi
@@ -729,7 +744,6 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         format={(v) => fmtMoney(v)}
         sub="Pérdida esperada anual"
         variant="warning"
-        objective="Minimizar — pérdida esperada en un año medio."
         animationDelay={80}
       />
       <ExposureKpi
@@ -740,7 +754,6 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         sub="Si una DANA golpea hoy"
         variant="risk"
         scale={{ value: pml, max: tiv, leftLabel: '0', rightLabel: 'TIV', color: 'var(--accent-risk-text)' }}
-        objective="Vigilar — peor caso single-event para capital."
         animationDelay={160}
       />
       <ExposureKpi
@@ -751,7 +764,6 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
         sub={`${tiv ? ((highValue / tiv) * 100).toFixed(1) : '0'}% ${t('of TIV')}`}
         variant="risk"
         scale={{ value: highValue, max: tiv, leftLabel: '0', rightLabel: 'TIV', color: 'var(--accent-risk-text)' }}
-        objective="Reducir — concentración en píxeles de alto riesgo."
         animationDelay={240}
       />
       <ExposureKpi

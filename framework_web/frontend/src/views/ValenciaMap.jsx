@@ -77,7 +77,7 @@ export function ValenciaMap() {
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random Forest v2.
+          l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random Forest v3-T.
         </p>
       </header>
 
@@ -164,13 +164,17 @@ export function ValenciaMap() {
             <p className="text-11 text-text-tertiary mt-3 leading-relaxed">
               {viewMode === 'binary' ? (
                 <>
-                  Binary view: pixels with{' '}
+                  Capa de inspección · <strong>sensibilidad primero</strong>.
+                  Píxeles con{' '}
                   <span className="font-mono text-text-secondary">
                     p ≥ {threshold.toFixed(3)}
                   </span>{' '}
-                  are coloured red (flood-positive); the rest are muted
-                  grey. Drag the slider to see the classification update
-                  live.
+                  se marcan para inspección (rojo). El umbral operacional
+                  0,310 (recall ≥ 0,75) marca ~25 % del territorio{' '}
+                  <em>a propósito</em>: en seguros, no detectar una
+                  inundación es peor que inspeccionar de más. Sube el
+                  umbral para aislar el núcleo de alto riesgo (p ≥ 0,50 ≈
+                  5 %).
                 </>
               ) : (
                 <>

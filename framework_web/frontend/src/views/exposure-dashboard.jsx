@@ -158,7 +158,7 @@ export function ExposureDashboard() {
 
           {/* Banner SNCZI · solo aparece cuando el operador ha
            *  activado el toggle 'snczi' Y el backend responde que la
-           *  integración está pendiente. Mientras seguimos con RF v2
+           *  integración está pendiente. Mientras seguimos con RF v3-T
            *  como fallback. */}
           <SnczNoticeBar variant="inline" />
 
@@ -374,7 +374,7 @@ function MethodologyFooter() {
       </p>
       <p>
         Capa de peligro: <span className="font-mono text-text-primary">P(flood)</span> del
-        Random Forest v2 (14 variables, GroupKFold 5×1 km, umbral operacional 0.614)
+        Random Forest v3-T (9 variables, GroupKFold 5×1 km, umbral operacional 0.310)
         entrenado sobre retrodispersión SAR Sentinel-1 pre/post DANA Valencia 2024 y validado
         contra Copernicus EMS EMSR773.
       </p>
@@ -749,7 +749,7 @@ function ConcentrationRiskBackdrop() {
         tileSize: 256,
         minzoom: 10,
         maxzoom: 15,
-        attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+        attribution: 'Random Forest v3-T · TFG Vargas (UAB)',
       });
       map.addLayer({
         id,

@@ -87,14 +87,15 @@ def predict_risk(
         )
 
     import numpy as np
-    x = np.array([feats["features"][f] for f in FEATURE_NAMES_V2],
+    # v3-T: el set de features (9) lo declara el propio modelo. feats["features"]
+    # trae las 14 del lookup (superset), se seleccionan las que el modelo usa.
+    x = np.array([feats["features"][f] for f in model.get_feature_names()],
                  dtype="float32")
-    proba = model.predict(x)
+    proba = model.predict(x)  # ya calibrada
     category = categorize_probability(proba)
 
-    threshold = (settings.THRESHOLD_OPERATIONAL_ALGEMESI
-                 if feats["zone"] == "algemesi"
-                 else settings.THRESHOLD_OPERATIONAL)
+    # v3-T usa un umbral operacional unico para toda zona.
+    threshold = model.get_threshold()
 
     return RiskPredictionResponse(
         lat=lat,

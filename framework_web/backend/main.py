@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
     # 1. Modelo
     t = time.time()
     try:
-        get_model_service().load_model(settings.MODEL_PATH)
+        get_model_service().load_model(settings.MODEL_PATH, settings.CALIBRATOR_PATH)
         log.info("Modelo cargado en %.2f s", time.time() - t)
     except Exception as exc:
         log.exception("Fallo cargando modelo: %s", exc)

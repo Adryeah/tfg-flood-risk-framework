@@ -1,9 +1,11 @@
 export const API_BASE = '/api';
 
+// Bordes de banda de categoría, alineados con el backend
+// (categorize_probability): >=0.25 moderate, >=0.5 high, >=0.75 very_high.
 export const RISK_THRESHOLDS = {
-  low: 0.3,
-  medium: 0.614,
-  high: 0.85,
+  moderate: 0.25,
+  high: 0.5,
+  very_high: 0.75,
 };
 
 // Paleta canónica de categoría de riesgo (esquema de 4 bins del modelo) para
@@ -28,11 +30,13 @@ export const ZONES = {
     description: "l'Horta Sud (training zone)",
     center: [39.43, -0.4],
     zoom: 11,
-    threshold: 0.614,
-    bbox: [-0.55, 39.3, -0.25, 39.55],
+    threshold: 0.31,
+    // bbox = extensión REAL del ráster de riesgo v3-T (no el study-bbox,
+    // que era ligeramente menor y recortaba los bordes de la zona).
+    bbox: [-0.559, 39.293, -0.24, 39.557],
     leafletBounds: [
-      [39.3, -0.55],
-      [39.55, -0.25],
+      [39.293, -0.559],
+      [39.557, -0.24],
     ],
     color: '#1D4ED8', // brand-700 — training area
   },
@@ -42,11 +46,12 @@ export const ZONES = {
     description: 'Ribera Alta del Júcar (extrapolation)',
     center: [39.19, -0.43],
     zoom: 11,
-    threshold: 0.389,
-    bbox: [-0.698, 39.007, -0.166, 39.365],
+    threshold: 0.31,
+    // bbox = extensión REAL del ráster de riesgo v3-T de Algemesí.
+    bbox: [-0.71, 38.995, -0.152, 39.377],
     leafletBounds: [
-      [39.007, -0.698],
-      [39.365, -0.166],
+      [38.995, -0.71],
+      [39.377, -0.152],
     ],
     color: '#7E22CE', // purple-700 — extrapolation area
   },

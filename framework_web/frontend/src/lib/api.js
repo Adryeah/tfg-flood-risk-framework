@@ -7,6 +7,11 @@ const DEFAULT_TIMEOUT = 30000;
 // Trailing slash stripped so we don't end up with double // in URLs.
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
+// Versión del modelo — cache-buster para tiles/geojson (servidos con
+// Cache-Control immutable). Subir en cada re-entrenamiento para invalidar
+// la caché del navegador. v3-T = modelo transferible de 9 features.
+const MODEL_VERSION = 'v3t2';
+
 function withBase(path) {
   // Pass-through for any caller that already uses an absolute URL.
   if (/^https?:\/\//i.test(path)) return path;
@@ -87,16 +92,20 @@ export const api = {
   health: () => request('/api/health'),
 
   risk: {
-    getGeoJSON: (zone) => request(`/api/risk/${zone}.geojson`),
+    // ?v= cache-buster: los tiles/geojson se sirven con Cache-Control
+    // immutable; al cambiar el modelo (v3-T) hay que invalidar la caché
+    // del navegador o seguiría mostrando los tiles v2 con la misma URL.
+    // Subir este sufijo en cada re-entrenamiento del modelo.
+    getGeoJSON: (zone) => request(`/api/risk/${zone}.geojson?v=${MODEL_VERSION}`),
     // Low-probability shoulder (p ∈ [0, 0.25)). Opt-in overlay; may 404
     // if the export script hasn't been re-run with the tail step.
-    getTailGeoJSON: (zone) => request(`/api/risk/${zone}/tail.geojson`),
+    getTailGeoJSON: (zone) => request(`/api/risk/${zone}/tail.geojson?v=${MODEL_VERSION}`),
     predict: (lat, lon) => request(`/api/risk/predict?lat=${lat}&lon=${lon}`),
     // Plantilla XYZ para MapLibre raster source — `{z}/{x}/{y}` quedan
     // como literales para que MapLibre los sustituya por tile. Devuelve
     // la URL ABSOLUTA al backend (no relativa) para evitar que el
     // navegador resuelva contra el dominio del frontend en producción.
-    tilesUrl: (zone) => `${API_BASE}/api/tiles/${zone}/{z}/{x}/{y}.png`,
+    tilesUrl: (zone) => `${API_BASE}/api/tiles/${zone}/{z}/{x}/{y}.png?v=${MODEL_VERSION}`,
   },
 
   geo: {

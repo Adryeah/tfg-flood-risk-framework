@@ -245,7 +245,7 @@ export function Sidebar({ isOpen = false, onClose = () => {} }) {
           className="text-10 font-mono uppercase tracking-[0.14em]"
           style={{ color: 'var(--text-muted)' }}
         >
-          Build 0.1.0 · RF v2 · GroupKFold 5×1km
+          Build 0.1.0 · RF v3-T · GroupKFold 5×1km
         </div>
       </div>
     </aside>

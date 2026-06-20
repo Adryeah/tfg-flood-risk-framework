@@ -208,7 +208,7 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
             className="text-10 uppercase tracking-[0.06em]"
             style={{ color: 'var(--accent-risk-text)', fontWeight: 600 }}
           >
-            Predicción · RF v2
+            Predicción · RF v3-T
           </span>
         </div>
       </div>

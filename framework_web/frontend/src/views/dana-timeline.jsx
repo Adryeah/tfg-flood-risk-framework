@@ -72,7 +72,7 @@ const PHASES = [
     body: (
       <>
         Entrenado con 28 escenas baseline (sin nunca ver las dos del
-        evento), Random Forest v2 emitía mapas de probabilidad sobre
+        evento), Random Forest v3-T emitía mapas de probabilidad sobre
         l'Horta Sud. Las cotas bajas, los cauces del Turia y el sur
         de Catarroja ya aparecían en{' '}
         <strong>rojo oscuro (p &gt; 0.75)</strong> en julio de 2024.
@@ -126,8 +126,8 @@ const PHASES = [
         La delineación de Copernicus EMS identifica{' '}
         <strong>199 km² inundados</strong>. Comparado con la
         predicción del modelo de antes del evento:{' '}
-        <strong>AUC 0.922 · Recall 77.7 % · Buffered recall a 100 m
-        95.8 %</strong>. El modelo, entrenado solo con datos
+        <strong>AUC 0.840 · Recall 73.6 % · Buffered recall a 100 m
+        98.2 %</strong>. El modelo, entrenado solo con datos
         anteriores, había marcado correctamente la geometría del
         riesgo.
       </>
@@ -310,11 +310,11 @@ function HeroStatCard({ stat, idx, active }) {
 // cuando la sección entra al viewport.
 function RecallVerdict() {
   const [ref, inView] = useInView({ threshold: 0.25 });
-  const recall = useCountUp(95.8, { active: inView, duration: 1400 });
-  const pixelRecall = useCountUp(77.7, { active: inView, duration: 1400, startDelay: 200 });
-  const auc = useCountUp(0.922, { active: inView, duration: 1400, startDelay: 300 });
-  const f1 = useCountUp(0.485, { active: inView, duration: 1400, startDelay: 400 });
-  const captured = useCountUp(190.7, { active: inView, duration: 1400, startDelay: 100 });
+  const recall = useCountUp(98.2, { active: inView, duration: 1400 });
+  const pixelRecall = useCountUp(73.6, { active: inView, duration: 1400, startDelay: 200 });
+  const auc = useCountUp(0.840, { active: inView, duration: 1400, startDelay: 300 });
+  const f1 = useCountUp(0.549, { active: inView, duration: 1400, startDelay: 400 });
+  const captured = useCountUp(195.4, { active: inView, duration: 1400, startDelay: 100 });
   const missed = useCountUp(8.3, { active: inView, duration: 1400, startDelay: 100 });
 
   return (
@@ -407,7 +407,7 @@ function RecallVerdict() {
               <SecondaryKpi
                 label="F1 · operacional"
                 value={f1.toFixed(3)}
-                note="Threshold 0.614"
+                note="Threshold 0.310"
               />
             </div>
           </div>

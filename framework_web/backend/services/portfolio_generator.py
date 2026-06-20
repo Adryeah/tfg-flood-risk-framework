@@ -180,9 +180,9 @@ def generate_custom_portfolio(
         insured = round(_sample_lognormal(rng, value_mean,
                                             value_min, value_max), 0)
         # predict
-        x = np.array([feats["features"][f] for f in FEATURE_NAMES_V2],
+        x = np.array([feats["features"][f] for f in model.get_feature_names()],
                      dtype="float32")
-        risk_p = model.predict(x)
+        risk_p = model.predict(x)  # v3-T calibrada
         category = categorize_probability(risk_p)
         damage_ratio = _damage_ratio_for(ctype, subtype, ground_floor)
         loss_dana = round(insured * risk_p * damage_ratio, 0)

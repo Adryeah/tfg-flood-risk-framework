@@ -31,7 +31,7 @@ import { useEffect, useState, useCallback } from 'react';
  * tomamos como T100 (ligero rounding) para que el escalado sea
  * neutral en el escenario que validamos.
  *
- * P(flood) (probabilidad por píxel del modelo RF v2) NO escala:
+ * P(flood) (probabilidad por píxel del modelo RF v3-T) NO escala:
  * representa la baseline climatológica actual del píxel, no la
  * intensidad de un escenario concreto. Es honest separar las dos
  * dimensiones.
@@ -105,7 +105,7 @@ export function rpVerdict(scaledLoss, tiv) {
 // La plataforma soporta dos backbones intercambiables para los mapas
 // de zonas inundables por RP:
 //
-//  · 'rf_v2'  → modelo propio Random Forest v2 + escalado AEP por
+//  · 'rf_v2'  → modelo propio Random Forest v3-T + escalado AEP por
 //               Dottori 2018 (todo client-side, sin dependencias
 //               externas, defendible metodológicamente). Default.
 //  · 'snczi'  → rasters oficiales MITECO (Sistema Nacional de
@@ -114,18 +114,18 @@ export function rpVerdict(scaledLoss, tiv) {
 //               cuando el operador haya descargado los GeoTIFF.
 //
 // El switching es opt-in y queda persistido en localStorage. La UI
-// muestra una pill "Fuente: RF v2" o "Fuente: SNCZI" en el Console
+// muestra una pill "Fuente: RF v3-T" o "Fuente: SNCZI" en el Console
 // y en el Exposure Dashboard.
 export const BACKBONE_SOURCES = ['rf_v2', 'snczi'];
 export const DEFAULT_BACKBONE = 'rf_v2';
 
 export const BACKBONE_LABELS = {
-  rf_v2: 'RF v2 propio',
+  rf_v2: 'RF v3-T propio',
   snczi: 'SNCZI · MITECO',
 };
 
 export const BACKBONE_NOTES = {
-  rf_v2: 'Random Forest v2 + escalado AEP (Dottori 2018)',
+  rf_v2: 'Random Forest v3-T + escalado AEP (Dottori 2018)',
   snczi: 'Cartografía oficial MITECO · T10/T100/T500 (cuando configurado)',
 };
 

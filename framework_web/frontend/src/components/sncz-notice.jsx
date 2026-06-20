@@ -42,8 +42,8 @@ export function SnczNoticeBar({ variant = 'inline' }) {
     ? 'No se pudo verificar la fuente SNCZI'
     : 'SNCZI no está configurado en este deployment';
   const body = isError
-    ? 'El backend no respondió a la verificación. Si Render acaba de despertar, intenta de nuevo en unos segundos. Mientras tanto la plataforma sigue usando RF v2 con el escalado AEP.'
-    : 'Los rasters oficiales MITECO requieren descarga manual con aceptación de términos web — proceso no automatizable. Mientras tanto la plataforma sigue usando RF v2 con el escalado AEP de Dottori (2018), que es la fuente documentada en el capítulo 5 de la memoria.';
+    ? 'El backend no respondió a la verificación. Si Render acaba de despertar, intenta de nuevo en unos segundos. Mientras tanto la plataforma sigue usando RF v3-T con el escalado AEP.'
+    : 'Los rasters oficiales MITECO requieren descarga manual con aceptación de términos web — proceso no automatizable. Mientras tanto la plataforma sigue usando RF v3-T con el escalado AEP de Dottori (2018), que es la fuente documentada en el capítulo 5 de la memoria.';
 
   if (variant === 'console') {
     // Variante mil-spec para el HUD del /tour. Ribbon delgado top
@@ -75,7 +75,7 @@ export function SnczNoticeBar({ variant = 'inline' }) {
                 className="text-11 mt-0.5 leading-snug"
                 style={{ color: 'rgba(248,250,252,0.90)' }}
               >
-                {title}. Usando <strong>RF v2 + Dottori 2018</strong> como
+                {title}. Usando <strong>RF v3-T + Dottori 2018</strong> como
                 fallback.
               </div>
             </div>
@@ -327,7 +327,7 @@ export function SnczInfoModal({ onClose }) {
         {/* Footer */}
         <div className="px-6 pt-3 pb-5 border-t border-border-default">
           <p className="font-serif italic text-11 text-text-tertiary leading-snug">
-            Mientras tanto la plataforma usa RF v2 propio + escalado
+            Mientras tanto la plataforma usa RF v3-T propio + escalado
             AEP (Dottori et al. 2018). Defendible metodológicamente,
             sin dependencia externa. Detalle completo en el capítulo 5
             de la memoria.

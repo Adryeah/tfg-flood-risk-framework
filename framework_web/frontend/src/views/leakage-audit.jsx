@@ -73,6 +73,34 @@ const AUC_DELTA = AUC_SUSPECTED - AUC_VERIFIED;
 const CASE_ID = 'LK-2024-001';
 const CASE_FRAMEWORK = 'Solvency II · EU AI Act';
 
+// Linaje completo de modelos del framework — trazabilidad de gobernanza
+// (qué se entrenó, qué se descartó y por qué). El XGBoost v3 es el que
+// disparó esta auditoría; v3-T es el modelo final transferible.
+const MODEL_LINEAGE = [
+  {
+    model: 'RF v1', feats: 11, auc: '0.853', state: 'superseded', verdict: 'línea base',
+    note: 'Línea base: 6 SAR temporales + 4 DEM + NDVI. Valida el pipeline completo y la CV espacial. Superado por v2 al añadir features hidrogeomorfológicas (HAND, TWI).',
+  },
+  {
+    model: 'RF v2', feats: 14, auc: '0.922', state: 'superseded', verdict: 'no transfiere',
+    note: 'Añade HAND/TWI/distance_to_coast (14 feat). El MEJOR mapa local de Valencia, pero al extrapolar a Algemesí el recall caía a 0 — la decisión no transfería (H3 refutada): distance_to_coast y elevation son spatial proxies que no generalizan a otra cuenca.',
+  },
+  {
+    model: 'XGBoost v3', feats: 24, auc: '0.966', state: 'rejected', verdict: 'descartado',
+    note: 'Iteración exploratoria con AUC 0.966 — sospechosamente alto. La auditoría de esta página detectó FUGA TEMPORAL: las features estacionales incluían escenas del propio evento DANA. Descartado por la regla de parada (falló el Test 2).',
+  },
+  {
+    model: 'RF v3-T', feats: 9, auc: '0.840', state: 'final', verdict: 'final',
+    note: 'Modelo FINAL. Features elegidas por ablación Leave-One-Zone-Out (quita las 5 no transferibles, incl. distance_to_coast/elevation), calibración isotónica y envoltura AOA. Único que transfiere la DECISIÓN a zona nueva: recall extrapolado 0 → 0.63 (0.92 con buffer 100 m).',
+  },
+];
+
+const LINEAGE_STYLE = {
+  superseded: { color: 'var(--text-tertiary)', label: 'SUPERADO' },
+  rejected: { color: 'var(--accent-risk-text)', label: 'DESCARTADO' },
+  final: { color: 'var(--accent-valid-text)', label: 'FINAL' },
+};
+
 export function LeakageAudit() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -184,7 +212,7 @@ export function LeakageAudit() {
       status: 'fail',
       content: (
         <p>
-          {`Según la regla de parada, XGBoost v3 fue descartado. models/xgboost_v3_DEPRECATED.joblib se conserva para trazabilidad pero excluido del pipeline. Modelo final: Random Forest v2 — 14 variables, sin fuga temporal posible por construcción. Documentado en scripts/models/README_leakage_finding.md.`}
+          {`Según la regla de parada, XGBoost v3 fue descartado. models/xgboost_v3_DEPRECATED.joblib se conserva para trazabilidad pero excluido del pipeline. El modelo elegido entonces fue el Random Forest v2 (14 features, sin fuga temporal posible por construcción) — después refinado al modelo transferible final RF v3-T (9 features; ver "Linaje de modelos" arriba). Documentado en scripts/models/README_leakage_finding.md.`}
         </p>
       ),
     },
@@ -257,6 +285,87 @@ export function LeakageAudit() {
             xgboost_v3_DEPRECATED
           </dd>
         </dl>
+      </section>
+
+      {/* ─── MODEL LINEAGE · todos los modelos del framework ──────
+       *  Trazabilidad de gobernanza completa: los cuatro modelos
+       *  entrenados, su veredicto y el motivo. Convierte la auditoría
+       *  (centrada en el XGBoost descartado) en la historia íntegra
+       *  del modelo, incluida la consolidación del v3-T transferible.
+       * ─────────────────────────────────────────────────────────── */}
+      <section>
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center gap-2 text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.14em] mb-1">
+              <span>Linaje de modelos</span>
+              <span className="text-border-strong">·</span>
+              <span>trazabilidad de gobernanza</span>
+            </div>
+            <CardTitle className="text-14">
+              Los cuatro modelos del framework — qué se probó, qué se descartó y por qué
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-12">
+                <thead>
+                  <tr className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary border-b border-border-default">
+                    <th className="text-left font-semibold py-2 pr-3">Modelo</th>
+                    <th className="text-right font-semibold py-2 px-3">Features</th>
+                    <th className="text-right font-semibold py-2 px-3">AUC</th>
+                    <th className="text-left font-semibold py-2 px-3">Veredicto</th>
+                    <th className="text-left font-semibold py-2 pl-3">Motivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {MODEL_LINEAGE.map((m) => {
+                    const st = LINEAGE_STYLE[m.state];
+                    const isFinal = m.state === 'final';
+                    return (
+                      <tr
+                        key={m.model}
+                        className="border-b border-border-default/60 align-top"
+                        style={isFinal ? { background: 'var(--accent-valid-bg, rgba(34,197,94,0.06))' } : undefined}
+                      >
+                        <td className="py-2.5 pr-3 font-mono font-semibold text-text-primary whitespace-nowrap">
+                          {m.model}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-secondary">
+                          {m.feats}
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-secondary">
+                          {m.auc}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span
+                            className="text-10 font-mono font-semibold uppercase tracking-[0.1em]"
+                            style={{ color: st.color }}
+                          >
+                            {st.label}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pl-3 text-text-secondary leading-snug max-w-[42ch]">
+                          {m.note}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-11 text-text-tertiary leading-snug max-w-[80ch]">
+              <strong>Por qué el modelo final es el RF v3-T</strong> y no otro:
+              el criterio del framework no es el AUC más alto (sería el XGBoost
+              descartado, 0,966 — inflado por fuga temporal, ver auditoría
+              abajo) ni el mejor mapa local (sería el v2, 0,922, pero su recall
+              extrapolado era 0). Es la <strong>transferibilidad honesta</strong>:
+              un modelo que generaliza a zonas nuevas (recall 0 → 0,63), está
+              calibrado, sabe dónde es válido (AOA) y cuyas métricas no esconden
+              fuga. El v3-T es el único que cumple las cuatro — por eso es el
+              modelo final del TFG.
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       {/* ─── EVIDENCE A · MODEL COMPARISON ────────────────────────

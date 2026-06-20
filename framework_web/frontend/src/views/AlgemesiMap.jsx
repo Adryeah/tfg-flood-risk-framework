@@ -14,7 +14,7 @@ import { ZONES } from '../lib/constants.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Ranking-based AUC. Stays high (0.817) under transfer because ranking is robust to prevalence shift. This is the metric to trust in extrapolation; threshold-dependent ones (F1, Precisión) are not.`,
+    body: `Ranking-based AUC. Stays high (0.788) under transfer because ranking is robust to prevalence shift. This is the metric to trust in extrapolation; threshold-dependent ones (F1, Precisión) are not.`,
   },
   'AUC PR': {
     cite: 'sklearn.metrics.average_precision_score',
@@ -22,15 +22,15 @@ const METRIC_DOCS = {
   },
   'F1 score': {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision + recall at the recalibrated threshold 0.389. Drops dramatically (0.485 → 0.018) because precision collapses — see Precisión.`,
+    body: `Harmonic mean of precision + recall at the single calibrated threshold 0.310 (same as Valencia, no recalibration). Stays low (0.549 → 0.015) because precision collapses under 27× lower prevalence — see Precisión. At pixel level F1 is structurally limited; the product aggregates to zone/policy level.`,
   },
   Precisión: {
     cite: 'sklearn.metrics.precision_score',
-    body: `TP / (TP + FP). Collapses from 0.353 → 0.009 because positives are 27× rarer in Algemesí. With prevalence < 1 %, even a 5 % false-positive rate produces 17× more FP than TP — hence the floor.`,
+    body: `TP / (TP + FP). Collapses from 0.438 → 0.008 because positives are 27× rarer in Algemesí. With prevalence < 1 %, even a 5 % false-positive rate produces 17× more FP than TP — hence the floor.`,
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). Counter-intuitively IMPROVES on Algemesí (0.777 → 0.919) because the threshold was recalibrated downward (0.614 → 0.389) to catch the rare positives.`,
+    body: `TP / (TP + FN). With v3-T the recall transfers at the SAME calibrated threshold (0.736 → 0.626, no recalibration needed) — unlike the prior v2 model whose extrapolated recall collapsed to 0. With a 100 m operational buffer it reaches 0.92.`,
   },
   'Recall (100 m)': {
     cite: 'Tellman et al. 2021 · Nature 596',
@@ -278,24 +278,28 @@ export function AlgemesiMap() {
             <p className="text-11 text-text-tertiary mt-3 leading-relaxed">
               {viewMode === 'binary' ? (
                 <>
-                  Binary view: pixels with{' '}
+                  Capa de inspección · <strong>sensibilidad primero</strong>.
+                  Píxeles con{' '}
                   <span className="font-mono text-text-secondary">
                     p ≥ {threshold.toFixed(3)}
                   </span>{' '}
-                  are coloured red (flood-positive); the rest are muted
-                  grey. Drag the slider to see the classification update
-                  live.
+                  se marcan para inspección (rojo). El umbral operacional
+                  0,310 (recall ≥ 0,75) marca ~24 % del territorio{' '}
+                  <em>a propósito</em>: en seguros, no detectar una
+                  inundación es peor que inspeccionar de más. Sube el
+                  umbral para aislar el núcleo de alto riesgo (p ≥ 0,50 ≈
+                  7 %).
                 </>
               ) : (
                 <>
                   Continuous view: 8-bin colour palette from the geojson.
-                  Recalibrated threshold{' '}
+                  El modelo v3-T aplica el{' '}
                   <span className="font-mono text-text-secondary">
-                    {ZONES.algemesi.threshold.toFixed(3)}
+                    mismo umbral calibrado {ZONES.algemesi.threshold.toFixed(3)}
                   </span>{' '}
-                  (original 0.614 was recalibrated because positive
-                  prevalence differs by ~27× — 0.29 % vs 7.98 %). Switch
-                  to Binary to apply the slider live to the map.
+                  que en Valencia, sin recalibración — la calibración
+                  isotónica hace comparable la escala de probabilidad entre
+                  zonas. Cambia a Binario para aplicar el slider al mapa.
                 </>
               )}
             </p>

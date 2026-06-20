@@ -143,7 +143,7 @@ export function ReturnPeriodSelector({
 }
 
 /**
- * Selector de fuente backbone (RF v2 propio vs SNCZI oficial).
+ * Selector de fuente backbone (RF v3-T propio vs SNCZI oficial).
  * Variante 'console' (mil-spec compacto) y 'dashboard' (chip más grande).
  * Persistido global en localStorage vía useBackbone hook.
  */
@@ -180,7 +180,7 @@ export function BackboneSourceSelector({ variant = 'console', className = '' }) 
                 }
                 title={BACKBONE_LABELS[s]}
               >
-                {s === 'rf_v2' ? 'RF V2' : 'SNCZI'}
+                {s === 'rf_v2' ? 'RF v3-T' : 'SNCZI'}
               </button>
             );
           })}
@@ -224,7 +224,7 @@ export function BackboneSourceSelector({ variant = 'console', className = '' }) 
               }}
               title={BACKBONE_LABELS[s]}
             >
-              {s === 'rf_v2' ? 'RF v2' : 'SNCZI'}
+              {s === 'rf_v2' ? 'RF v3-T' : 'SNCZI'}
             </button>
           );
         })}

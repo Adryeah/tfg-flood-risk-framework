@@ -74,15 +74,18 @@ export function formatProbability(value) {
 }
 
 export function getRiskCategory(probability) {
-  if (probability < 0.3) return 'low';
-  if (probability < 0.614) return 'medium';
-  return 'high';
+  // 4 bandas alineadas con el backend (categorize_probability).
+  if (probability < 0.25) return 'low';
+  if (probability < 0.5) return 'moderate';
+  if (probability < 0.75) return 'high';
+  return 'very_high';
 }
 
 export function getRiskColor(category) {
   return {
     low: '#16A34A',
-    medium: '#EAB308',
+    moderate: '#D97706',
     high: '#DC2626',
+    very_high: '#991B1B',
   }[category];
 }

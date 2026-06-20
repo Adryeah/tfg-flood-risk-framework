@@ -538,7 +538,7 @@ function RiskBackdrop() {
         tileSize: 256,
         minzoom: 10,
         maxzoom: 15,
-        attribution: 'Random Forest v2 · TFG Vargas (UAB)',
+        attribution: 'Random Forest v3-T · TFG Vargas (UAB)',
       });
       map.addLayer({
         id: layerId,

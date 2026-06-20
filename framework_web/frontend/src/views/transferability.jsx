@@ -81,10 +81,10 @@ export function Transferability() {
   }, []);
 
   // Pull headline AUC numbers if backend exposes them; otherwise fall
-  // back to the values stated in the memoria (0.922 Valencia / 0.817
-  // Algemesí). The fallback is documented in the conclusion card.
-  const aucValencia = data?.auc_valencia ?? 0.922;
-  const aucAlgemesi = data?.auc_algemesi ?? 0.817;
+  // back to los valores del modelo final v3-T (0.840 Valencia / 0.788
+  // Algemesí). El fallback se documenta en la tarjeta de conclusión.
+  const aucValencia = data?.auc_valencia ?? 0.840;
+  const aucAlgemesi = data?.auc_algemesi ?? 0.788;
   const aucDrop = aucAlgemesi - aucValencia;
 
   if (loading) {
@@ -123,7 +123,7 @@ export function Transferability() {
         </p>
       </div>
 
-      {/* ─── HERO TRANSFER NARRATIVE · 0.922 → 0.817 ───
+      {/* ─── HERO TRANSFER NARRATIVE · 0.840 → 0.788 ───
        *  Typographic story: two big AUC numbers separated by an arrow,
        *  with the Δ chip floating below. Reads like a stat panel in a
        *  Bloomberg article. Replaces the prior banner-card. */}
@@ -147,11 +147,11 @@ export function Transferability() {
           </span>
         </div>
         <h3 className="font-serif text-22 text-text-primary tracking-tight leading-tight mb-2">
-          Drift de feature detectado en{' '}
-          <span className="font-mono text-18">distance_to_coast</span>
+          La selección de features por ablación LOZO{' '}
+          <span className="font-mono text-18">recupera la transferencia</span>
         </h3>
         <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-3xl">
-          {`La feature distance_to_coast es el predictor más importante en Valencia (+0.162 ΔAUC) pero invierte el signo y pasa a ser negativamente importante en Algemesí (−0.021). Algemesí es una cuenca fluvial (río Júcar), no un sistema costero. Para producción, el modelo necesitaría regionalización por tipo de cuenca hidrográfica.`}
+          {`El modelo v3-T elimina las 5 features no transferibles que el análisis de ablación Leave-One-Zone-Out identificó como dañinas para la generalización geográfica — entre ellas distance_to_coast y elevation, predictores fuertes en Valencia pero spatial proxies que no transfieren a una cuenca fluvial como Algemesí (Mila et al. 2024). El resultado: el ranking se mantiene (AUC 0.840 → 0.788) y, a diferencia del modelo v2 anterior, la decisión también transfiere — el recall extrapolado pasa de 0 a 0.63 (0.92 con tolerancia de 100 m).`}
         </p>
       </div>
 
@@ -200,8 +200,10 @@ export function Transferability() {
           </h2>
         </div>
         <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-          Contribución ΔAUC por feature en cada zona. El cambio drástico
-          en distance_to_coast es la prueba decisiva.
+          Contribución ΔAUC por feature en cada zona, para el set v3-T de 9
+          features transferibles. HAND (altura sobre el cauce) lidera y
+          mantiene su importancia entre zonas — es una feature relativa al
+          terreno, no geográfica absoluta.
         </p>
         <ImportanceComparisonChart
           data={data.permutation_importance_comparison}
@@ -220,7 +222,7 @@ export function Transferability() {
           </span>
         </div>
         <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-3xl">
-          {`El experimento de transferibilidad demuestra que la generalización del modelo tiene límites identificables y cuantificables. AUC ${aucAlgemesi.toFixed(3)} confirma que el modelo conserva capacidad de ordenación, pero el colapso de precisión (35% → 0.9%) muestra que la clasificación binaria falla. La causa raíz es identificable: drift en features geográficamente definidas (distance_to_coast). Para despliegue en producción, el modelo necesitaría regionalización por tipo de cuenca hidrográfica — costera, fluvial, montañosa. Este hallazgo, aunque pueda parecer un fallo del modelo, es exactamente el tipo de validación rigurosa que un TFG debe incluir.`}
+          {`El experimento de transferibilidad demuestra que la generalización del modelo tiene límites identificables, cuantificables y abordables. AUC ${aucAlgemesi.toFixed(3)} confirma que el ranking transfiere; y con el modelo v3-T —tras la selección de features por ablación Leave-One-Zone-Out, que elimina los spatial proxies no transferibles (distance_to_coast, elevation)— la DECISIÓN también transfiere: el recall extrapolado pasa de 0 en el v2 a 0,63 (0,92 con tolerancia de 100 m). La precisión a nivel píxel sigue baja por la rareza del evento (prevalencia 0,3 %), por lo que el producto agrega el riesgo a nivel zona/póliza. Delimitar honestamente el dominio de validez del modelo (vía Area of Applicability) es exactamente el tipo de validación rigurosa que un TFG debe incluir.`}
         </p>
       </div>
 
@@ -446,7 +448,7 @@ function ImportanceComparisonChart({ data }) {
 }
 
 // ─── Hero transferencia con dos AUC counting up ──────────────────
-// Bloomberg-stat-panel: 0.922 → 0.817 con flecha entre ambos y Δ chip
+// Bloomberg-stat-panel: 0.840 → 0.788 con flecha entre ambos y Δ chip
 // flotando abajo. Las dos cifras animan en sincronía cuando la
 // sección entra al viewport — refuerza la sensación de "salto entre
 // dos zonas geográficas".
