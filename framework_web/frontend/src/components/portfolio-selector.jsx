@@ -63,10 +63,10 @@ export function PortfolioSelector({
                 <Icon className="w-3.5 h-3.5" strokeWidth={1.6} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-12 font-medium text-text-primary truncate">
+                <div className="text-13 font-semibold text-text-primary truncate">
                   {p.name}
                 </div>
-                <div className="text-10 font-mono text-text-tertiary mt-0.5 tabular-nums">
+                <div className="text-12 font-mono text-text-secondary mt-0.5 tabular-nums">
                   {p.n_clients.toLocaleString()} clients · €
                   {(p.total_insured_value / 1e6).toFixed(1)}M
                 </div>
@@ -92,10 +92,10 @@ export function PortfolioSelector({
               <Plus className="w-3.5 h-3.5" strokeWidth={1.6} />
             </div>
             <div>
-              <div className="text-12 font-medium text-text-primary">
+              <div className="text-13 font-semibold text-text-primary">
                 Create custom
               </div>
-              <div className="text-10 text-text-tertiary mt-0.5">
+              <div className="text-11 text-text-tertiary mt-0.5">
                 Define parameters
               </div>
             </div>

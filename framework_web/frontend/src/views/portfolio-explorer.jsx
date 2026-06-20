@@ -711,7 +711,7 @@ function KpiBar({ exposure, filteredClients, totalCount }) {
   }, [filteredClients]);
 
   return (
-    <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_minmax(180px,220px)] gap-3">
+    <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-[repeat(7,minmax(0,1fr))_minmax(170px,210px)] gap-3">
       <ExposureKpi
         tier={1}
         label="TIV de la cartera"
