@@ -10,7 +10,8 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 // Versión del modelo — cache-buster para tiles/geojson (servidos con
 // Cache-Control immutable). Subir en cada re-entrenamiento para invalidar
 // la caché del navegador. v3-T = modelo transferible de 10 features (+river).
-const MODEL_VERSION = 'v3t3';
+// v3t4: suelo de visualización del mapa continuo subido a 0.25 (núcleo de riesgo).
+const MODEL_VERSION = 'v3t4';
 
 function withBase(path) {
   // Pass-through for any caller that already uses an absolute URL.

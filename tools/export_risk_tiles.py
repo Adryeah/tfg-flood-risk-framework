@@ -51,20 +51,25 @@ ZONES = {
 _YLORD = (np.array([colormaps["YlOrRd"](i / 255)[:3] for i in range(256)]) * 255).astype("uint8")
 
 
-VISIBLE_MIN = 0.25  # "< 0.25 transparente": p bajo (mar, suelo seco) NO se pinta
+# v3-T (10 feat, calibrado a prevalencia natural): las probabilidades son bajas
+# en valor absoluto. VISIBLE_MIN es el SUELO DE VISUALIZACIÓN del mapa continuo
+# (no el umbral operacional, que es 0.16 y vive en la vista binaria). Se fija en
+# 0.25 ≈ p91 para que el mapa muestre el NÚCLEO de riesgo concentrado y no la
+# banda pálida 0.16-0.25 que satura visualmente toda la cuenca; coincide con la
+# leyenda "< 0.25 transparente". La rampa se estira sobre [VISIBLE_MIN, VISIBLE_MAX].
+VISIBLE_MIN = 0.25
+VISIBLE_MAX = 0.60
 
 
 def _render_tile(data: np.ndarray) -> np.ndarray | None:
-    """data (256,256) float. Solo se pinta p >= VISIBLE_MIN (convención de
-    la leyenda "< 0.25 transparente"): así el mar y el suelo de baja
-    probabilidad quedan transparentes y se ve el basemap oscuro debajo,
-    igual que en producción. Devuelve RGBA uint8 o None si el tile no
-    tiene ningun pixel visible."""
+    """data (256,256) float. Solo se pinta p >= VISIBLE_MIN; el color mapea
+    linealmente [VISIBLE_MIN, VISIBLE_MAX] -> rampa YlOrRd. Devuelve RGBA
+    uint8 o None si el tile no tiene ningun pixel visible."""
     visible = np.isfinite(data) & (data >= VISIBLE_MIN) & (data <= 1.0)
     if not visible.any():
         return None
-    v = np.clip(np.where(visible, data, 0.0), 0.0, 1.0)
-    idx = (v * 255).astype("uint8")
+    v = np.clip((data - VISIBLE_MIN) / (VISIBLE_MAX - VISIBLE_MIN), 0.0, 1.0)
+    idx = (np.where(visible, v, 0.0) * 255).astype("uint8")
     rgb = _YLORD[idx]                                  # (256,256,3)
     alpha = np.where(visible, ALPHA, 0).astype("uint8")
     return np.dstack([rgb, alpha])
