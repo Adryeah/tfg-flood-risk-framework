@@ -81,9 +81,11 @@ class Settings(BaseSettings):
         return v
 
     # v3-T: umbral operacional unico (calibrado, recall>=0,75 en holdout
-    # Valencia). El modelo transferible usa el mismo umbral en toda zona.
-    THRESHOLD_OPERATIONAL: float = 0.310
-    THRESHOLD_OPERATIONAL_ALGEMESI: float = 0.310
+    # Valencia a PREVALENCIA NATURAL). El modelo transferible usa el mismo
+    # umbral en toda zona. Fuente de verdad = v3t_calibrator.joblib (el backend
+    # lo carga de ahi); estos defaults son el respaldo y deben coincidir.
+    THRESHOLD_OPERATIONAL: float = 0.160
+    THRESHOLD_OPERATIONAL_ALGEMESI: float = 0.160
 
 
 settings = Settings()

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-from .model_service import FEATURE_NAMES_V2
+from .model_service import FEATURE_NAMES_V2, FEATURE_NAMES_V3T
 
 log = logging.getLogger(__name__)
 
@@ -104,7 +104,11 @@ class FeatureExtractor:
                                    float(row["lat"]), float(row["lon"]))
         if dist_m > max_distance_m:
             return None
-        features = {f: float(row[f]) for f in FEATURE_NAMES_V2}
+        # Expone la union de v2 (14) y v3-T (incluye distance_to_river, que NO
+        # esta en v2) para que el scoring en vivo del modelo de 10 features
+        # encuentre todas sus columnas. Solo incluye las presentes en el lookup.
+        feat_cols = list(dict.fromkeys([*FEATURE_NAMES_V2, *FEATURE_NAMES_V3T]))
+        features = {f: float(row[f]) for f in feat_cols if f in row.index}
         return {
             "zone": zone,
             "nearest_lat": float(row["lat"]),
@@ -120,10 +124,13 @@ def get_feature_extractor() -> FeatureExtractor:
 
 
 def categorize_probability(p: float) -> str:
-    if p >= 0.75:
-        return "very_high"
+    # Bandas reancladas a la escala CALIBRADA de v3-T (10 feat, umbral
+    # operacional 0.16 a prevalencia natural). "moderate" = a partir del umbral
+    # (pixel marcado); "very_high" es raro (~1%), como debe ser.
     if p >= 0.50:
+        return "very_high"
+    if p >= 0.30:
         return "high"
-    if p >= 0.25:
+    if p >= 0.16:
         return "moderate"
     return "low"

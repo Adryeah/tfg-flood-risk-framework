@@ -7,7 +7,7 @@ import { useInView, usePrefersReducedMotion } from '@/lib/animations.js';
  * Convierte un número plano en una lectura de instrumento: dónde cae el valor
  * dentro de su escala, con un tick semántico opcional (umbral operacional,
  * baseline de azar, objetivo). Sale del ADN del proyecto — todo gira en torno
- * a puntos de operación (AUC vs azar 0.5, recall ≥ 0.75, threshold 0.310).
+ * a puntos de operación (AUC vs azar 0.5, recall ≥ 0.75, threshold 0.160).
  *
  * Comportamientos según el tipo de métrica (los fija el caller con min/max):
  *   - score:     min=0.5,max=1.0  → el fill refleja el rango ÚTIL (azar→perfecto)

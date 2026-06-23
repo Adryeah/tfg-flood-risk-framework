@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  CloudRain,
-  Satellite,
-  Map as MapIcon,
-  AlertOctagon,
-  BookOpen,
-} from 'lucide-react';
+import { CloudRain, Satellite, Map as MapIcon, AlertOctagon, BookOpen } from 'lucide-react';
 
 import { DanaSwipeCompare } from '../components/dana-swipe-compare.jsx';
 import { RevealSection } from '../components/reveal-section.jsx';
@@ -55,10 +49,9 @@ const PHASES = [
     weight: 'normal',
     body: (
       <>
-        El satélite Sentinel-1A captura la zona en órbita ascendente.
-        Es la imagen más reciente con la que el modelo tiene contacto
-        antes de la DANA. <strong>Diez días después</strong> la zona se
-        inundaría — pero el modelo no lo sabe aún.
+        El satélite Sentinel-1A captura la zona en órbita ascendente. Es la imagen más reciente con
+        la que el modelo tiene contacto antes de la DANA. <strong>Diez días después</strong> la zona
+        se inundaría — pero el modelo no lo sabe aún.
       </>
     ),
   },
@@ -71,11 +64,10 @@ const PHASES = [
     weight: 'normal',
     body: (
       <>
-        Entrenado con 28 escenas baseline (sin nunca ver las dos del
-        evento), Random Forest v3-T emitía mapas de probabilidad sobre
-        l'Horta Sud. Las cotas bajas, los cauces del Turia y el sur
-        de Catarroja ya aparecían en{' '}
-        <strong>rojo oscuro (p &gt; 0.75)</strong> en julio de 2024.
+        Entrenado con 28 escenas baseline (sin nunca ver las dos del evento), Random Forest v3-T
+        emitía mapas de probabilidad sobre l'Horta Sud. Las cotas bajas, los cauces del Turia y el
+        sur de Catarroja ya aparecían en <strong>rojo oscuro (p &gt; 0.75)</strong> en julio de
+        2024.
       </>
     ),
   },
@@ -88,11 +80,10 @@ const PHASES = [
     weight: 'heavy', // este es el corazón del relato
     body: (
       <>
-        Un sistema convectivo profundo, alimentado por la entrada de
-        aire frío en altura y el Mediterráneo a temperatura récord,
-        descarga <strong>hasta 400 mm en 8 horas</strong> sobre la
-        cabecera del Poyo y el Magro. La escorrentía colapsa los
-        barrancos urbanizados de l'Horta Sud al atardecer.
+        Un sistema convectivo profundo, alimentado por la entrada de aire frío en altura y el
+        Mediterráneo a temperatura récord, descarga <strong>hasta 400 mm en 8 horas</strong> sobre
+        la cabecera del Poyo y el Magro. La escorrentía colapsa los barrancos urbanizados de l'Horta
+        Sud al atardecer.
       </>
     ),
   },
@@ -105,12 +96,10 @@ const PHASES = [
     weight: 'normal',
     body: (
       <>
-        Dos días después del evento, la siguiente pasada SAR observa la
-        zona con láminas de agua todavía visibles en Catarroja,
-        Paiporta, Albal y Beniparrell. Copernicus EMS se activa el
-        mismo día como{' '}
-        <strong>EMSR773 (Floods in Valencia, Spain)</strong> y publica
-        una delineación oficial.
+        Dos días después del evento, la siguiente pasada SAR observa la zona con láminas de agua
+        todavía visibles en Catarroja, Paiporta, Albal y Beniparrell. Copernicus EMS se activa el
+        mismo día como <strong>EMSR773 (Floods in Valencia, Spain)</strong> y publica una
+        delineación oficial.
       </>
     ),
   },
@@ -123,13 +112,10 @@ const PHASES = [
     weight: 'normal',
     body: (
       <>
-        La delineación de Copernicus EMS identifica{' '}
-        <strong>199 km² inundados</strong>. Comparado con la
-        predicción del modelo de antes del evento:{' '}
-        <strong>AUC 0.840 · Recall 73.6 % · Buffered recall a 100 m
-        98.2 %</strong>. El modelo, entrenado solo con datos
-        anteriores, había marcado correctamente la geometría del
-        riesgo.
+        La delineación de Copernicus EMS identifica <strong>199 km² inundados</strong>. Comparado
+        con la predicción del modelo de antes del evento:{' '}
+        <strong>AUC 0.848 · Recall 63.9 % · Buffered recall a 100 m 97.0 %</strong>. El modelo,
+        entrenado solo con datos anteriores, había marcado correctamente la geometría del riesgo.
       </>
     ),
   },
@@ -144,16 +130,13 @@ export function DanaTimeline() {
           Case study · The day that triggered this project
         </div>
         <h1 className="font-serif text-28 sm:text-32 leading-[1.05] text-text-primary tracking-tight">
-          DANA <span className="italic text-text-tertiary mx-1">·</span>{' '}
-          29 octubre 2024
+          DANA <span className="italic text-text-tertiary mx-1">·</span> 29 octubre 2024
         </h1>
         <p className="font-serif italic text-14 sm:text-15 text-text-secondary mt-3 max-w-3xl leading-snug">
-          La depresión aislada en niveles altos descargó sobre Valencia
-          en ocho horas el equivalente a un año de lluvia. Lo que
-          siguió fue la catástrofe más grave del siglo en territorio
-          español. Esta página reconstruye el evento desde la última
-          observación SAR pre-DANA hasta la validación oficial contra
-          el ground truth Copernicus EMS.
+          La depresión aislada en niveles altos descargó sobre Valencia en ocho horas el equivalente
+          a un año de lluvia. Lo que siguió fue la catástrofe más grave del siglo en territorio
+          español. Esta página reconstruye el evento desde la última observación SAR pre-DANA hasta
+          la validación oficial contra el ground truth Copernicus EMS.
         </p>
       </header>
 
@@ -179,12 +162,10 @@ export function DanaTimeline() {
         </div>
         <DanaSwipeCompare zone="valencia" height={460} />
         <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
-          Una sola superficie geográfica (l'Horta Sud), dos lecturas:
-          el heatmap rojo es lo que el modelo predijo antes de la DANA;
-          la capa cian es lo que Copernicus EMS confirmó dos días
-          después. Arrastra el divisor para revelar el ground truth
-          sobre el mapa de predicción — las dos siluetas se superponen
-          en los valles de Catarroja, Paiporta y Albal.
+          Una sola superficie geográfica (l'Horta Sud), dos lecturas: el heatmap rojo es lo que el
+          modelo predijo antes de la DANA; la capa cian es lo que Copernicus EMS confirmó dos días
+          después. Arrastra el divisor para revelar el ground truth sobre el mapa de predicción —
+          las dos siluetas se superponen en los valles de Catarroja, Paiporta y Albal.
         </p>
       </RevealSection>
 
@@ -225,15 +206,12 @@ export function DanaTimeline() {
             aria-hidden="true"
           />
           <p className="font-serif text-16 sm:text-17 text-text-primary leading-relaxed">
-            La DANA de Valencia ocurrió. Lo que este TFG demuestra es
-            que <em>podría haberse anticipado</em>{' '}
-            <span className="text-text-tertiary">—</span> no en hora
-            cero como una alerta meteorológica, sino con días o semanas
-            de antelación como mapa de exposición{' '}
-            <span className="text-text-tertiary">—</span> con datos
-            públicos, un ordenador personal y rigor metodológico. No
-            hace falta un proveedor comercial de cat-models para
-            construir esa señal.
+            La DANA de Valencia ocurrió. Lo que este TFG demuestra es que{' '}
+            <em>podría haberse anticipado</em> <span className="text-text-tertiary">—</span> no en
+            hora cero como una alerta meteorológica, sino con días o semanas de antelación como mapa
+            de exposición <span className="text-text-tertiary">—</span> con datos públicos, un
+            ordenador personal y rigor metodológico. No hace falta un proveedor comercial de
+            cat-models para construir esa señal.
           </p>
           <p className="font-serif italic text-13 text-text-secondary mt-4">
             Memoria del TFG, Capítulo 7 · <em>Discusión</em>.
@@ -248,10 +226,7 @@ export function DanaTimeline() {
 function HeroStatsGrid() {
   const [ref, inView] = useInView({ threshold: 0.3 });
   return (
-    <section
-      ref={ref}
-      className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
-    >
+    <section ref={ref} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {HERO_STATS.map((s, idx) => (
         <HeroStatCard key={s.label} stat={s} idx={idx} active={inView} />
       ))}
@@ -293,13 +268,9 @@ function HeroStatCard({ stat, idx, active }) {
         >
           {display}
         </span>
-        <span className="text-13 font-mono text-text-secondary">
-          {stat.unit}
-        </span>
+        <span className="text-13 font-mono text-text-secondary">{stat.unit}</span>
       </div>
-      <p className="font-serif italic text-12 text-text-secondary leading-snug">
-        {stat.label}
-      </p>
+      <p className="font-serif italic text-12 text-text-secondary leading-snug">{stat.label}</p>
     </div>
   );
 }
@@ -310,12 +281,12 @@ function HeroStatCard({ stat, idx, active }) {
 // cuando la sección entra al viewport.
 function RecallVerdict() {
   const [ref, inView] = useInView({ threshold: 0.25 });
-  const recall = useCountUp(98.2, { active: inView, duration: 1400 });
-  const pixelRecall = useCountUp(73.6, { active: inView, duration: 1400, startDelay: 200 });
-  const auc = useCountUp(0.840, { active: inView, duration: 1400, startDelay: 300 });
-  const f1 = useCountUp(0.549, { active: inView, duration: 1400, startDelay: 400 });
-  const captured = useCountUp(195.4, { active: inView, duration: 1400, startDelay: 100 });
-  const missed = useCountUp(8.3, { active: inView, duration: 1400, startDelay: 100 });
+  const recall = useCountUp(97.0, { active: inView, duration: 1400 });
+  const pixelRecall = useCountUp(63.9, { active: inView, duration: 1400, startDelay: 200 });
+  const auc = useCountUp(0.848, { active: inView, duration: 1400, startDelay: 300 });
+  const f1 = useCountUp(0.348, { active: inView, duration: 1400, startDelay: 400 });
+  const captured = useCountUp(193.0, { active: inView, duration: 1400, startDelay: 100 });
+  const missed = useCountUp(6.0, { active: inView, duration: 1400, startDelay: 100 });
 
   return (
     <section ref={ref}>
@@ -346,14 +317,11 @@ function RecallVerdict() {
               >
                 {recall.toFixed(1)}%
               </span>
-              <span className="text-12 font-mono text-text-tertiary">
-                cobertura
-              </span>
+              <span className="text-12 font-mono text-text-tertiary">cobertura</span>
             </div>
             <p className="font-serif italic text-13 text-text-secondary leading-snug">
-              De cada 100 píxeles que se inundaron realmente, el modelo
-              había marcado 96 como riesgo alto en su predicción
-              pre-DANA. Sin haber visto nunca el evento.
+              De cada 100 píxeles que se inundaron realmente, el modelo había marcado 96 como riesgo
+              alto en su predicción pre-DANA. Sin haber visto nunca el evento.
             </p>
           </div>
 
@@ -384,12 +352,8 @@ function RecallVerdict() {
               />
             </div>
             <div className="mt-1.5 flex justify-between text-11 font-mono tabular-nums">
-              <span style={{ color: '#10B981' }}>
-                ≈ {captured.toFixed(1)} km² capturados
-              </span>
-              <span className="text-text-tertiary">
-                ≈ {missed.toFixed(1)} km² no detectados
-              </span>
+              <span style={{ color: '#10B981' }}>≈ {captured.toFixed(1)} km² capturados</span>
+              <span className="text-text-tertiary">≈ {missed.toFixed(1)} km² no detectados</span>
             </div>
 
             {/* KPIs secundarios con count-up */}
@@ -399,27 +363,17 @@ function RecallVerdict() {
                 value={`${pixelRecall.toFixed(1)}%`}
                 note="Sin tolerancia espacial"
               />
-              <SecondaryKpi
-                label="AUC ROC"
-                value={auc.toFixed(3)}
-                note="Capacidad de ranking"
-              />
-              <SecondaryKpi
-                label="F1 · operacional"
-                value={f1.toFixed(3)}
-                note="Threshold 0.310"
-              />
+              <SecondaryKpi label="AUC ROC" value={auc.toFixed(3)} note="Capacidad de ranking" />
+              <SecondaryKpi label="F1 · operacional" value={f1.toFixed(3)} note="Threshold 0.160" />
             </div>
           </div>
         </div>
       </div>
       <p className="font-serif italic text-13 text-text-secondary mt-3 max-w-3xl leading-snug">
-        Las dos siluetas de los mapas de arriba no son anecdóticas:
-        el modelo había anticipado el <strong>95.8% de la geografía
-        del evento real</strong> a tolerancia de manzana (100 m). El
-        4.2% no detectado corresponde casi en su totalidad a píxeles
-        aislados — artefactos de la rasterización del shapefile
-        EMSR773 — no a errores estructurales del modelo. Detalle
+        Las dos siluetas de los mapas de arriba no son anecdóticas: el modelo había anticipado el{' '}
+        <strong>95.8% de la geografía del evento real</strong> a tolerancia de manzana (100 m). El
+        4.2% no detectado corresponde casi en su totalidad a píxeles aislados — artefactos de la
+        rasterización del shapefile EMSR773 — no a errores estructurales del modelo. Detalle
         metodológico completo en el capítulo 5 de la memoria.
       </p>
     </section>
@@ -452,11 +406,7 @@ function PhaseItem({ phase, idx }) {
           transitionDelay: '150ms',
         }}
       >
-        <Icon
-          className="w-3.5 h-3.5"
-          style={{ color: phase.accent }}
-          strokeWidth={2}
-        />
+        <Icon className="w-3.5 h-3.5" style={{ color: phase.accent }} strokeWidth={2} />
       </span>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
         <span
@@ -476,9 +426,7 @@ function PhaseItem({ phase, idx }) {
       >
         {phase.title}
       </h3>
-      <p className="text-13 text-text-secondary leading-relaxed max-w-3xl">
-        {phase.body}
-      </p>
+      <p className="text-13 text-text-secondary leading-relaxed max-w-3xl">{phase.body}</p>
     </li>
   );
 }
@@ -490,13 +438,9 @@ function SecondaryKpi({ label, value, note }) {
       <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary mb-0.5 truncate">
         {label}
       </div>
-      <div className="font-mono font-medium tabular-nums text-13 text-text-primary">
-        {value}
-      </div>
+      <div className="font-mono font-medium tabular-nums text-13 text-text-primary">{value}</div>
       {note && (
-        <div className="text-10 text-text-tertiary font-serif italic mt-0.5 truncate">
-          {note}
-        </div>
+        <div className="text-10 text-text-tertiary font-serif italic mt-0.5 truncate">{note}</div>
       )}
     </div>
   );

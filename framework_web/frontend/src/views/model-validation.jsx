@@ -2,13 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Loader2, ShieldCheck } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -21,7 +15,7 @@ import { api } from '@/lib/api.js';
 import { useInView, useCountUp } from '@/lib/animations.js';
 import { FEATURE_DOCS, CATEGORY_META } from '@/lib/feature-docs.js';
 
-const THRESHOLD_OPERATIONAL = 0.310;
+const THRESHOLD_OPERATIONAL = 0.16;
 
 // ─── Methodology references shown at the bottom of the page ──────────
 // Curated list — each row maps directly to a metric or chart visible on
@@ -32,8 +26,7 @@ const SOURCES = [
     author: 'Evidently AI',
     year: '2024',
     work: 'Open-source ML monitoring · classification performance dashboard.',
-    used_for:
-      'Reference pattern for the KPI strip + ROC + confusion-matrix heatmap layout.',
+    used_for: 'Reference pattern for the KPI strip + ROC + confusion-matrix heatmap layout.',
   },
   {
     author: 'Brier',
@@ -45,23 +38,19 @@ const SOURCES = [
     author: 'Breiman',
     year: '2001',
     work: 'Random Forests. Machine Learning 45(1).',
-    used_for:
-      'Model architecture (RandomForestClassifier) and permutation importance.',
+    used_for: 'Model architecture (RandomForestClassifier) and permutation importance.',
   },
   {
     author: 'Roberts et al.',
     year: '2017',
-    work:
-      'Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. Ecography 40(8).',
-    used_for:
-      'Spatial GroupKFold (1×1 km blocks) instead of random k-fold.',
+    work: 'Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure. Ecography 40(8).',
+    used_for: 'Spatial GroupKFold (1×1 km blocks) instead of random k-fold.',
   },
   {
     author: 'Pedregosa et al.',
     year: '2011',
     work: 'scikit-learn: Machine Learning in Python. JMLR 12.',
-    used_for:
-      'AUC ROC / F1 / Precision / Recall / Confusion Matrix implementations.',
+    used_for: 'AUC ROC / F1 / Precision / Recall / Confusion Matrix implementations.',
   },
   {
     author: 'Tellman et al.',
@@ -73,14 +62,15 @@ const SOURCES = [
   {
     author: 'Naeini et al.',
     year: '2015',
-    work:
-      'Obtaining well-calibrated probabilities using Bayesian binning. AAAI.',
+    work: 'Obtaining well-calibrated probabilities using Bayesian binning. AAAI.',
     used_for: 'Expected Calibration Error (ECE) reported in model_metrics.',
   },
 ];
 
 export function ModelValidation() {
   const [metrics, setMetrics] = useState(null);
+  const [zoneLevel, setZoneLevel] = useState(null);
+  const [operating, setOperating] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -97,6 +87,16 @@ export function ModelValidation() {
         setLoadError(err?.message || 'No se pudieron cargar las métricas');
       })
       .finally(() => mounted && setLoading(false));
+    // Secciones nuevas (escala zona + puntos de operación). No bloquean la
+    // página: si fallan, sus tarjetas simplemente no se renderizan.
+    api.metrics
+      .getSection('zone_level')
+      .then((d) => mounted && setZoneLevel(d))
+      .catch(() => {});
+    api.metrics
+      .getSection('operating_points')
+      .then((d) => mounted && setOperating(d))
+      .catch(() => {});
     return () => {
       mounted = false;
     };
@@ -117,8 +117,7 @@ export function ModelValidation() {
   const m = metrics.model_metrics;
   const buf = metrics.buffer_metrics || [];
   // Recall at 100m buffer — useful operational metric (loose-match search radius).
-  const recall100m =
-    buf.find((b) => b.buffer_m === 100)?.recall ?? m.recall;
+  const recall100m = buf.find((b) => b.buffer_m === 100)?.recall ?? m.recall;
 
   return (
     <div className="p-3 sm:p-6 max-w-[1440px] mx-auto">
@@ -135,12 +134,12 @@ export function ModelValidation() {
             Random Forest v3-T
           </Badge>
           <Badge variant="outline" className="text-10 font-mono uppercase tracking-wider">
-            9 features
+            10 features
           </Badge>
         </div>
         <p className="font-serif italic text-15 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Cross-validated performance metrics with spatial GroupKFold
-          methodology — honest numbers, no random k-fold inflation.
+          Cross-validated performance metrics with spatial GroupKFold methodology — honest numbers,
+          no random k-fold inflation.
         </p>
       </div>
 
@@ -161,9 +160,8 @@ export function ModelValidation() {
           </div>
           <AucHero auc={m.auc_mean} std={m.auc_std} />
           <p className="font-serif italic text-14 text-text-secondary mt-3 max-w-md leading-snug">
-            Random Forest v3-T trained on 9 transferable features over
-            Sentinel-1 SAR backscatter pre/post DANA Valencia 2024, validated
-            against Copernicus EMS EMSR773.
+            Random Forest v3-T trained on 9 transferable features over Sentinel-1 SAR backscatter
+            pre/post DANA Valencia 2024, validated against Copernicus EMS EMSR773.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <div className="h-px w-7 bg-brand-500/60" />
@@ -183,7 +181,7 @@ export function ModelValidation() {
             objective="Maximizar — equilibrio precisión / recall."
             hint={
               <InfoHint cite="sklearn.metrics.f1_score">
-                {`Media armónica de precisión y recall en el umbral de decisión operacional (${THRESHOLD_OPERATIONAL}). Elegido maximizando F1 en los folds de validación — equilibra falsas alarmas frente a inundaciones no detectadas.`}
+                {`Media armónica de precisión y recall en el umbral de decisión operacional (${THRESHOLD_OPERATIONAL}). El umbral se fija garantizando recall ≥ 0,75 en el hold-out de calibración (no maximizando F1) — en seguros, no detectar una inundación es peor que una falsa alarma.`}
               </InfoHint>
             }
           />
@@ -234,9 +232,9 @@ export function ModelValidation() {
             }
           />
           <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-            Validación cruzada espacial con bloques de 1 × 1 km. Curvas
-            ilustrativas reconstruidas de AUC media ± σ — no son puntos ROC
-            por fold medidos (el backend solo expone media y desviación).
+            Validación cruzada espacial con bloques de 1 × 1 km. Curvas ilustrativas reconstruidas
+            de AUC media ± σ — no son puntos ROC por fold medidos (el backend solo expone media y
+            desviación).
           </p>
           <ROCChart auc={m.auc_mean} stdAuc={m.auc_std} />
         </div>
@@ -252,8 +250,7 @@ export function ModelValidation() {
             }
           />
           <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-            Valencia OOF · umbral {THRESHOLD_OPERATIONAL}. Sin fuga del
-            conjunto de entrenamiento.
+            Valencia OOF · umbral {THRESHOLD_OPERATIONAL}. Sin fuga del conjunto de entrenamiento.
           </p>
           <ConfusionMatrix matrix={metrics.confusion_matrix} />
         </div>
@@ -271,9 +268,8 @@ export function ModelValidation() {
           }
         />
         <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-          Importancia por permutación · features principales por
-          contribución ΔAUC. Hover en cualquier barra para definición
-          completa.
+          Importancia por permutación · features principales por contribución ΔAUC. Hover en
+          cualquier barra para definición completa.
         </p>
         <FeatureImportanceChart features={metrics.feature_importance} />
         <FeatureGlossary features={metrics.feature_importance} />
@@ -291,8 +287,7 @@ export function ModelValidation() {
           }
         />
         <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-          Rendimiento al aumentar la tolerancia espacial · escala
-          operativa.
+          Rendimiento al aumentar la tolerancia espacial · escala operativa.
         </p>
         <BufferMetricsChart bufferMetrics={metrics.buffer_metrics} />
       </div>
@@ -351,10 +346,10 @@ export function ModelValidation() {
           </span>
         </div>
         <h3 className="font-serif text-22 text-text-primary tracking-tight leading-tight mb-2">
-          De 14 features a 9: la cadena que hace el modelo transferible
+          De 14 features a 10: la cadena que hace el modelo transferible
         </h3>
         <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-2xl">
-          {`El v3-T no se ajusta a ojo. (1) Selección de features por ablación Leave-One-Zone-Out bidireccional: se quita cada feature y se mide el AUC cruzado Valencia↔Algemesí en ambos sentidos; las que dañan la transferencia —elevation, slope y, por su efecto sobre el punto de decisión, distance_to_coast— se eliminan, quedando 9. (2) Calibración isotónica ajustada en un hold-out disjunto de Valencia: hace que un "0,7" signifique de verdad ~70 % también en zona nueva (ECE 0,24 → 0,06). (3) Area of Applicability (Meyer & Pebesma 2021): el modelo delimita dónde es competente y dónde extrapola a ciegas.`}
+          {`El v3-T no se ajusta a ojo. (1) Selección de features por ablación Leave-One-Zone-Out bidireccional: se quita cada feature y se mide el AUC cruzado Valencia↔Algemesí en ambos sentidos; las que dañan la transferencia —elevation, slope y, por su efecto sobre el punto de decisión, distance_to_coast— se eliminan, y en su lugar se incorpora distance_to_river (la distancia al cauce que sí transfiere entre cuencas), quedando 10 features. (2) Calibración isotónica ajustada en un hold-out disjunto de Valencia a la prevalencia real: hace que un "0,7" signifique de verdad ~70 % (ECE in-domain 0,18 → 0,019). (3) Area of Applicability (Meyer & Pebesma 2021): el modelo delimita dónde es competente — el 66,2 % de Algemesí cae dentro y contiene el 93,5 % de la inundación real — y dónde extrapola a ciegas.`}
         </p>
         <dl className="mt-4 grid grid-cols-3 gap-x-6 max-w-md">
           <div>
@@ -362,7 +357,7 @@ export function ModelValidation() {
               Features
             </dt>
             <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
-              9
+              10
             </dd>
           </div>
           <div>
@@ -370,7 +365,7 @@ export function ModelValidation() {
               Umbral calibrado
             </dt>
             <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
-              0,310
+              0,160
             </dd>
           </div>
           <div>
@@ -378,16 +373,182 @@ export function ModelValidation() {
               ECE calibrado
             </dt>
             <dd className="font-mono text-18 font-semibold text-text-primary tabular-nums mt-0.5">
-              0,06
+              0,019
             </dd>
           </div>
         </dl>
       </div>
 
+      {/* ─── 07 Escala de agregación · municipio ─── */}
+      {zoneLevel?.valencia && (
+        <div className="mt-10">
+          <SectionIndex
+            n={7}
+            title="Precisión por escala de agregación"
+            info={
+              <InfoHint cite="Unidad positiva si ≥5 % de sus píxeles lo son">
+                {`La precisión por píxel es estructuralmente baja (SAR banda C + prevalencia extrema), pero un asegurador no decide por píxel: decide por barrio, código postal o municipio. A esa escala los falsos positivos dispersos se promedian y la precisión sube — de forma 100 % honesta, sin tocar el modelo. Una unidad (celda 1 km o municipio) se marca como inundable si ≥5 % de sus píxeles lo están.`}
+              </InfoHint>
+            }
+          />
+          <p className="font-serif italic text-13 text-text-secondary mb-3 leading-snug">
+            Misma predicción, leída a tres escalas (Valencia, contra Copernicus EMS). La precisión
+            sube del píxel al municipio mientras el recall se mantiene.
+          </p>
+          <ScaleAggregationTable pixel={m} zone={zoneLevel.valencia} />
+        </div>
+      )}
+
+      {/* ─── 08 Puntos de operación ─── */}
+      {operating?.points && (
+        <div className="mt-10">
+          <SectionIndex
+            n={8}
+            title="Puntos de operación"
+            info={
+              <InfoHint cite="Mismo modelo, distinto coste asimétrico">
+                {`El mismo modelo calibrado se puede operar en varios regímenes según lo que cueste un falso negativo frente a un falso positivo. Subir o bajar el umbral mueve el punto sobre la curva precision-recall sin reentrenar nada. Se muestran tres puntos nombrados sobre el hold-out de Valencia a prevalencia natural.`}
+              </InfoHint>
+            }
+          />
+          <p className="font-serif italic text-13 text-text-secondary mb-3 leading-snug">
+            Un único modelo, tres modos de uso según el coste de equivocarse.
+          </p>
+          <OperatingPoints data={operating} />
+        </div>
+      )}
+
       {/* ─── SOURCES bibliography footer ─── */}
       <div className="mt-8">
         <MethodologySources items={SOURCES} />
       </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────
+// Escala de agregación: misma predicción leída a píxel / 1 km / municipio.
+// Hace concreta la afirmación "el producto lee el riesgo a nivel zona".
+// ────────────────────────────────────────────────────────────────
+function ScaleAggregationTable({ pixel, zone }) {
+  const rows = [
+    { scale: 'Píxel (10 m)', m: pixel, n: null },
+    { scale: 'Celda 1 km', m: zone.grid_1km, n: zone.grid_1km?.n_units },
+    { scale: 'Municipio', m: zone.municipality, n: zone.municipality?.n_units },
+  ];
+  const fmt = (x) => (x == null ? '—' : x.toFixed(3).replace('.', ','));
+  return (
+    <div className="overflow-hidden rounded-md border border-border-default">
+      <table className="w-full text-13">
+        <thead>
+          <tr className="bg-subtle text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary">
+            <th className="text-left font-medium px-3 py-2">Escala</th>
+            <th className="text-right font-medium px-3 py-2">Precisión</th>
+            <th className="text-right font-medium px-3 py-2">Recall</th>
+            <th className="text-right font-medium px-3 py-2">F1</th>
+            <th className="text-right font-medium px-3 py-2">Unidades</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr
+              key={r.scale}
+              className={`border-t border-border-default ${
+                i === rows.length - 1 ? 'bg-brand-50/40' : ''
+              }`}
+            >
+              <td className="px-3 py-2 text-text-primary">
+                {r.scale}
+                {i === rows.length - 1 && (
+                  <span className="ml-2 text-10 font-mono uppercase tracking-wider text-brand-700">
+                    escala de producto
+                  </span>
+                )}
+              </td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums font-semibold text-text-primary">
+                {fmt(r.m?.precision)}
+              </td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-text-secondary">
+                {fmt(r.m?.recall)}
+              </td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-text-secondary">
+                {fmt(r.m?.f1)}
+              </td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-text-tertiary">
+                {r.n ?? '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────
+// Puntos de operación: 3 tarjetas (cribado / operativo / triaje) sobre
+// la curva precision-recall del modelo calibrado.
+// ────────────────────────────────────────────────────────────────
+function OperatingPoints({ data }) {
+  const META = {
+    cribado: {
+      label: 'Cribado',
+      desc: 'Máxima sensibilidad — barre toda la exposición (recall ≥ 0,90).',
+      accent: 'text-risk-high-soft',
+    },
+    operativo: {
+      label: 'Operativo',
+      desc: 'El umbral desplegado (0,160, recall ≥ 0,75).',
+      accent: 'text-brand-700',
+    },
+    triaje: {
+      label: 'Triaje',
+      desc: 'Prioriza inspección — máxima precisión con recall ≥ 0,40.',
+      accent: 'text-risk-low-soft',
+    },
+  };
+  const order = ['cribado', 'operativo', 'triaje'];
+  const fmt = (x) => (x == null ? '—' : x.toFixed(3).replace('.', ','));
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {order.map((key) => {
+        const p = data.points[key];
+        const meta = META[key];
+        if (!p || !meta) return null;
+        return (
+          <div key={key} className="rounded-md border border-border-default p-4 bg-surface">
+            <div className={`text-10 font-mono uppercase tracking-[0.18em] ${meta.accent} mb-1`}>
+              {meta.label}
+            </div>
+            <div className="font-mono text-text-tertiary text-11 mb-3">umbral {fmt(p.t)}</div>
+            <dl className="grid grid-cols-3 gap-x-2">
+              <div>
+                <dt className="text-10 font-mono uppercase tracking-wide text-text-tertiary">
+                  Prec
+                </dt>
+                <dd className="font-mono text-16 font-semibold text-text-primary tabular-nums">
+                  {fmt(p.precision)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-10 font-mono uppercase tracking-wide text-text-tertiary">
+                  Recall
+                </dt>
+                <dd className="font-mono text-16 font-semibold text-text-primary tabular-nums">
+                  {fmt(p.recall)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-10 font-mono uppercase tracking-wide text-text-tertiary">F1</dt>
+                <dd className="font-mono text-16 font-semibold text-text-primary tabular-nums">
+                  {fmt(p.f1)}
+                </dd>
+              </div>
+            </dl>
+            <p className="text-12 text-text-secondary leading-snug mt-3">{meta.desc}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -403,9 +564,7 @@ function SectionIndex({ n, title, info }) {
       <span className="font-serif italic text-32 text-text-tertiary leading-none">
         {String(n).padStart(2, '0')}
       </span>
-      <h2 className="font-serif text-20 text-text-primary tracking-tight leading-none">
-        {title}
-      </h2>
+      <h2 className="font-serif text-20 text-text-primary tracking-tight leading-none">{title}</h2>
       {info}
     </div>
   );
@@ -432,16 +591,10 @@ function SecondaryMetric({ label, value, descr, hint, objective, scale = null })
           <div className="font-mono text-22 font-semibold text-text-primary tabular-nums leading-none">
             {value}
           </div>
-          {descr && (
-            <div className="text-10 font-mono text-text-tertiary mt-1">
-              {descr}
-            </div>
-          )}
+          {descr && <div className="text-10 font-mono text-text-tertiary mt-1">{descr}</div>}
         </div>
       </div>
-      {scale && (
-        <ScaleRail {...scale} color={scale.color || 'var(--accent-valid-text)'} />
-      )}
+      {scale && <ScaleRail {...scale} color={scale.color || 'var(--accent-valid-text)'} />}
       {objective && (
         <div className="font-serif italic text-11 text-text-tertiary leading-snug mt-1.5">
           {objective}
@@ -480,10 +633,7 @@ function ROCChart({ auc, stdAuc }) {
       const pts = [[0, 0]];
       for (let x = 0.01; x <= 1; x += 0.02) {
         // Concave-up curve parameterised so AUC ≈ foldAuc. Empirical fit.
-        const y = Math.min(
-          1,
-          1 - Math.pow(1 - x, 1 + foldAuc * 6)
-        );
+        const y = Math.min(1, 1 - Math.pow(1 - x, 1 + foldAuc * 6));
         pts.push([Number(x.toFixed(2)), Number(y.toFixed(4))]);
       }
       pts.push([1, 1]);
@@ -512,10 +662,7 @@ function ROCChart({ auc, stdAuc }) {
     const folds = [];
     const flows = [];
     for (let i = 0; i < 5; i++) {
-      const foldAuc = Math.max(
-        0.5,
-        Math.min(0.999, auc + (rand() - 0.5) * stdAuc * 2)
-      );
+      const foldAuc = Math.max(0.5, Math.min(0.999, auc + (rand() - 0.5) * stdAuc * 2));
       const curve = generateCurve(foldAuc);
       const colour = FOLD_PALETTE[i];
 
@@ -624,9 +771,7 @@ function ROCChart({ auc, stdAuc }) {
         // Only show one entry per fold (the analytical line). The
         // matching `lines` flow series shares the same name, so we
         // dedupe via the legend `data` whitelist.
-        data: folds
-          .map((s) => s.name)
-          .concat(['Random (AUC 0.5)']),
+        data: folds.map((s) => s.name).concat(['Random (AUC 0.5)']),
       },
       xAxis: {
         type: 'value',
@@ -855,10 +1000,7 @@ function ConfusionMatrixHeatmap({ matrix, total }) {
             show: true,
             formatter: (p) => {
               const c = p.data;
-              return (
-                `{val|${c.value[2].toLocaleString()}}\n` +
-                `{sub|${c.cellType} · ${c.pct}%}`
-              );
+              return `{val|${c.value[2].toLocaleString()}}\n` + `{sub|${c.cellType} · ${c.pct}%}`;
             },
             // El color de val/sub lo aporta cada celda vía su `label.rich`
             // (mkCell arriba). Aquí solo va el fallback neutro.
@@ -918,9 +1060,7 @@ function FeatureImportanceChart({ features }) {
 
     // Descending by importance, then reverse for ECharts y-axis (top of
     // the chart should show the most important feature).
-    const sorted = [...features].sort(
-      (a, b) => b.importance - a.importance
-    );
+    const sorted = [...features].sort((a, b) => b.importance - a.importance);
     const total = sorted.length;
     const names = sorted.map((f) => f.feature).reverse();
     const values = sorted.map((f) => f.importance).reverse();
@@ -934,10 +1074,7 @@ function FeatureImportanceChart({ features }) {
       const doc = FEATURE_DOCS[p.name];
       const cat = doc && CATEGORY_META[doc.category];
       const safe = (s) =>
-        String(s)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+        String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
       const head = `
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -1017,8 +1154,7 @@ function FeatureImportanceChart({ features }) {
           data: values,
           barWidth: 14,
           itemStyle: {
-            color: (params) =>
-              params.dataIndex >= total - 5 ? '#1D4ED8' : '#93C5FD',
+            color: (params) => (params.dataIndex >= total - 5 ? '#1D4ED8' : '#93C5FD'),
             borderRadius: [0, 3, 3, 0],
           },
         },
@@ -1037,7 +1173,7 @@ function FeatureImportanceChart({ features }) {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Feature glossary — all 9 features with category chip + unit +
+// Feature glossary — all 10 features with category chip + unit +
 // one-line "what it measures" description.
 //
 // Why a static glossary AND a chart tooltip? Different reading modes:
@@ -1060,10 +1196,7 @@ function FeatureGlossary({ features }) {
         </div>
         <div className="flex items-center gap-2 text-10 font-mono">
           {Object.entries(CATEGORY_META).map(([key, meta]) => (
-            <span
-              key={key}
-              className="inline-flex items-center gap-1.5 text-text-tertiary"
-            >
+            <span key={key} className="inline-flex items-center gap-1.5 text-text-tertiary">
               <span
                 className="inline-block w-2 h-2 rounded-sm"
                 style={{ background: meta.color }}
@@ -1091,10 +1224,7 @@ function FeatureGlossary({ features }) {
               const cat = doc && CATEGORY_META[doc.category];
               const isTop5 = ordered.indexOf(f) < 5;
               return (
-                <tr
-                  key={f.feature}
-                  className="border-b border-border-default hover:bg-bg-hover"
-                >
+                <tr key={f.feature} className="border-b border-border-default hover:bg-bg-hover">
                   <td className="py-1.5 px-2">
                     {cat && (
                       <span
@@ -1116,9 +1246,7 @@ function FeatureGlossary({ features }) {
                   <td
                     className={
                       'py-1.5 px-2 text-right font-mono tabular-nums ' +
-                      (isTop5
-                        ? 'text-brand-700 font-semibold'
-                        : 'text-text-primary')
+                      (isTop5 ? 'text-brand-700 font-semibold' : 'text-text-primary')
                     }
                   >
                     {Number(f.importance).toFixed(4)}
@@ -1142,8 +1270,8 @@ function FeatureGlossary({ features }) {
         </table>
       </div>
       <div className="mt-2 text-10 text-text-tertiary leading-relaxed">
-        Hover any bar in the chart above for the full definition, source
-        pipeline, and academic citation per feature.
+        Hover any bar in the chart above for the full definition, source pipeline, and academic
+        citation per feature.
       </div>
     </div>
   );

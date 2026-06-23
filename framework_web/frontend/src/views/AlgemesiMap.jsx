@@ -14,23 +14,23 @@ import { ZONES } from '../lib/constants.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Ranking-based AUC. Stays high (0.788) under transfer because ranking is robust to prevalence shift. This is the metric to trust in extrapolation; threshold-dependent ones (F1, Precisión) are not.`,
+    body: `Ranking-based AUC. Stays high (0.861) under transfer — even higher than in-domain (0.848) — because ranking is robust to prevalence shift and distance_to_river transfers cleanly across basins. This is the metric to trust in extrapolation; threshold-dependent ones (F1, Precisión) are not.`,
   },
   'AUC PR': {
     cite: 'sklearn.metrics.average_precision_score',
-    body: `Area under the Precision-Recall curve. Naturally tiny when positive prevalence is < 1 %: the baseline for a random classifier ≈ prevalence (here 0.0029), so any non-trivial AUC PR above ~0.01 is informative. The 0.007 value isn't broken — it's a faithful reflection of how hard the extrapolation problem is.`,
+    body: `Area under the Precision-Recall curve. Naturally tiny when positive prevalence is < 1 %: the baseline for a random classifier ≈ prevalence (here 0.0030), so any non-trivial AUC PR above ~0.01 is informative. The 0.011 value isn't broken — it's a faithful reflection of how hard the extrapolation problem is.`,
   },
   'F1 score': {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision + recall at the single calibrated threshold 0.310 (same as Valencia, no recalibration). Stays low (0.549 → 0.015) because precision collapses under 27× lower prevalence — see Precisión. At pixel level F1 is structurally limited; the product aggregates to zone/policy level.`,
+    body: `Harmonic mean of precision + recall at the single calibrated threshold 0.160 (same as Valencia, no recalibration). Low in both zones (0.348 → 0.023) because precision is structurally limited at pixel level under extreme imbalance — see Precisión. The product aggregates to zone/policy level, where buffered recall (0.94 at 100 m) is the figure that matters.`,
   },
   Precisión: {
     cite: 'sklearn.metrics.precision_score',
-    body: `TP / (TP + FP). Collapses from 0.438 → 0.008 because positives are 27× rarer in Algemesí. With prevalence < 1 %, even a 5 % false-positive rate produces 17× more FP than TP — hence the floor.`,
+    body: `TP / (TP + FP). Low in-domain (0.239) and collapses to 0.012 in Algemesí because positives are ~27× rarer there. With prevalence < 1 %, even a 5 % false-positive rate produces far more FP than TP — hence the floor. This is why the product reads risk at zone level, not pixel level.`,
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). With v3-T the recall transfers at the SAME calibrated threshold (0.736 → 0.626, no recalibration needed) — unlike the prior v2 model whose extrapolated recall collapsed to 0. With a 100 m operational buffer it reaches 0.92.`,
+    body: `TP / (TP + FN). With v3-T the recall transfers at the SAME calibrated threshold (0.639 → 0.676, it does not even drop) — unlike the prior v2 model whose extrapolated recall collapsed to 0.18. With a 100 m operational buffer it reaches 0.94.`,
   },
   'Recall (100 m)': {
     cite: 'Tellman et al. 2021 · Nature 596',
@@ -42,7 +42,7 @@ const METRIC_DOCS = {
   },
   'Brier score': {
     cite: 'Brier 1950',
-    body: `MSE between predicted probabilities and the true outcome. Measures calibration. Lower = better. Random Forest's 0.111 here is decent given the prevalence shift.`,
+    body: `MSE between predicted probabilities and the true outcome. Measures calibration. Lower = better. v3-T's 0.021 here reflects the isotonic recalibration to natural prevalence — the probabilities are honestly scaled, not inflated.`,
   },
 };
 
@@ -68,8 +68,7 @@ function DeltaVsValencia({ delta }) {
   return (
     <span
       className={
-        'inline-flex items-center gap-0.5 text-10 font-mono tabular-nums ml-1.5 ' +
-        palette[tone]
+        'inline-flex items-center gap-0.5 text-10 font-mono tabular-nums ml-1.5 ' + palette[tone]
       }
       title={`vs Valencia (training)`}
     >
@@ -126,12 +125,8 @@ export function AlgemesiMap() {
   // Recall at 100 m buffer — operational neighbourhood-scale metric.
   // Show "—" if buffer_metrics is absent so the row order stays stable
   // vs Valencia (no silent omission).
-  const buf100Alg = (metrics?.buffer_metrics || []).find(
-    (b) => b.buffer_m === 100
-  );
-  const buf100Val = (valenciaMetrics?.buffer_metrics || []).find(
-    (b) => b.buffer_m === 100
-  );
+  const buf100Alg = (metrics?.buffer_metrics || []).find((b) => b.buffer_m === 100);
+  const buf100Val = (valenciaMetrics?.buffer_metrics || []).find((b) => b.buffer_m === 100);
 
   // Each row carries the algemesí value AND the matching Valencia
   // baseline so the renderer can compute the Δ chip. `compareKind`:
@@ -176,7 +171,8 @@ export function AlgemesiMap() {
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Ribera Alta del Júcar · Algemesí + Alzira · Same model, transferred without retraining as a geographic generalisation test.
+          Ribera Alta del Júcar · Algemesí + Alzira · Same model, transferred without retraining as
+          a geographic generalisation test.
         </p>
       </header>
 
@@ -196,32 +192,26 @@ export function AlgemesiMap() {
           />
         </div>
 
-        <aside className="space-y-3" style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+        <aside
+          className="space-y-3"
+          style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+        >
           <Card title="Statistics" subtitle="Extrapolation · full surface">
             <dl className="divide-y divide-border-default text-13">
               {rows.map((row) => {
                 const docs = METRIC_DOCS[row.label];
                 const hasValue = row.value != null && Number.isFinite(row.value);
                 const delta =
-                  hasValue && Number.isFinite(row.baseline)
-                    ? row.value - row.baseline
-                    : null;
+                  hasValue && Number.isFinite(row.baseline) ? row.value - row.baseline : null;
                 return (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between py-1.5 group"
-                  >
+                  <div key={row.label} className="flex items-center justify-between py-1.5 group">
                     <dt className="text-text-secondary inline-flex items-center gap-1">
                       {row.label}
-                      {docs && (
-                        <InfoHint cite={docs.cite}>{docs.body}</InfoHint>
-                      )}
+                      {docs && <InfoHint cite={docs.cite}>{docs.body}</InfoHint>}
                     </dt>
                     <dd className="font-mono font-medium text-text-primary tabular-nums">
                       {loading || !hasValue ? '—' : row.value.toFixed(3)}
-                      {!loading && delta != null && (
-                        <DeltaVsValencia delta={delta} />
-                      )}
+                      {!loading && delta != null && <DeltaVsValencia delta={delta} />}
                     </dd>
                   </div>
                 );
@@ -249,8 +239,7 @@ export function AlgemesiMap() {
                   onClick={() => setViewMode(opt.id)}
                   className="px-2.5 py-1 uppercase tracking-wider transition-colors"
                   style={{
-                    backgroundColor:
-                      viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
+                    backgroundColor: viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
                     color: viewMode === opt.id ? '#f7f8f8' : '#8a8f98',
                     fontWeight: viewMode === opt.id ? 600 : 400,
                     borderLeft: i > 0 ? '1px solid var(--border-strong)' : 'none',
@@ -278,28 +267,22 @@ export function AlgemesiMap() {
             <p className="text-11 text-text-tertiary mt-3 leading-relaxed">
               {viewMode === 'binary' ? (
                 <>
-                  Capa de inspección · <strong>sensibilidad primero</strong>.
-                  Píxeles con{' '}
-                  <span className="font-mono text-text-secondary">
-                    p ≥ {threshold.toFixed(3)}
-                  </span>{' '}
-                  se marcan para inspección (rojo). El umbral operacional
-                  0,310 (recall ≥ 0,75) marca ~24 % del territorio{' '}
-                  <em>a propósito</em>: en seguros, no detectar una
-                  inundación es peor que inspeccionar de más. Sube el
-                  umbral para aislar el núcleo de alto riesgo (p ≥ 0,50 ≈
-                  7 %).
+                  Capa de inspección · <strong>sensibilidad primero</strong>. Píxeles con{' '}
+                  <span className="font-mono text-text-secondary">p ≥ {threshold.toFixed(3)}</span>{' '}
+                  se marcan para inspección (rojo). El umbral operacional 0,160 (recall ≥ 0,75)
+                  marca ~17 % del territorio <em>a propósito</em>: en seguros, no detectar una
+                  inundación es peor que inspeccionar de más. Sube el umbral para aislar el núcleo
+                  de alto riesgo (p ≥ 0,50 ≈ 2 %).
                 </>
               ) : (
                 <>
-                  Continuous view: 8-bin colour palette from the geojson.
-                  El modelo v3-T aplica el{' '}
+                  Continuous view: 8-bin colour palette from the geojson. El modelo v3-T aplica el{' '}
                   <span className="font-mono text-text-secondary">
                     mismo umbral calibrado {ZONES.algemesi.threshold.toFixed(3)}
                   </span>{' '}
-                  que en Valencia, sin recalibración — la calibración
-                  isotónica hace comparable la escala de probabilidad entre
-                  zonas. Cambia a Binario para aplicar el slider al mapa.
+                  que en Valencia, sin recalibración — la calibración isotónica hace comparable la
+                  escala de probabilidad entre zonas. Cambia a Binario para aplicar el slider al
+                  mapa.
                 </>
               )}
             </p>
@@ -340,7 +323,9 @@ function Card({ title, subtitle, actions, children }) {
         <div>
           {/* Mismo registro editorial que ValenciaMap.Card. */}
           <h3 className="font-serif text-15 text-text-primary tracking-tight">{title}</h3>
-          {subtitle && <p className="font-serif italic text-12 text-text-tertiary mt-0.5">{subtitle}</p>}
+          {subtitle && (
+            <p className="font-serif italic text-12 text-text-tertiary mt-0.5">{subtitle}</p>
+          )}
         </div>
         {actions}
       </div>

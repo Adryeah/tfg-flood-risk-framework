@@ -2,12 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
 import { Loader2 } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -36,7 +31,6 @@ import {
 } from '@/components/return-period-selector.jsx';
 import { SnczNoticeBar } from '@/components/sncz-notice.jsx';
 
-
 export function ExposureDashboard() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -55,8 +49,7 @@ export function ExposureDashboard() {
         setPortfolios(list);
         // Default to wide_distribution for demo consistency with the other
         // portfolio views (1000 clients, full product mix).
-        const preferred =
-          list.find((p) => p.id === 'wide_distribution') || list[0];
+        const preferred = list.find((p) => p.id === 'wide_distribution') || list[0];
         if (preferred) setSelectedId(preferred.id);
       } catch (err) {
         console.error('Portfolios index failed', err);
@@ -104,11 +97,10 @@ export function ExposureDashboard() {
               Exposure Dashboard
             </h1>
             <InfoHint side="bottom" size={14}>
-              Vista agregada de una cartera concreta: 4 KPIs hero arriba
-              (TIV · EAL · PML · pólizas afectadas) y 6 widgets debajo que
-              cruzan la cartera con la superficie de riesgo del Random Forest
-              v2. Pensado para un underwriter que necesita ver concentración,
-              cola de pérdida y prioridades de revisión en una sola pantalla.
+              Vista agregada de una cartera concreta: 4 KPIs hero arriba (TIV · EAL · PML · pólizas
+              afectadas) y 6 widgets debajo que cruzan la cartera con la superficie de riesgo del
+              Random Forest v2. Pensado para un underwriter que necesita ver concentración, cola de
+              pérdida y prioridades de revisión en una sola pantalla.
             </InfoHint>
             {portfolio && (
               <Badge
@@ -124,10 +116,7 @@ export function ExposureDashboard() {
           </p>
         </div>
 
-        <Select
-          value={selectedId || ''}
-          onValueChange={(v) => v && setSelectedId(v)}
-        >
+        <Select value={selectedId || ''} onValueChange={(v) => v && setSelectedId(v)}>
           <SelectTrigger className="w-full sm:w-[260px] h-8 text-12">
             <SelectValue placeholder="Selecciona cartera" />
           </SelectTrigger>
@@ -179,10 +168,9 @@ export function ExposureDashboard() {
               badge="agrupado · 2 zonas de estudio"
               hint={
                 <>
-                  Burbujas agrupando las pólizas que caen en el mismo bloque
-                  geográfico, superpuestas sobre la superficie de riesgo del
-                  RF (tiles raster píxel-perfect). Un cluster grande sobre
-                  zona roja = concentración de riesgo a vigilar (Solvencia II
+                  Burbujas agrupando las pólizas que caen en el mismo bloque geográfico,
+                  superpuestas sobre la superficie de riesgo del RF (tiles raster píxel-perfect). Un
+                  cluster grande sobre zona roja = concentración de riesgo a vigilar (Solvencia II
                   pide diversificar la exposición espacial).
                 </>
               }
@@ -201,11 +189,10 @@ export function ExposureDashboard() {
               badge={`${portfolio.n_clients} pólizas`}
               hint={
                 <>
-                  Reparto de las pólizas por categoría de riesgo derivada de
-                  la probabilidad del Random Forest: <b>low</b> (p&lt;0.25),
-                  <b> moderate</b> (0.25–0.50), <b>high</b> (0.50–0.75) y
-                  <b> very_high</b> (≥0.75). Cuanto más volumen en rojo,
-                  mayor base esperada de siniestralidad anual.
+                  Reparto de las pólizas por categoría de riesgo derivada de la probabilidad del
+                  Random Forest: <b>low</b> (p&lt;0.25),
+                  <b> moderate</b> (0.25–0.50), <b>high</b> (0.50–0.75) y<b> very_high</b> (≥0.75).
+                  Cuanto más volumen en rojo, mayor base esperada de siniestralidad anual.
                 </>
               }
               annotation="Más volumen rojo = más siniestralidad anual esperada en cartera."
@@ -221,11 +208,9 @@ export function ExposureDashboard() {
               badge="valor asegurado"
               hint={
                 <>
-                  Suma del valor asegurado por producto (Particulares ·
-                  Pymes · Autos). Permite ver cuánto capital está expuesto
-                  por línea de negocio antes de aplicar probabilidad de
-                  inundación — útil para underwriting de prima técnica
-                  por ramo.
+                  Suma del valor asegurado por producto (Particulares · Pymes · Autos). Permite ver
+                  cuánto capital está expuesto por línea de negocio antes de aplicar probabilidad de
+                  inundación — útil para underwriting de prima técnica por ramo.
                 </>
               }
               annotation="Particulares concentra el mayor TIV; PYMES segunda línea de exposición."
@@ -245,12 +230,10 @@ export function ExposureDashboard() {
               badge="Oasis OEP-style"
               hint={
                 <>
-                  Curva de excedencia tipo OEP (Occurrence Exceedance
-                  Probability): para cada umbral de pérdida <i>L</i> en el
-                  eje X, suma del € total de pólizas con pérdida estimada
-                  ≥ <i>L</i>. Una caída brusca indica que pocas pólizas
-                  concentran la mayor parte de la pérdida — la "cola del
-                  portfolio" donde el capital está más vulnerable.
+                  Curva de excedencia tipo OEP (Occurrence Exceedance Probability): para cada umbral
+                  de pérdida <i>L</i> en el eje X, suma del € total de pólizas con pérdida estimada
+                  ≥ <i>L</i>. Una caída brusca indica que pocas pólizas concentran la mayor parte de
+                  la pérdida — la "cola del portfolio" donde el capital está más vulnerable.
                 </>
               }
               cite="Oasis LMF · single-event PML approximation"
@@ -267,11 +250,10 @@ export function ExposureDashboard() {
               badge="escenario DANA"
               hint={
                 <>
-                  Descomposición de la pérdida esperada total por categoría
-                  de riesgo en el escenario DANA single-event. Cada barra
-                  agrega: Σ (valor_asegurado × P(flood) × damage_ratio)
-                  para las pólizas de esa categoría. Identifica de un
-                  vistazo qué bucket de riesgo aporta más € a la PML.
+                  Descomposición de la pérdida esperada total por categoría de riesgo en el
+                  escenario DANA single-event. Cada barra agrega: Σ (valor_asegurado × P(flood) ×
+                  damage_ratio) para las pólizas de esa categoría. Identifica de un vistazo qué
+                  bucket de riesgo aporta más € a la PML.
                 </>
               }
               annotation="High + Very High aportan la mayor parte del DANA loss — candidatos prioritarios a re-tarificar."
@@ -287,12 +269,10 @@ export function ExposureDashboard() {
               badge="por pérdida estimada"
               hint={
                 <>
-                  Las 10 pólizas con mayor pérdida estimada en escenario
-                  DANA. Son los candidatos prioritarios para revisión
-                  manual: re-tarificar, renegociar deductibles, exigir
-                  medidas físicas (rejillas anti-retorno, planta no
-                  habitable en cota inundable, garaje en alto) antes
-                  de renovar.
+                  Las 10 pólizas con mayor pérdida estimada en escenario DANA. Son los candidatos
+                  prioritarios para revisión manual: re-tarificar, renegociar deductibles, exigir
+                  medidas físicas (rejillas anti-retorno, planta no habitable en cota inundable,
+                  garaje en alto) antes de renovar.
                 </>
               }
               annotation="Re-tarificar, renegociar deductibles o exigir medidas físicas antes de la próxima renovación."
@@ -368,15 +348,17 @@ function MethodologyFooter() {
       <p>
         <span className="font-mono text-text-primary">PML</span> = Σ
         <code className="px-1">valor_asegurado × P(flood) × damage_ratio</code>
-        sobre todas las pólizas, calculada según la convención de Pérdida Máxima
-        Probable de Oasis LMF (pérdida single-event dada la huella de peligro). <span className="font-mono text-text-primary">EAL</span> = PML ×{' '}
-        <code className="px-1">prob_evento_año</code> (5% — periodo de retorno ≈ 20 años para eventos tipo DANA).
+        sobre todas las pólizas, calculada según la convención de Pérdida Máxima Probable de Oasis
+        LMF (pérdida single-event dada la huella de peligro).{' '}
+        <span className="font-mono text-text-primary">EAL</span> = PML ×{' '}
+        <code className="px-1">prob_evento_año</code> (5% — periodo de retorno ≈ 20 años para
+        eventos tipo DANA).
       </p>
       <p>
-        Capa de peligro: <span className="font-mono text-text-primary">P(flood)</span> del
-        Random Forest v3-T (9 variables, GroupKFold 5×1 km, umbral operacional 0.310)
-        entrenado sobre retrodispersión SAR Sentinel-1 pre/post DANA Valencia 2024 y validado
-        contra Copernicus EMS EMSR773.
+        Capa de peligro: <span className="font-mono text-text-primary">P(flood)</span> del Random
+        Forest v3-T (10 variables, GroupKFold 5×1 km, umbral operacional 0.160) entrenado sobre
+        retrodispersión SAR Sentinel-1 pre/post DANA Valencia 2024 y validado contra Copernicus EMS
+        EMSR773.
       </p>
     </div>
   );
@@ -491,9 +473,7 @@ function Widget({
       <CardContent className="p-3 flex-1">{children}</CardContent>
       {annotation && (
         <div className="px-4 pb-3 pt-1 border-t border-border-default">
-          <p className="font-serif italic text-11 text-text-tertiary leading-snug">
-            {annotation}
-          </p>
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug">{annotation}</p>
         </div>
       )}
     </Card>
@@ -549,9 +529,17 @@ function RiskDonut({ distribution }) {
           labelLine: { show: false },
           data: [
             { value: distribution.low || 0, name: 'Low', itemStyle: { color: RISK_COLORS.low } },
-            { value: distribution.moderate || 0, name: 'Moderate', itemStyle: { color: RISK_COLORS.moderate } },
+            {
+              value: distribution.moderate || 0,
+              name: 'Moderate',
+              itemStyle: { color: RISK_COLORS.moderate },
+            },
             { value: distribution.high || 0, name: 'High', itemStyle: { color: RISK_COLORS.high } },
-            { value: distribution.very_high || 0, name: 'Very high', itemStyle: { color: RISK_COLORS.very_high } },
+            {
+              value: distribution.very_high || 0,
+              name: 'Very high',
+              itemStyle: { color: RISK_COLORS.very_high },
+            },
           ],
         },
       ],
@@ -649,13 +637,15 @@ function ExposureByTypeChart({ clients }) {
           type: 'bar',
           // Each bar takes its product's brand colour — visual link with
           // the Policy Map points + the Portfolio Explorer filter dots.
-          data: buckets.map(([k, v]) => ({
-            value: v,
-            itemStyle: {
-              color: PRODUCT_COLOR[k] || '#94A3B8',
-              borderRadius: [0, 2, 2, 0],
-            },
-          })).reverse(),
+          data: buckets
+            .map(([k, v]) => ({
+              value: v,
+              itemStyle: {
+                color: PRODUCT_COLOR[k] || '#94A3B8',
+                borderRadius: [0, 2, 2, 0],
+              },
+            }))
+            .reverse(),
           barWidth: '58%',
         },
       ],
@@ -974,9 +964,7 @@ function LossBreakdownChart({ clients }) {
           color: '#f7f8f8',
         },
         valueFormatter: (v) =>
-          v >= 1_000_000
-            ? `€${(v / 1_000_000).toFixed(2)}M`
-            : `€${(v / 1000).toFixed(0)}K`,
+          v >= 1_000_000 ? `€${(v / 1_000_000).toFixed(2)}M` : `€${(v / 1000).toFixed(0)}K`,
       },
       legend: {
         bottom: 0,
@@ -1089,16 +1077,13 @@ function TopRiskClientsTable({ clients }) {
 
   const top = useMemo(() => {
     return [...(clients || [])]
-      .sort(
-        (a, b) =>
-          (b.estimated_loss_dana || 0) - (a.estimated_loss_dana || 0)
-      )
+      .sort((a, b) => (b.estimated_loss_dana || 0) - (a.estimated_loss_dana || 0))
       .slice(0, 10);
   }, [clients]);
 
   // Max est. loss in the top-10 — drives the inline bar normalisation
   // so the #1 row renders a 100 % bar and everyone else scales down.
-  const maxLoss = ((top[0]?.estimated_loss_dana || 0) * mult) || 1;
+  const maxLoss = (top[0]?.estimated_loss_dana || 0) * mult || 1;
 
   // Local money formatter (M for ≥ 1M, K below). Same convention as
   // Portfolio Explorer's fmtMoney — keeps the two views aligned.
@@ -1141,15 +1126,9 @@ function TopRiskClientsTable({ clients }) {
                 className="hover:bg-bg-hover transition-colors group animate-in fade-in slide-in-from-bottom-1"
                 style={{ animationDelay, animationDuration: '320ms' }}
               >
-                <td className="py-1.5 pr-2 font-mono text-text-tertiary tabular-nums">
-                  {idx + 1}
-                </td>
-                <td className="py-1.5 pr-2 font-mono text-text-primary truncate">
-                  {c.id}
-                </td>
-                <td className="py-1.5 pr-2 text-text-secondary capitalize">
-                  {c.type}
-                </td>
+                <td className="py-1.5 pr-2 font-mono text-text-tertiary tabular-nums">{idx + 1}</td>
+                <td className="py-1.5 pr-2 font-mono text-text-primary truncate">{c.id}</td>
+                <td className="py-1.5 pr-2 text-text-secondary capitalize">{c.type}</td>
                 <td className="py-1.5 pr-2 text-right font-mono text-text-primary tabular-nums">
                   {c.risk_probability?.toFixed(3) ?? '—'}
                 </td>
@@ -1199,10 +1178,7 @@ function ReturnPeriodScenarioBar() {
         <span className="font-mono font-semibold tabular-nums text-text-primary text-14">
           ×{mult.toFixed(2)}
         </span>
-        <span
-          className="text-10 font-serif italic text-text-tertiary truncate"
-          title={SOURCE_NOTE}
-        >
+        <span className="text-10 font-serif italic text-text-tertiary truncate" title={SOURCE_NOTE}>
           baseline T100 · {SOURCE_NOTE}
         </span>
       </div>

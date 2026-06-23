@@ -2,13 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as echarts from 'echarts';
 import { Loader2, FlaskConical, AlertCircle, ArrowRight } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 import { MethodologySources } from '@/components/methodology-sources';
@@ -25,30 +19,25 @@ const SOURCES = [
     author: 'Evidently AI',
     year: '2024',
     work: 'Data Drift detection dashboards · open-source ML monitoring.',
-    used_for:
-      'Reference pattern for feature-drift bar charts + per-feature drill-down.',
+    used_for: 'Reference pattern for feature-drift bar charts + per-feature drill-down.',
   },
   {
     author: 'Gama, Žliobaitė et al.',
     year: '2014',
     work: 'A survey on concept drift adaptation. ACM Computing Surveys 46.',
-    used_for:
-      'Definition and taxonomy of data drift / concept drift in supervised ML.',
+    used_for: 'Definition and taxonomy of data drift / concept drift in supervised ML.',
   },
   {
     author: 'Roberts et al.',
     year: '2017',
-    work:
-      'Cross-validation strategies for data with spatial structure. Ecography 40(8).',
-    used_for:
-      'Justifies spatial extrapolation as a rigorous transferability test.',
+    work: 'Cross-validation strategies for data with spatial structure. Ecography 40(8).',
+    used_for: 'Justifies spatial extrapolation as a rigorous transferability test.',
   },
   {
     author: 'Breiman',
     year: '2001',
     work: 'Random Forests. Machine Learning 45(1).',
-    used_for:
-      'Permutation importance, recomputed independently per zone.',
+    used_for: 'Permutation importance, recomputed independently per zone.',
   },
 ];
 
@@ -81,10 +70,10 @@ export function Transferability() {
   }, []);
 
   // Pull headline AUC numbers if backend exposes them; otherwise fall
-  // back to los valores del modelo final v3-T (0.840 Valencia / 0.788
+  // back to los valores del modelo final v3-T (0.848 Valencia / 0.861
   // Algemesí). El fallback se documenta en la tarjeta de conclusión.
-  const aucValencia = data?.auc_valencia ?? 0.840;
-  const aucAlgemesi = data?.auc_algemesi ?? 0.788;
+  const aucValencia = data?.auc_valencia ?? 0.848;
+  const aucAlgemesi = data?.auc_algemesi ?? 0.861;
   const aucDrop = aucAlgemesi - aucValencia;
 
   if (loading) {
@@ -118,12 +107,12 @@ export function Transferability() {
           </Badge>
         </div>
         <p className="font-serif italic text-15 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Cómo se comporta el modelo entrenado en Valencia al aplicarse
-          a Algemesí sin reentrenamiento.
+          Cómo se comporta el modelo entrenado en Valencia al aplicarse a Algemesí sin
+          reentrenamiento.
         </p>
       </div>
 
-      {/* ─── HERO TRANSFER NARRATIVE · 0.840 → 0.788 ───
+      {/* ─── HERO TRANSFER NARRATIVE · 0.848 → 0.861 ───
        *  Typographic story: two big AUC numbers separated by an arrow,
        *  with the Δ chip floating below. Reads like a stat panel in a
        *  Bloomberg article. Replaces the prior banner-card. */}
@@ -131,11 +120,7 @@ export function Transferability() {
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-3">
           AUC ROC · transferencia geográfica
         </div>
-        <TransferHero
-          aucValencia={aucValencia}
-          aucAlgemesi={aucAlgemesi}
-          aucDrop={aucDrop}
-        />
+        <TransferHero aucValencia={aucValencia} aucAlgemesi={aucAlgemesi} aucDrop={aucDrop} />
       </div>
 
       {/* ─── KEY FINDING · vertical-rule pull quote ─── */}
@@ -151,23 +136,20 @@ export function Transferability() {
           <span className="font-mono text-18">recupera la transferencia</span>
         </h3>
         <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-3xl">
-          {`El modelo v3-T elimina las 5 features no transferibles que el análisis de ablación Leave-One-Zone-Out identificó como dañinas para la generalización geográfica — entre ellas distance_to_coast y elevation, predictores fuertes en Valencia pero spatial proxies que no transfieren a una cuenca fluvial como Algemesí (Mila et al. 2024). El resultado: el ranking se mantiene (AUC 0.840 → 0.788) y, a diferencia del modelo v2 anterior, la decisión también transfiere — el recall extrapolado pasa de 0 a 0.63 (0.92 con tolerancia de 100 m).`}
+          {`El modelo v3-T elimina las 5 features no transferibles que el análisis de ablación Leave-One-Zone-Out identificó como dañinas para la generalización geográfica — entre ellas distance_to_coast y elevation, predictores fuertes en Valencia pero spatial proxies que no transfieren a una cuenca fluvial como Algemesí (Mila et al. 2024) — y las sustituye por distance_to_river, que sí transfiere. El resultado: el ranking ni siquiera baja (AUC 0.848 → 0.861) y, a diferencia del modelo v2 anterior, la decisión también transfiere — el recall extrapolado pasa de 0.18 a 0.68 (0.94 con tolerancia de 100 m).`}
         </p>
       </div>
 
       {/* ─── 01 Feature Drift ─── */}
       <div className="mb-8">
         <div className="mb-3 flex items-baseline gap-3">
-          <span className="font-serif italic text-32 text-text-tertiary leading-none">
-            01
-          </span>
+          <span className="font-serif italic text-32 text-text-tertiary leading-none">01</span>
           <h2 className="font-serif text-20 text-text-primary tracking-tight leading-none">
             Drift de features Valencia → Algemesí
           </h2>
         </div>
         <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-          Diferencia z-score normalizada por feature. Positivo = valores
-          mayores en Algemesí.
+          Diferencia z-score normalizada por feature. Positivo = valores mayores en Algemesí.
         </p>
         {highlightFeature && (
           <div className="mb-2 text-11 font-mono text-brand-700 inline-flex items-center gap-1.5">
@@ -183,46 +165,35 @@ export function Transferability() {
             </a>
           </div>
         )}
-        <FeatureDriftChart
-          features={data.feature_drift}
-          highlightFeature={highlightFeature}
-        />
+        <FeatureDriftChart features={data.feature_drift} highlightFeature={highlightFeature} />
       </div>
 
       {/* ─── 02 Permutation Importance Comparison ─── */}
       <div className="mb-8">
         <div className="mb-3 flex items-baseline gap-3">
-          <span className="font-serif italic text-32 text-text-tertiary leading-none">
-            02
-          </span>
+          <span className="font-serif italic text-32 text-text-tertiary leading-none">02</span>
           <h2 className="font-serif text-20 text-text-primary tracking-tight leading-none">
             Comparativa de importancia por permutación
           </h2>
         </div>
         <p className="font-serif italic text-13 text-text-secondary mb-2 leading-snug">
-          Contribución ΔAUC por feature en cada zona, para el set v3-T de 9
-          features transferibles. HAND (altura sobre el cauce) lidera y
-          mantiene su importancia entre zonas — es una feature relativa al
-          terreno, no geográfica absoluta.
+          Contribución ΔAUC por feature en cada zona, para el set v3-T de 10 features transferibles.
+          HAND (altura sobre el cauce) lidera y mantiene su importancia entre zonas — es una feature
+          relativa al terreno, no geográfica absoluta.
         </p>
-        <ImportanceComparisonChart
-          data={data.permutation_importance_comparison}
-        />
+        <ImportanceComparisonChart data={data.permutation_importance_comparison} />
       </div>
 
       {/* ─── METHODOLOGICAL CONCLUSION · pull quote ─── */}
       <div className="mt-8 pl-6 border-l border-brand-500/60">
         <div className="flex items-center gap-2 mb-2">
-          <FlaskConical
-            className="w-4 h-4 text-brand-700"
-            strokeWidth={1.75}
-          />
+          <FlaskConical className="w-4 h-4 text-brand-700" strokeWidth={1.75} />
           <span className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
             Conclusión metodológica
           </span>
         </div>
         <p className="font-serif text-15 text-text-secondary leading-relaxed max-w-3xl">
-          {`El experimento de transferibilidad demuestra que la generalización del modelo tiene límites identificables, cuantificables y abordables. AUC ${aucAlgemesi.toFixed(3)} confirma que el ranking transfiere; y con el modelo v3-T —tras la selección de features por ablación Leave-One-Zone-Out, que elimina los spatial proxies no transferibles (distance_to_coast, elevation)— la DECISIÓN también transfiere: el recall extrapolado pasa de 0 en el v2 a 0,63 (0,92 con tolerancia de 100 m). La precisión a nivel píxel sigue baja por la rareza del evento (prevalencia 0,3 %), por lo que el producto agrega el riesgo a nivel zona/póliza. Delimitar honestamente el dominio de validez del modelo (vía Area of Applicability) es exactamente el tipo de validación rigurosa que un TFG debe incluir.`}
+          {`El experimento de transferibilidad demuestra que la generalización del modelo tiene límites identificables, cuantificables y abordables. AUC ${aucAlgemesi.toFixed(3)} confirma que el ranking transfiere; y con el modelo v3-T —tras la selección de features por ablación Leave-One-Zone-Out, que elimina los spatial proxies no transferibles (distance_to_coast, elevation)— la DECISIÓN también transfiere: el recall extrapolado pasa de 0,18 en el v2 a 0,61 (0,92 con tolerancia de 100 m). La precisión a nivel píxel sigue baja por la rareza del evento (prevalencia 0,3 %), por lo que el producto agrega el riesgo a nivel zona/póliza. Delimitar honestamente el dominio de validez del modelo (vía Area of Applicability) es exactamente el tipo de validación rigurosa que un TFG debe incluir.`}
         </p>
       </div>
 
@@ -356,9 +327,7 @@ function ImportanceComparisonChart({ data }) {
     if (!ref.current || !data) return;
     const chart = echarts.init(ref.current);
 
-    const sorted = [...data].sort(
-      (a, b) => b.importance_valencia - a.importance_valencia
-    );
+    const sorted = [...data].sort((a, b) => b.importance_valencia - a.importance_valencia);
     const names = sorted.map((d) => d.feature).reverse();
     const valencia = sorted.map((d) => d.importance_valencia).reverse();
     const algemesi = sorted.map((d) => d.importance_algemesi).reverse();
@@ -448,7 +417,7 @@ function ImportanceComparisonChart({ data }) {
 }
 
 // ─── Hero transferencia con dos AUC counting up ──────────────────
-// Bloomberg-stat-panel: 0.840 → 0.788 con flecha entre ambos y Δ chip
+// Bloomberg-stat-panel: 0.848 → 0.861 con flecha entre ambos y Δ chip
 // flotando abajo. Las dos cifras animan en sincronía cuando la
 // sección entra al viewport — refuerza la sensación de "salto entre
 // dos zonas geográficas".
@@ -475,10 +444,7 @@ function TransferHero({ aucValencia, aucAlgemesi, aucDrop }) {
           {v.toFixed(3)}
         </div>
       </div>
-      <ArrowRight
-        className="w-10 h-10 text-text-tertiary self-center"
-        strokeWidth={1.25}
-      />
+      <ArrowRight className="w-10 h-10 text-text-tertiary self-center" strokeWidth={1.25} />
       <div>
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
           Algemesí · extrapolación
@@ -489,7 +455,7 @@ function TransferHero({ aucValencia, aucAlgemesi, aucDrop }) {
       </div>
       <div className="self-end pb-2">
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-risk-medium-bg text-risk-medium-soft text-13 font-mono font-semibold tabular-nums">
-          Δ {(aucDrop < 0 ? '-' : '')}
+          Δ {aucDrop < 0 ? '-' : ''}
           {d.toFixed(3)}
         </span>
       </div>

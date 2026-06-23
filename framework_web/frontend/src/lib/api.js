@@ -9,8 +9,8 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 // Versión del modelo — cache-buster para tiles/geojson (servidos con
 // Cache-Control immutable). Subir en cada re-entrenamiento para invalidar
-// la caché del navegador. v3-T = modelo transferible de 9 features.
-const MODEL_VERSION = 'v3t2';
+// la caché del navegador. v3-T = modelo transferible de 10 features (+river).
+const MODEL_VERSION = 'v3t3';
 
 function withBase(path) {
   // Pass-through for any caller that already uses an absolute URL.
@@ -34,9 +34,7 @@ function formatDetail(detail) {
   if (typeof detail === 'string') return detail;
   if (Array.isArray(detail)) {
     return detail
-      .map((d) =>
-        d && typeof d === 'object' && d.msg ? d.msg : JSON.stringify(d)
-      )
+      .map((d) => (d && typeof d === 'object' && d.msg ? d.msg : JSON.stringify(d)))
       .join('; ');
   }
   if (typeof detail === 'object') {
@@ -146,7 +144,6 @@ export const api = {
     // Manifest del raster SNCZI para una zona + RP. Devuelve 503 con
     // detail JSON mientras la integración SNCZI no esté configurada
     // — el frontend captura el error para mostrar el banner editorial.
-    getSnczManifest: (zone, rp) =>
-      request(`/api/return-periods/snczi/${zone}/${rp}/manifest`),
+    getSnczManifest: (zone, rp) => request(`/api/return-periods/snczi/${zone}/${rp}/manifest`),
   },
 };

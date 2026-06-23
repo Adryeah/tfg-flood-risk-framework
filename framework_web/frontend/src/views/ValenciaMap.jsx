@@ -77,7 +77,8 @@ export function ValenciaMap() {
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random Forest v3-T.
+          l'Horta Sud · 14 DANA-affected municipalities · Flood probability surface from Random
+          Forest v3-T.
         </p>
       </header>
 
@@ -97,7 +98,10 @@ export function ValenciaMap() {
           />
         </div>
 
-        <aside className="space-y-3" style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+        <aside
+          className="space-y-3"
+          style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+        >
           <Card title="Statistics" subtitle="GroupKFold 5 × 1 km · out-of-fold">
             <dl className="divide-y divide-border-default text-13">
               {rows.map((row) => (
@@ -135,8 +139,7 @@ export function ValenciaMap() {
                   onClick={() => setViewMode(opt.id)}
                   className="px-2.5 py-1 uppercase tracking-wider transition-colors"
                   style={{
-                    backgroundColor:
-                      viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
+                    backgroundColor: viewMode === opt.id ? 'rgba(255,255,255,0.10)' : 'transparent',
                     color: viewMode === opt.id ? '#f7f8f8' : '#8a8f98',
                     fontWeight: viewMode === opt.id ? 600 : 400,
                     borderLeft: i > 0 ? '1px solid var(--border-strong)' : 'none',
@@ -164,28 +167,21 @@ export function ValenciaMap() {
             <p className="text-11 text-text-tertiary mt-3 leading-relaxed">
               {viewMode === 'binary' ? (
                 <>
-                  Capa de inspección · <strong>sensibilidad primero</strong>.
-                  Píxeles con{' '}
-                  <span className="font-mono text-text-secondary">
-                    p ≥ {threshold.toFixed(3)}
-                  </span>{' '}
-                  se marcan para inspección (rojo). El umbral operacional
-                  0,310 (recall ≥ 0,75) marca ~25 % del territorio{' '}
-                  <em>a propósito</em>: en seguros, no detectar una
-                  inundación es peor que inspeccionar de más. Sube el
-                  umbral para aislar el núcleo de alto riesgo (p ≥ 0,50 ≈
-                  5 %).
+                  Capa de inspección · <strong>sensibilidad primero</strong>. Píxeles con{' '}
+                  <span className="font-mono text-text-secondary">p ≥ {threshold.toFixed(3)}</span>{' '}
+                  se marcan para inspección (rojo). El umbral operacional 0,160 (recall ≥ 0,75)
+                  marca ~22 % del territorio <em>a propósito</em>: en seguros, no detectar una
+                  inundación es peor que inspeccionar de más. Sube el umbral para aislar el núcleo
+                  de alto riesgo (p ≥ 0,50 ≈ 1 %).
                 </>
               ) : (
                 <>
-                  Continuous view: 8-bin colour palette from the
-                  geojson. Operational threshold{' '}
+                  Continuous view: 8-bin colour palette from the geojson. Operational threshold{' '}
                   <span className="font-mono text-text-secondary">
                     {ZONES.valencia.threshold.toFixed(3)}
                   </span>{' '}
-                  selected by recall ≥ 0.75 criterion on spatial
-                  cross-validation. Switch to Binary to apply the
-                  slider live to the map.
+                  selected by recall ≥ 0.75 criterion on spatial cross-validation. Switch to Binary
+                  to apply the slider live to the map.
                 </>
               )}
             </p>
@@ -227,7 +223,9 @@ function Card({ title, subtitle, actions, children }) {
            *  que los h1 de las páginas. Subtítulo (cuando existe) en
            *  serif italic para mantener la familia tipográfica. */}
           <h3 className="font-serif text-15 text-text-primary tracking-tight">{title}</h3>
-          {subtitle && <p className="font-serif italic text-12 text-text-tertiary mt-0.5">{subtitle}</p>}
+          {subtitle && (
+            <p className="font-serif italic text-12 text-text-tertiary mt-0.5">{subtitle}</p>
+          )}
         </div>
         {actions}
       </div>

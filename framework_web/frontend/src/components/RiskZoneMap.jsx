@@ -248,9 +248,7 @@ function RiskLayers({
         //     `probability_max` por feature para extrudir.
         let riskGeos = null;
         if (mode3d) {
-          riskGeos = await Promise.all(
-            targets.map((z) => api.risk.getGeoJSON(z))
-          );
+          riskGeos = await Promise.all(targets.map((z) => api.risk.getGeoJSON(z)));
           if (cancelled) return;
         }
 
@@ -272,11 +270,7 @@ function RiskLayers({
               source: id,
               paint: {
                 'fill-extrusion-color': ['get', 'color'],
-                'fill-extrusion-height': [
-                  '*',
-                  ['coalesce', ['get', 'probability_max'], 0.1],
-                  500,
-                ],
+                'fill-extrusion-height': ['*', ['coalesce', ['get', 'probability_max'], 0.1], 500],
                 'fill-extrusion-base': 0,
                 'fill-extrusion-opacity': 0.78,
                 'fill-extrusion-vertical-gradient': true,
@@ -331,14 +325,11 @@ function RiskLayers({
           if (!map.getSource('terrain-dem')) {
             map.addSource('terrain-dem', {
               type: 'raster-dem',
-              tiles: [
-                'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
-              ],
+              tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
               tileSize: 256,
               encoding: 'terrarium',
               maxzoom: 14,
-              attribution:
-                'Terrain · AWS Open Data Registry (SRTM/ALOS)',
+              attribution: 'Terrain · AWS Open Data Registry (SRTM/ALOS)',
             });
           }
           // setTerrain es idempotente; comprobamos para evitar logs
@@ -419,12 +410,7 @@ function RiskLayers({
               // effect rather than a hard pop-in at minzoom.
               minzoom: 11,
               paint: {
-                'fill-extrusion-color': [
-                  'case',
-                  ['has', 'colour'],
-                  ['get', 'colour'],
-                  '#9CA3AF',
-                ],
+                'fill-extrusion-color': ['case', ['has', 'colour'], ['get', 'colour'], '#9CA3AF'],
                 'fill-extrusion-height': [
                   'coalesce',
                   ['get', 'render_height'],
@@ -604,11 +590,7 @@ function RiskLayers({
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
       if (id === 'municipalities' && map.getLayer('municipalities-fill')) {
-        map.setLayoutProperty(
-          'municipalities-fill',
-          'visibility',
-          on ? 'visible' : 'none'
-        );
+        map.setLayoutProperty('municipalities-fill', 'visibility', on ? 'visible' : 'none');
       }
     });
   }, [map, isLoaded, visibility]);
@@ -734,8 +716,16 @@ function PixelInspectionContent({ inspection }) {
   // 4 bandas alineadas con el backend (categorize_probability): low /
   // moderate / high / very_high. Antes MODERATE y VERY_HIGH caían al
   // gris por defecto porque el mapa solo tenía MEDIUM/HIGH.
-  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MODERATE: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)', VERY_HIGH: 'rgba(153,27,27,0.16)' }[cat] || '#F3F5F7';
-  const sevFg = { LOW: '#15803D', MODERATE: '#D97706', HIGH: '#DC2626', VERY_HIGH: '#991B1B' }[cat] || '#1F2937';
+  const sevBg =
+    {
+      LOW: 'rgba(22,163,74,0.14)',
+      MODERATE: 'rgba(217,119,6,0.15)',
+      HIGH: 'rgba(220,38,38,0.14)',
+      VERY_HIGH: 'rgba(153,27,27,0.16)',
+    }[cat] || '#F3F5F7';
+  const sevFg =
+    { LOW: '#15803D', MODERATE: '#D97706', HIGH: '#DC2626', VERY_HIGH: '#991B1B' }[cat] ||
+    '#1F2937';
   const features = data.features || {};
   const topFeatures = Object.entries(features).slice(0, 5);
 
@@ -809,10 +799,10 @@ function Coords({ lat, lon }) {
 }
 
 function categorize(p) {
-  // Mismas bandas que el backend (categorize_probability).
-  if (p < 0.25) return 'low';
-  if (p < 0.5) return 'moderate';
-  if (p < 0.75) return 'high';
+  // Mismas bandas que el backend (categorize_probability) · escala v3-T calibrada.
+  if (p < 0.16) return 'low';
+  if (p < 0.3) return 'moderate';
+  if (p < 0.5) return 'high';
   return 'very_high';
 }
 
@@ -860,10 +850,7 @@ function OverlayPanel({
   // expandido tapa medio mapa en pantallas estrechas. Tap en el header
   // alterna entre header-only y panel completo.
   const [openMobile, setOpenMobile] = useState(false);
-  const activeCount = items.reduce(
-    (n, it) => (visibility[it.id] ? n + 1 : n),
-    0
-  );
+  const activeCount = items.reduce((n, it) => (visibility[it.id] ? n + 1 : n), 0);
 
   const toggle = (id) => {
     const next = !visibility[id];
@@ -912,8 +899,7 @@ function OverlayPanel({
               strokeLinecap="round"
               strokeLinejoin="round"
               className={
-                'transition-transform duration-200 ' +
-                (openMobile ? 'rotate-180' : 'rotate-0')
+                'transition-transform duration-200 ' + (openMobile ? 'rotate-180' : 'rotate-0')
               }
             >
               <polyline points="6 9 12 15 18 9" />

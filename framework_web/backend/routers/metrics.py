@@ -31,13 +31,16 @@ def _load_metrics() -> dict:
 
 @router.get("/{section}", summary="Metricas pre-calculadas por seccion")
 def get_metrics(section: Literal[
-        "valencia", "algemesi", "transferability", "leakage"]):
+        "valencia", "algemesi", "transferability", "leakage",
+        "operating_points", "zone_level"]):
     """Devuelve la seccion correspondiente del JSON pre-computado.
 
-    - **valencia**: metricas RF v2 sobre el dataset de entrenamiento.
+    - **valencia**: metricas RF v3-T in-domain (GroupKFold espacial).
     - **algemesi**: metricas tras aplicacion sin reentrenamiento + recalibracion.
     - **transferability**: drift de features y permutation importance.
     - **leakage**: resultados de la auditoria Tests 1-2 sobre XGBoost v3.
+    - **operating_points**: curva precision-recall + puntos de operacion nombrados.
+    - **zone_level**: precision/recall/F1 a escala municipio y celda 1 km.
     """
     try:
         data = _load_metrics()

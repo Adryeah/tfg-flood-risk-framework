@@ -36,7 +36,7 @@ export const FEATURE_DOCS = {
     unit: 'dB',
     short: 'Temporal standard deviation of VV backscatter',
     description:
-      'How much the pixel\'s backscatter fluctuates across the baseline. High std = pixel that oscillates (irrigated cropland, river fringe); low std = stable urban or bare rock.',
+      "How much the pixel's backscatter fluctuates across the baseline. High std = pixel that oscillates (irrigated cropland, river fringe); low std = stable urban or bare rock.",
     source: 'Sentinel-1 GRD IW · pipeline 03_sar_temporal_features',
   },
   min_sigma0_vv: {
@@ -154,6 +154,15 @@ export const FEATURE_DOCS = {
       'Vertical distance from the pixel down to the nearest stream pixel along the flow path. Captures local relative relief better than absolute elevation. Nobre et al. (2011) flood-mapping standard.',
     source: 'DEM-derived · pipeline 04_topographic_features',
     cite: 'Nobre et al. 2011',
+  },
+  distance_to_river: {
+    label: 'distance_to_river',
+    category: 'distance',
+    unit: 'm',
+    short: 'Euclidean distance to the main drainage network',
+    description:
+      'Distance to the principal drainage channels (flow-accumulation > p99.5). The geomorphologically correct fluvial-flood feature that replaces distance_to_coast: it encodes PROCESS (proximity to the river system), not absolute position, so it transfers across basins. 2nd most important feature in v3-T (Gini 22.8%).',
+    source: 'DEM-derived · scripts/features/make_distance_to_river.py',
   },
 };
 

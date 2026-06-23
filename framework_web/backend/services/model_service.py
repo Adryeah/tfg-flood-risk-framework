@@ -21,10 +21,13 @@ import numpy as np
 log = logging.getLogger(__name__)
 
 
-# Set de features del v3-T (subconjunto del v2, mismo orden de entrenamiento).
+# Set de features del v3-T (nucleo transferible lozo9r, mismo orden de
+# entrenamiento). distance_to_river (A/B ganador) va el ultimo. El orden y la
+# lista REAL los fija el calibrador (cal["features"]); esto es solo fallback.
 FEATURE_NAMES_V3T: List[str] = [
     "mean_sigma0_vv", "min_sigma0_vv", "cv_sigma0_vv", "water_count",
     "distance_to_stream", "flow_accumulation", "ndvi_mean", "twi", "hand",
+    "distance_to_river",
 ]
 
 # Set v2 (14 feats) — conservado solo por compatibilidad de imports legacy.
@@ -50,7 +53,7 @@ class ModelService:
         self._model_path: Optional[Path] = None
         self._iso = None                # IsotonicRegression o None
         self._features: List[str] = FEATURE_NAMES_V3T
-        self._threshold: float = 0.310
+        self._threshold: float = 0.160
 
     @classmethod
     def get_instance(cls) -> "ModelService":
@@ -79,7 +82,7 @@ class ModelService:
                 cal = joblib.load(calibrator_path)
             self._iso = cal.get("isotonic")
             self._features = cal.get("features", FEATURE_NAMES_V3T)
-            self._threshold = float(cal.get("threshold", 0.310))
+            self._threshold = float(cal.get("threshold", 0.160))
             log.info("Calibrador v3-T cargado: %d feats, umbral=%.3f (isotonica=%s)",
                      len(self._features), self._threshold, self._iso is not None)
         else:

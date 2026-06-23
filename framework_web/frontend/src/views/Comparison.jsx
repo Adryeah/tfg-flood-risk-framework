@@ -16,11 +16,11 @@ import { api } from '../lib/api.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Area under the Receiver Operating Characteristic curve. Measures pure ranking: does the model assign higher probability to flooded pixels than to dry ones? Robust under prevalence shift — that's why it transfers well (0.840 → 0.788, Δ−0.05) with the v3-T transferable feature set.`,
+    body: `Area under the Receiver Operating Characteristic curve. Measures pure ranking: does the model assign higher probability to flooded pixels than to dry ones? Robust under prevalence shift — that's why it transfers so well (0.848 in-domain → 0.861 in Algemesí, it does not drop) with the v3-T transferable feature set.`,
   },
   'F1 score': {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision and recall at the decision threshold. Tied to a specific operating point, so it stays low under extreme prevalence shift (0.549 → 0.015), driven by precision — Algemesí has 27× lower prevalence. At pixel level F1 is structurally limited; the product aggregates to zone/policy level.`,
+    body: `Harmonic mean of precision and recall at the decision threshold. Tied to a specific operating point, so it stays low at pixel level (0.348 in-domain → 0.023 in Algemesí), driven by precision under extreme prevalence — Algemesí has 27× lower prevalence. The product aggregates to zone/policy level, where buffered recall is the figure that matters.`,
   },
   Precision: {
     cite: 'sklearn.metrics.precision_score',
@@ -28,11 +28,11 @@ const METRIC_DOCS = {
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). Fraction of actually-flooded pixels the model catches. With v3-T the recall transfers at the SAME threshold (0.736 → 0.626, no recalibration) — unlike the v2 model whose recall collapsed to 0 extrapolating. With a 100 m operational buffer it reaches 0.92.`,
+    body: `TP / (TP + FN). Fraction of actually-flooded pixels the model catches. With v3-T the recall transfers at the SAME threshold (0.639 → 0.676, it does not even drop) — unlike the v2 model whose extrapolated recall collapsed to 0.18. With a 100 m operational buffer it reaches 0.94.`,
   },
   Threshold: {
     cite: 'Operational decision point',
-    body: `Probability above which a pixel is classified as flood. v3-T uses a SINGLE calibrated threshold (0.310, recall ≥ 0.75 criterion on Valencia spatial CV) applied to every zone without recalibration — the calibration makes the probability scale comparable across zones.`,
+    body: `Probability above which a pixel is classified as flood. v3-T uses a SINGLE calibrated threshold (0.160, recall ≥ 0.75 criterion on the Valencia calibration hold-out at natural prevalence) applied to every zone without recalibration — the isotonic calibration makes the probability scale comparable across zones.`,
   },
   'Positive prevalence': {
     cite: 'EMSR773 ground truth',
@@ -133,18 +133,8 @@ export function Comparison() {
     const vm = valMetrics.model_metrics || {};
     const am = algMetrics.model_metrics || {};
     const round = (x) => Number(((x ?? 0) * 1).toFixed(3));
-    const valData = [
-      round(vm.auc_mean),
-      round(vm.f1),
-      round(vm.recall),
-      round(vm.precision),
-    ];
-    const algData = [
-      round(am.auc_mean),
-      round(am.f1),
-      round(am.recall),
-      round(am.precision),
-    ];
+    const valData = [round(vm.auc_mean), round(vm.f1), round(vm.recall), round(vm.precision)];
+    const algData = [round(am.auc_mean), round(am.f1), round(am.recall), round(am.precision)];
     // Delta = Algemesí − Valencia. Used to colour each Algemesí bar
     // by drop severity so the eye catches the catastrophes (F1 / Precision).
     const deltas = algData.map((v, i) => v - valData[i]);
@@ -306,8 +296,8 @@ export function Comparison() {
     { label: 'Recall', v: vm.recall, a: am.recall, deltaKind: 'metric' },
     {
       label: 'Threshold',
-      v: 0.31,
-      a: 0.31,
+      v: 0.16,
+      a: 0.16,
       raw: true,
       deltaKind: 'numeric',
     },
@@ -348,7 +338,8 @@ export function Comparison() {
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Geographic generalisation test: the same Random Forest v3-T trained in l'Horta Sud, applied to Algemesí without retraining or recalibration.
+          Geographic generalisation test: the same Random Forest v3-T trained in l'Horta Sud,
+          applied to Algemesí without retraining or recalibration.
         </p>
       </header>
 
@@ -451,21 +442,14 @@ export function Comparison() {
                 const docs = METRIC_DOCS[r.label];
                 const vNum = Number(r.v);
                 const aNum = Number(r.a);
-                const delta = Number.isFinite(vNum) && Number.isFinite(aNum)
-                  ? aNum - vNum
-                  : null;
+                const delta = Number.isFinite(vNum) && Number.isFinite(aNum) ? aNum - vNum : null;
                 const isMetric = r.deltaKind === 'metric';
                 return (
-                  <tr
-                    key={r.label}
-                    className="hover:bg-bg-hover transition-colors"
-                  >
+                  <tr key={r.label} className="hover:bg-bg-hover transition-colors">
                     <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-text-secondary">
                       <span className="inline-flex items-center gap-1.5">
                         {r.label}
-                        {docs && (
-                          <InfoHint cite={docs.cite}>{docs.body}</InfoHint>
-                        )}
+                        {docs && <InfoHint cite={docs.cite}>{docs.body}</InfoHint>}
                       </span>
                     </td>
                     <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-right font-mono font-medium text-text-primary tabular-nums">
@@ -494,11 +478,7 @@ export function Comparison() {
                       )}
                     </td>
                     <td className="py-2 sm:py-2.5 px-2 sm:px-4 text-right">
-                      <DeltaChip
-                        delta={delta}
-                        kind={r.deltaKind}
-                        suffix={r.suffix?.trim() || ''}
-                      />
+                      <DeltaChip delta={delta} kind={r.deltaKind} suffix={r.suffix?.trim() || ''} />
                     </td>
                   </tr>
                 );
@@ -532,16 +512,13 @@ export function Comparison() {
         </div>
         <p className="text-13 text-text-primary leading-relaxed">
           The v3-T model trained exclusively on Valencia identifies{' '}
-          <span className="font-semibold">92 %</span> of flooded areas in
-          Algemesí (100 m buffer) without retraining. AUC transfers from{' '}
-          <span className="font-mono">0.840</span> to{' '}
-          <span className="font-mono">0.788</span> and — unlike the prior v2
-          model — recall also transfers ({' '}
-          <span className="font-mono">0.74 → 0.63</span>) at the same calibrated
-          threshold. Precision stays low (
-          <span className="font-mono">0.9 %</span>) because positive prevalence
-          is <span className="font-mono">27×</span> lower; the product therefore
-          aggregates risk to zone/policy level rather than per pixel.
+          <span className="font-semibold">94 %</span> of flooded areas in Algemesí (100 m buffer)
+          without retraining. AUC transfers from <span className="font-mono">0.848</span> to{' '}
+          <span className="font-mono">0.861</span> and — unlike the prior v2 model — recall also
+          transfers ( <span className="font-mono">0.64 → 0.68</span>, it does not even drop) at the
+          same calibrated threshold. Precision stays low (<span className="font-mono">1.2 %</span>)
+          because positive prevalence is <span className="font-mono">27×</span> lower; the product
+          therefore aggregates risk to zone/policy level rather than per pixel.
         </p>
       </div>
     </div>

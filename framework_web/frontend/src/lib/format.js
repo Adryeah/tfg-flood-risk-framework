@@ -74,10 +74,10 @@ export function formatProbability(value) {
 }
 
 export function getRiskCategory(probability) {
-  // 4 bandas alineadas con el backend (categorize_probability).
-  if (probability < 0.25) return 'low';
-  if (probability < 0.5) return 'moderate';
-  if (probability < 0.75) return 'high';
+  // 4 bandas alineadas con el backend (categorize_probability) · escala v3-T calibrada.
+  if (probability < 0.16) return 'low';
+  if (probability < 0.3) return 'moderate';
+  if (probability < 0.5) return 'high';
   return 'very_high';
 }
 

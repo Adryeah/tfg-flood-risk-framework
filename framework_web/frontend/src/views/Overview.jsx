@@ -30,7 +30,7 @@ const PORTFOLIO_ID = 'wide_distribution';
 // historical scene retrieval is wired into the backend. Info tooltips on
 // each component disclose this so they can't be confused with measurements.
 const SPARK = {
-  auc:    [0.821, 0.828, 0.834, 0.831, 0.838, 0.840, 0.837, 0.840],
+  auc: [0.821, 0.828, 0.834, 0.831, 0.838, 0.842, 0.846, 0.848],
   recall: [0.946, 0.951, 0.948, 0.953, 0.957, 0.955, 0.958, 0.958],
   pixels: [6.8, 6.9, 7.0, 7.1, 7.2, 7.3, 7.4, 7.5],
 };
@@ -39,24 +39,23 @@ const SPARK = {
 // Coordinates approximate; sufficient for nearest-neighbour binning of 1000
 // portfolio clients.
 const MUNICIPALITY_CENTROIDS = [
-  { name: 'Paiporta',    lat: 39.4276, lon: -0.4153 },
-  { name: 'Catarroja',   lat: 39.4006, lon: -0.4006 },
-  { name: 'Sedaví',      lat: 39.4231, lon: -0.3853 },
-  { name: 'Massanassa',  lat: 39.4131, lon: -0.3936 },
-  { name: 'Benetússer',  lat: 39.4225, lon: -0.3886 },
-  { name: 'Albal',       lat: 39.3897, lon: -0.4061 },
-  { name: 'Alfafar',     lat: 39.4222, lon: -0.3789 },
-  { name: 'Picanya',     lat: 39.4406, lon: -0.4339 },
-  { name: 'Torrent',     lat: 39.4364, lon: -0.4664 },
-  { name: 'Aldaia',      lat: 39.4661, lon: -0.4575 },
-  { name: 'Algemesí',    lat: 39.1903, lon: -0.4372 },
-  { name: 'Alzira',      lat: 39.1503, lon: -0.4322 },
-  { name: 'Manises',     lat: 39.4914, lon: -0.4592 },
-  { name: 'Quart',       lat: 39.4789, lon: -0.4408 },
-  { name: 'Mislata',     lat: 39.4744, lon: -0.4181 },
-  { name: 'Valencia',    lat: 39.4750, lon: -0.3750 },
+  { name: 'Paiporta', lat: 39.4276, lon: -0.4153 },
+  { name: 'Catarroja', lat: 39.4006, lon: -0.4006 },
+  { name: 'Sedaví', lat: 39.4231, lon: -0.3853 },
+  { name: 'Massanassa', lat: 39.4131, lon: -0.3936 },
+  { name: 'Benetússer', lat: 39.4225, lon: -0.3886 },
+  { name: 'Albal', lat: 39.3897, lon: -0.4061 },
+  { name: 'Alfafar', lat: 39.4222, lon: -0.3789 },
+  { name: 'Picanya', lat: 39.4406, lon: -0.4339 },
+  { name: 'Torrent', lat: 39.4364, lon: -0.4664 },
+  { name: 'Aldaia', lat: 39.4661, lon: -0.4575 },
+  { name: 'Algemesí', lat: 39.1903, lon: -0.4372 },
+  { name: 'Alzira', lat: 39.1503, lon: -0.4322 },
+  { name: 'Manises', lat: 39.4914, lon: -0.4592 },
+  { name: 'Quart', lat: 39.4789, lon: -0.4408 },
+  { name: 'Mislata', lat: 39.4744, lon: -0.4181 },
+  { name: 'Valencia', lat: 39.475, lon: -0.375 },
 ];
-
 
 export function Overview() {
   const [valMetrics, setValMetrics] = useState(null);
@@ -123,24 +122,22 @@ export function Overview() {
           TFG · Universitat Autònoma de Barcelona · 2026
         </div>
         <p className="font-serif text-20 sm:text-24 leading-snug text-text-primary max-w-3xl tracking-tight">
-          Este <em>framework</em> predice riesgo de inundación con datos
-          públicos de Copernicus. Entrenado <em>antes</em> de la DANA de
-          Valencia, validado contra el evento real EMSR773.
+          Este <em>framework</em> predice riesgo de inundación con datos públicos de Copernicus.
+          Entrenado <em>antes</em> de la DANA de Valencia, validado contra el evento real EMSR773.
         </p>
         <p className="font-serif italic text-13 sm:text-14 text-text-secondary mt-3 max-w-3xl leading-relaxed">
           Demuestra que es posible construir un <em>cat-model</em>
-          abierto, reproducible y con rigor regulatorio (Solvencia II ·
-          EU AI Act) usando solo datos satelitales gratuitos y un
-          ordenador personal.
+          abierto, reproducible y con rigor regulatorio (Solvencia II · EU AI Act) usando solo datos
+          satelitales gratuitos y un ordenador personal.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-11 font-mono text-text-tertiary">
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
-            Random Forest v3-T · 9 features
+            Random Forest v3-T · 10 features
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
-            AUC 0.840 · GroupKFold 5×1 km
+            AUC 0.848 · GroupKFold 5×1 km
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block w-px h-2.5 bg-border-strong" />
@@ -166,13 +163,10 @@ export function Overview() {
               year: 'numeric',
             })}
           </div>
-          <h1 className="text-20 font-semibold text-text-primary tracking-tight">
-            Daily Briefing
-          </h1>
+          <h1 className="text-20 font-semibold text-text-primary tracking-tight">Daily Briefing</h1>
           <p className="text-12 text-text-secondary mt-0.5 max-w-2xl leading-relaxed">
-            Real-time exposure summary for the Valencia metropolitan portfolio.
-            Model output validated against Copernicus EMS activation EMSR773
-            (DANA, 29 Oct 2024).
+            Real-time exposure summary for the Valencia metropolitan portfolio. Model output
+            validated against Copernicus EMS activation EMSR773 (DANA, 29 Oct 2024).
           </p>
         </div>
 
@@ -189,11 +183,7 @@ export function Overview() {
        *  SaaS plano. El hairline navy navy a la izquierda funciona como
        *  marca de sección, igual que en el dossier de /dana. */}
       <div className="flex items-center gap-3 mt-2 mb-1">
-        <div
-          className="h-px w-6"
-          style={{ background: '#3B82F6' }}
-          aria-hidden="true"
-        />
+        <div className="h-px w-6" style={{ background: '#3B82F6' }} aria-hidden="true" />
         <span
           className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
           style={{ color: '#3B82F6' }}
@@ -288,11 +278,7 @@ export function Overview() {
 
       {/* KPI row B · portfolio — mismo patrón eyebrow editorial */}
       <div className="flex items-center gap-3 mt-3 mb-1">
-        <div
-          className="h-px w-6"
-          style={{ background: '#F39C12' }}
-          aria-hidden="true"
-        />
+        <div className="h-px w-6" style={{ background: '#F39C12' }} aria-hidden="true" />
         <span
           className="text-9 font-mono font-semibold uppercase tracking-[0.20em]"
           style={{ color: '#F39C12' }}
@@ -420,14 +406,8 @@ export function Overview() {
 
       {/* Charts row · eyebrow editorial antes del reveal */}
       <div className="flex items-center gap-3 mt-3 mb-1">
-        <div
-          className="h-px w-6"
-          style={{ background: '#0F1B35' }}
-          aria-hidden="true"
-        />
-        <span
-          className="text-9 font-mono font-semibold uppercase tracking-[0.20em] text-text-primary"
-        >
+        <div className="h-px w-6" style={{ background: '#0F1B35' }} aria-hidden="true" />
+        <span className="text-9 font-mono font-semibold uppercase tracking-[0.20em] text-text-primary">
           EVIDENCIA · MODELO Y EVENTO
         </span>
         <span className="font-serif italic text-11 text-text-tertiary truncate">
@@ -444,7 +424,8 @@ export function Overview() {
             badge="P > 0.5"
             info={{
               what: 'Total insured value of policies whose pixel-level flood probability exceeds 0.5, aggregated by host municipality.',
-              source: 'Computed client-side from /api/portfolios/wide_distribution clients filtered by risk_probability > 0.5 and bucketed by nearest municipality.',
+              source:
+                'Computed client-side from /api/portfolios/wide_distribution clients filtered by risk_probability > 0.5 and bucketed by nearest municipality.',
             }}
             annotation="Albal, Algemesí y Alzira concentran la mayor parte del TIV expuesto del portfolio."
           >
@@ -476,7 +457,8 @@ export function Overview() {
             badge="Δ -12.4 dB"
             info={{
               what: 'Mean σ⁰ VV time series for a 500 m AOI centred on Paiporta. Pre-DANA reference is the 60-day median; the dip on 29 Oct 2024 marks the flood peak.',
-              source: 'Illustrative curve — historical S1 GRD time-series ingestion pending. Reference Δ from data/sentinel1/processed/.',
+              source:
+                'Illustrative curve — historical S1 GRD time-series ingestion pending. Reference Δ from data/sentinel1/processed/.',
             }}
             annotation="La caída brusca el 29 oct marca la lámina de agua: superficie especular → backscatter cae > 12 dB."
           >
@@ -563,9 +545,7 @@ function ChartCard({
       </div>
       {annotation && (
         <div className="px-4 pb-3 pt-1 border-t border-border-default">
-          <p className="font-serif italic text-11 text-text-tertiary leading-snug">
-            {annotation}
-          </p>
+          <p className="font-serif italic text-11 text-text-tertiary leading-snug">{annotation}</p>
         </div>
       )}
     </div>
@@ -613,7 +593,10 @@ function MunicipalityChart({ portfolio }) {
       xAxis: {
         type: 'value',
         ...chartAxis.value,
-        axisLabel: { ...chartAxis.value.axisLabel, formatter: (v) => `${(v / 1_000_000).toFixed(0)}M` },
+        axisLabel: {
+          ...chartAxis.value.axisLabel,
+          formatter: (v) => `${(v / 1_000_000).toFixed(0)}M`,
+        },
       },
       yAxis: { type: 'category', data: [...names].reverse(), ...chartAxis.category },
       series: [
@@ -755,4 +738,3 @@ function SarChart() {
 
   return <div ref={ref} style={{ width: '100%', height: '100%' }} />;
 }
-

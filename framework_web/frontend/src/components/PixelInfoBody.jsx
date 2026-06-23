@@ -13,7 +13,7 @@ export function PixelInfoBody({ info }) {
       <p className="text-12 text-text-secondary leading-relaxed">
         Click any point on the map to query{' '}
         <span className="font-mono text-text-primary">/api/risk/predict</span>. The model returns
-        the calibrated probability, risk category, and the 9 feature values used.
+        the calibrated probability, risk category, and the 10 feature values used.
       </p>
     );
   }
@@ -39,9 +39,7 @@ export function PixelInfoBody({ info }) {
     return (
       <div>
         <Coords lat={lat} lon={lon} />
-        <div className="mt-2 text-12 text-risk-high-soft">
-          {error || 'Point outside coverage.'}
-        </div>
+        <div className="mt-2 text-12 text-risk-high-soft">{error || 'Point outside coverage.'}</div>
       </div>
     );
   }
@@ -51,8 +49,16 @@ export function PixelInfoBody({ info }) {
     data.category ||
     (prob < 0.25 ? 'low' : prob < 0.5 ? 'moderate' : prob < 0.75 ? 'high' : 'very_high')
   ).toUpperCase();
-  const sevBg = { LOW: 'rgba(22,163,74,0.14)', MODERATE: 'rgba(217,119,6,0.15)', HIGH: 'rgba(220,38,38,0.14)', VERY_HIGH: 'rgba(153,27,27,0.16)' }[cat] || '#F3F5F7';
-  const sevFg = { LOW: '#15803D', MODERATE: '#D97706', HIGH: '#DC2626', VERY_HIGH: '#991B1B' }[cat] || '#1F2937';
+  const sevBg =
+    {
+      LOW: 'rgba(22,163,74,0.14)',
+      MODERATE: 'rgba(217,119,6,0.15)',
+      HIGH: 'rgba(220,38,38,0.14)',
+      VERY_HIGH: 'rgba(153,27,27,0.16)',
+    }[cat] || '#F3F5F7';
+  const sevFg =
+    { LOW: '#15803D', MODERATE: '#D97706', HIGH: '#DC2626', VERY_HIGH: '#991B1B' }[cat] ||
+    '#1F2937';
   const features = data.features || {};
   const topFeatures = Object.entries(features).slice(0, 6);
 

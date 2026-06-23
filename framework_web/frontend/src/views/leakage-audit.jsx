@@ -14,13 +14,7 @@ import {
   CircleAlert,
 } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 import CodeBlock from '@/components/code-block';
@@ -39,22 +33,18 @@ const SOURCES = [
     author: 'Evidently AI',
     year: '2024',
     work: 'Open-source ML observability · "Too good to be true" audit patterns.',
-    used_for:
-      'Reference for the "suspect → 4-test audit → stop-on-fail" workflow shape.',
+    used_for: 'Reference for the "suspect → 4-test audit → stop-on-fail" workflow shape.',
   },
   {
     author: 'EIOPA',
     year: '2009 / 2015',
-    work:
-      'Directive 2009/138/EC (Solvency II) — Internal Model Validation requirements.',
-    used_for:
-      'Model validation + backtesting obligations for insurance risk models.',
+    work: 'Directive 2009/138/EC (Solvency II) — Internal Model Validation requirements.',
+    used_for: 'Model validation + backtesting obligations for insurance risk models.',
   },
   {
     author: 'European Commission',
     year: '2024',
-    work:
-      'Regulation (EU) 2024/1689 — Artificial Intelligence Act, Annex III §5.',
+    work: 'Regulation (EU) 2024/1689 — Artificial Intelligence Act, Annex III §5.',
     used_for:
       'High-risk classification of AI used for insurance risk pricing; documentation, traceability and human oversight requirements.',
   },
@@ -78,20 +68,36 @@ const CASE_FRAMEWORK = 'Solvency II · EU AI Act';
 // disparó esta auditoría; v3-T es el modelo final transferible.
 const MODEL_LINEAGE = [
   {
-    model: 'RF v1', feats: 11, auc: '0.853', state: 'superseded', verdict: 'línea base',
+    model: 'RF v1',
+    feats: 11,
+    auc: '0.853',
+    state: 'superseded',
+    verdict: 'línea base',
     note: 'Línea base: 6 SAR temporales + 4 DEM + NDVI. Valida el pipeline completo y la CV espacial. Superado por v2 al añadir features hidrogeomorfológicas (HAND, TWI).',
   },
   {
-    model: 'RF v2', feats: 14, auc: '0.922', state: 'superseded', verdict: 'no transfiere',
+    model: 'RF v2',
+    feats: 14,
+    auc: '0.922',
+    state: 'superseded',
+    verdict: 'no transfiere',
     note: 'Añade HAND/TWI/distance_to_coast (14 feat). El MEJOR mapa local de Valencia, pero al extrapolar a Algemesí el recall caía a 0 — la decisión no transfería (H3 refutada): distance_to_coast y elevation son spatial proxies que no generalizan a otra cuenca.',
   },
   {
-    model: 'XGBoost v3', feats: 24, auc: '0.966', state: 'rejected', verdict: 'descartado',
+    model: 'XGBoost v3',
+    feats: 24,
+    auc: '0.966',
+    state: 'rejected',
+    verdict: 'descartado',
     note: 'Iteración exploratoria con AUC 0.966 — sospechosamente alto. La auditoría de esta página detectó FUGA TEMPORAL: las features estacionales incluían escenas del propio evento DANA. Descartado por la regla de parada (falló el Test 2).',
   },
   {
-    model: 'RF v3-T', feats: 9, auc: '0.840', state: 'final', verdict: 'final',
-    note: 'Modelo FINAL. Features elegidas por ablación Leave-One-Zone-Out (quita las 5 no transferibles, incl. distance_to_coast/elevation), calibración isotónica y envoltura AOA. Único que transfiere la DECISIÓN a zona nueva: recall extrapolado 0 → 0.63 (0.92 con buffer 100 m).',
+    model: 'RF v3-T',
+    feats: 10,
+    auc: '0.848',
+    state: 'final',
+    verdict: 'final',
+    note: 'Modelo FINAL. Features elegidas por ablación Leave-One-Zone-Out (quita las 5 no transferibles, incl. distance_to_coast/elevation) + distance_to_river, calibración isotónica y envoltura AOA. Único que transfiere la DECISIÓN a zona nueva: recall extrapolado 0.18 → 0.68 (0.94 con buffer 100 m).',
   },
 ];
 
@@ -137,10 +143,8 @@ export function LeakageAudit() {
   }
 
   const bugLocation =
-    data.code_references?.bug_location ||
-    'scripts/features/extract_advanced_features_v3.py:162';
-  const bugPattern =
-    data.code_references?.bug_pattern || 'if "event" not in p.parts';
+    data.code_references?.bug_location || 'scripts/features/extract_advanced_features_v3.py:162';
+  const bugPattern = data.code_references?.bug_pattern || 'if "event" not in p.parts';
   const fixPattern =
     data.code_references?.fix_pattern ||
     'EVENT_DATES = {"20241019", "20241031"}; if _date_from_name(p) not in EVENT_DATES';
@@ -165,10 +169,8 @@ export function LeakageAudit() {
     ...r,
     critical: r.max_abs_diff > 10,
   }));
-  const maxDiff = augmentedRows.reduce(
-    (m, r) => Math.max(m, Math.abs(Number(r.max_abs_diff) || 0)),
-    0
-  ) || 1;
+  const maxDiff =
+    augmentedRows.reduce((m, r) => Math.max(m, Math.abs(Number(r.max_abs_diff) || 0)), 0) || 1;
 
   // Timeline phases — each `content` is wrapped in a single <p> with a
   // plain text body so the i18n DOM walker can match it as one text
@@ -212,7 +214,7 @@ export function LeakageAudit() {
       status: 'fail',
       content: (
         <p>
-          {`Según la regla de parada, XGBoost v3 fue descartado. models/xgboost_v3_DEPRECATED.joblib se conserva para trazabilidad pero excluido del pipeline. El modelo elegido entonces fue el Random Forest v2 (14 features, sin fuga temporal posible por construcción) — después refinado al modelo transferible final RF v3-T (9 features; ver "Linaje de modelos" arriba). Documentado en scripts/models/README_leakage_finding.md.`}
+          {`Según la regla de parada, XGBoost v3 fue descartado. models/xgboost_v3_DEPRECATED.joblib se conserva para trazabilidad pero excluido del pipeline. El modelo elegido entonces fue el Random Forest v2 (14 features, sin fuga temporal posible por construcción) — después refinado al modelo transferible final RF v3-T (10 features; ver "Linaje de modelos" arriba). Documentado en scripts/models/README_leakage_finding.md.`}
         </p>
       ),
     },
@@ -238,8 +240,8 @@ export function LeakageAudit() {
           Auditoría de fuga
         </h1>
         <p className="text-13 text-text-secondary mt-1.5 max-w-[68ch]">
-          Detección de fuga temporal en la iteración exploratoria XGBoost v3 ·
-          Contribución metodológica
+          Detección de fuga temporal en la iteración exploratoria XGBoost v3 · Contribución
+          metodológica
         </p>
       </header>
 
@@ -254,36 +256,23 @@ export function LeakageAudit() {
         aria-label="Veredicto de auditoría"
         className="grid grid-cols-[auto_1fr_auto] gap-6 items-start bg-risk-high-bg border border-risk-high/25 rounded-md px-6 py-5"
       >
-        <Ban
-          className="w-9 h-9 text-risk-high-soft mt-1"
-          strokeWidth={1.5}
-        />
+        <Ban className="w-9 h-9 text-risk-high-soft mt-1" strokeWidth={1.5} />
         <div className="min-w-0">
           <div className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-risk-high-soft/80 mb-1">
             Veredicto
           </div>
-          <div className="text-20 font-semibold text-risk-high-soft tracking-tight">
-            Rechazado
-          </div>
+          <div className="text-20 font-semibold text-risk-high-soft tracking-tight">Rechazado</div>
           <p className="text-13 text-text-secondary leading-relaxed mt-2 max-w-[60ch]">
             {`Una iteración exploratoria de XGBoost reportó AUC ${AUC_SUSPECTED.toFixed(3)}, un salto de +${AUC_DELTA.toFixed(3)} sobre la baseline Random Forest v2. La auditoría de 4 tests se detuvo en el Test 2: fuga temporal confirmada. Según la regla de parar-al-fallar, el modelo se retiró del pipeline.`}
           </p>
         </div>
         <dl className="hidden md:grid grid-cols-[auto_auto] gap-x-4 gap-y-1.5 text-11 font-mono">
-          <dt className="text-text-tertiary uppercase tracking-wider">
-            Decidido por
-          </dt>
+          <dt className="text-text-tertiary uppercase tracking-wider">Decidido por</dt>
           <dd className="text-text-primary text-right">Test 2 fallo</dd>
-          <dt className="text-text-tertiary uppercase tracking-wider">
-            Regla de parada
-          </dt>
+          <dt className="text-text-tertiary uppercase tracking-wider">Regla de parada</dt>
           <dd className="text-text-primary text-right">Parar-al-fallar</dd>
-          <dt className="text-text-tertiary uppercase tracking-wider">
-            Artefacto
-          </dt>
-          <dd className="text-text-primary text-right">
-            xgboost_v3_DEPRECATED
-          </dd>
+          <dt className="text-text-tertiary uppercase tracking-wider">Artefacto</dt>
+          <dd className="text-text-primary text-right">xgboost_v3_DEPRECATED</dd>
         </dl>
       </section>
 
@@ -325,7 +314,11 @@ export function LeakageAudit() {
                       <tr
                         key={m.model}
                         className="border-b border-border-default/60 align-top"
-                        style={isFinal ? { background: 'var(--accent-valid-bg, rgba(34,197,94,0.06))' } : undefined}
+                        style={
+                          isFinal
+                            ? { background: 'var(--accent-valid-bg, rgba(34,197,94,0.06))' }
+                            : undefined
+                        }
                       >
                         <td className="py-2.5 pr-3 font-mono font-semibold text-text-primary whitespace-nowrap">
                           {m.model}
@@ -354,15 +347,13 @@ export function LeakageAudit() {
               </table>
             </div>
             <p className="mt-3 text-11 text-text-tertiary leading-snug max-w-[80ch]">
-              <strong>Por qué el modelo final es el RF v3-T</strong> y no otro:
-              el criterio del framework no es el AUC más alto (sería el XGBoost
-              descartado, 0,966 — inflado por fuga temporal, ver auditoría
-              abajo) ni el mejor mapa local (sería el v2, 0,922, pero su recall
-              extrapolado era 0). Es la <strong>transferibilidad honesta</strong>:
-              un modelo que generaliza a zonas nuevas (recall 0 → 0,63), está
-              calibrado, sabe dónde es válido (AOA) y cuyas métricas no esconden
-              fuga. El v3-T es el único que cumple las cuatro — por eso es el
-              modelo final del TFG.
+              <strong>Por qué el modelo final es el RF v3-T</strong> y no otro: el criterio del
+              framework no es el AUC más alto (sería el XGBoost descartado, 0,966 — inflado por fuga
+              temporal, ver auditoría abajo) ni el mejor mapa local (sería el v2, 0,922, pero su
+              recall extrapolado era 0). Es la <strong>transferibilidad honesta</strong>: un modelo
+              que generaliza a zonas nuevas (recall 0 → 0,63), está calibrado, sabe dónde es válido
+              (AOA) y cuyas métricas no esconden fuga. El v3-T es el único que cumple las cuatro —
+              por eso es el modelo final del TFG.
             </p>
           </CardContent>
         </Card>
@@ -387,9 +378,7 @@ export function LeakageAudit() {
             <span className="text-border-strong">·</span>
             <span>AUC reportado vs verificable</span>
           </div>
-          <CardTitle className="text-14">
-            El salto de +0.044 que disparó la auditoría
-          </CardTitle>
+          <CardTitle className="text-14">El salto de +0.044 que disparó la auditoría</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center py-2">
@@ -398,9 +387,7 @@ export function LeakageAudit() {
               <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
                 Sospechado
               </div>
-              <div className="text-11 text-text-secondary mb-3">
-                XGBoost v3 · 24 features
-              </div>
+              <div className="text-11 text-text-secondary mb-3">XGBoost v3 · 24 features</div>
               <div
                 className="font-mono font-semibold tabular-nums text-risk-high-soft inline-flex items-baseline"
                 style={{ fontSize: '40px', lineHeight: 1 }}
@@ -436,9 +423,7 @@ export function LeakageAudit() {
               <div className="text-10 font-mono uppercase tracking-[0.14em] text-text-tertiary mb-1">
                 Verificado
               </div>
-              <div className="text-11 text-text-secondary mb-3">
-                Random Forest v2 · 14 features
-              </div>
+              <div className="text-11 text-text-secondary mb-3">Random Forest v2 · 14 features</div>
               <div
                 className="font-mono font-semibold tabular-nums text-risk-low-soft inline-flex items-baseline gap-2"
                 style={{ fontSize: '40px', lineHeight: 1 }}
@@ -450,8 +435,8 @@ export function LeakageAudit() {
                 />
               </div>
               <div className="mt-3 text-11 text-text-secondary max-w-[28ch] mx-auto md:mr-auto md:ml-0 leading-relaxed">
-                Solo DEM estático + agregados del periodo baseline; sin fuga
-                temporal por construcción
+                Solo DEM estático + agregados del periodo baseline; sin fuga temporal por
+                construcción
               </div>
             </div>
           </div>
@@ -460,10 +445,9 @@ export function LeakageAudit() {
             <span className="text-10 font-mono font-semibold uppercase tracking-[0.14em] text-text-tertiary mr-2">
               Nota del auditor:
             </span>
-            Un salto de +0.044 AUC entre dos modelos correctamente validados con
-            CV, sin añadir ninguna familia de features cualitativamente nueva, es
-            la señal canónica de fuga en clasificación de teledetección. La
-            auditoría se disparó solo con ese indicio previo.
+            Un salto de +0.044 AUC entre dos modelos correctamente validados con CV, sin añadir
+            ninguna familia de features cualitativamente nueva, es la señal canónica de fuga en
+            clasificación de teledetección. La auditoría se disparó solo con ese indicio previo.
           </div>
         </CardContent>
       </Card>
@@ -498,21 +482,12 @@ export function LeakageAudit() {
         <Card>
           <CardHeader className="pb-3 border-b border-border-default">
             <div className="flex items-center gap-2 min-w-0">
-              <Code2
-                className="w-4 h-4 text-text-tertiary shrink-0"
-                strokeWidth={1.75}
-              />
-              <code className="text-11 font-mono text-text-secondary truncate">
-                {bugLocation}
-              </code>
+              <Code2 className="w-4 h-4 text-text-tertiary shrink-0" strokeWidth={1.75} />
+              <code className="text-11 font-mono text-text-secondary truncate">{bugLocation}</code>
             </div>
           </CardHeader>
           <CardContent className="pt-4 space-y-4">
-            <CodeBlock
-              code={bugCode}
-              caption={bugLocation}
-              badge="critical"
-            />
+            <CodeBlock code={bugCode} caption={bugLocation} badge="critical" />
             <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-3 items-start text-12 text-text-secondary leading-relaxed pt-1">
               <CircleAlert
                 className="w-4 h-4 text-risk-high-soft mt-0.5 shrink-0"
@@ -540,8 +515,8 @@ export function LeakageAudit() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="text-12">
-              Diferencias entre las features filtradas y las limpias re-derivadas.
-              Valores en dB salvo que se indique lo contrario.
+              Diferencias entre las features filtradas y las limpias re-derivadas. Valores en dB
+              salvo que se indique lo contrario.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -566,13 +541,8 @@ export function LeakageAudit() {
             <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-border-default">
               <div className="md:pr-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <Landmark
-                    className="w-4 h-4 text-corporate-navy"
-                    strokeWidth={1.75}
-                  />
-                  <span className="text-12 font-semibold text-text-primary">
-                    Solvency II
-                  </span>
+                  <Landmark className="w-4 h-4 text-corporate-navy" strokeWidth={1.75} />
+                  <span className="text-12 font-semibold text-text-primary">Solvency II</span>
                 </div>
                 <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
                   Directiva 2009/138/CE · Validación de modelo interno
@@ -583,13 +553,8 @@ export function LeakageAudit() {
               </div>
               <div className="md:pl-6 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0 border-border-default">
                 <div className="flex items-center gap-2 mb-2">
-                  <Scale
-                    className="w-4 h-4 text-corporate-navy"
-                    strokeWidth={1.75}
-                  />
-                  <span className="text-12 font-semibold text-text-primary">
-                    EU AI Act
-                  </span>
+                  <Scale className="w-4 h-4 text-corporate-navy" strokeWidth={1.75} />
+                  <span className="text-12 font-semibold text-text-primary">EU AI Act</span>
                 </div>
                 <div className="text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary mb-2">
                   Reglamento 2024/1689 · Anexo III §5
@@ -609,20 +574,17 @@ export function LeakageAudit() {
        *  decoration. Closes the case file.
        * ─────────────────────────────────────────────────────────── */}
       <section className="max-w-[68ch] mx-auto pt-2">
-        <Quote
-          className="w-6 h-6 text-text-tertiary mb-3"
-          strokeWidth={1.5}
-        />
+        <Quote className="w-6 h-6 text-text-tertiary mb-3" strokeWidth={1.5} />
         <p className="text-14 text-text-primary leading-relaxed">
-          Filtra siempre las series temporales por fecha, no por ruta. Los filtros
-          por ruta dependen de la organización de directorios, que es frágil; los
-          filtros por fecha son explícitos sobre la intención temporal.
+          Filtra siempre las series temporales por fecha, no por ruta. Los filtros por ruta dependen
+          de la organización de directorios, que es frágil; los filtros por fecha son explícitos
+          sobre la intención temporal.
         </p>
         <p className="text-12 text-text-secondary leading-relaxed mt-3">
-          Las mejoras significativas de métricas sin un cambio metodológico
-          subyacente merecen escrutinio. El modelo final del TFG (Random Forest v2)
-          es robusto por construcción: sus features son DEM estático, agregados SAR
-          del periodo baseline y NDVI baseline. No es posible fuga temporal.
+          Las mejoras significativas de métricas sin un cambio metodológico subyacente merecen
+          escrutinio. El modelo final del TFG (Random Forest v2) es robusto por construcción: sus
+          features son DEM estático, agregados SAR del periodo baseline y NDVI baseline. No es
+          posible fuga temporal.
         </p>
         <div className="mt-3 flex items-center gap-2 text-10 font-mono uppercase tracking-[0.12em] text-text-tertiary">
           <BookOpen className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -647,9 +609,7 @@ function SectionLabel({ index, eyebrow, children }) {
         <span className="text-border-strong">·</span>
         <span>{eyebrow}</span>
       </div>
-      <h2 className="text-14 font-semibold text-text-primary tracking-tight">
-        {children}
-      </h2>
+      <h2 className="text-14 font-semibold text-text-primary tracking-tight">{children}</h2>
     </div>
   );
 }
@@ -666,11 +626,7 @@ function SectionLabel({ index, eyebrow, children }) {
 // ────────────────────────────────────────────────────────────────
 function WinterDiffTable({ rows, maxDiff }) {
   if (!rows || rows.length === 0) {
-    return (
-      <div className="text-12 text-text-tertiary italic">
-        Sin datos de diferencias.
-      </div>
-    );
+    return <div className="text-12 text-text-tertiary italic">Sin datos de diferencias.</div>;
   }
   return (
     <div className="overflow-x-auto -mx-3">
@@ -678,28 +634,20 @@ function WinterDiffTable({ rows, maxDiff }) {
         <thead>
           <tr className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-[0.12em]">
             <th className="text-left py-2 px-3 font-medium">Variable</th>
-            <th className="text-right py-2 px-3 font-medium">
-              Dif. mediana · inundado
-            </th>
-            <th className="text-right py-2 px-3 font-medium">
-              Dif. mediana · no inundado
-            </th>
+            <th className="text-right py-2 px-3 font-medium">Dif. mediana · inundado</th>
+            <th className="text-right py-2 px-3 font-medium">Dif. mediana · no inundado</th>
             <th className="text-right py-2 px-3 font-medium">Máx. dif. abs.</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, idx) => {
             const isCritical = !!row.critical;
-            const pct = Math.min(
-              100,
-              (Math.abs(Number(row.max_abs_diff) || 0) / maxDiff) * 100
-            );
+            const pct = Math.min(100, (Math.abs(Number(row.max_abs_diff) || 0) / maxDiff) * 100);
             return (
               <tr
                 key={idx}
                 className={
-                  'border-t border-border-default ' +
-                  (isCritical ? 'bg-risk-high-bg' : '')
+                  'border-t border-border-default ' + (isCritical ? 'bg-risk-high-bg' : '')
                 }
               >
                 <td className="py-2.5 px-3 font-mono text-text-primary align-middle">
@@ -712,9 +660,7 @@ function WinterDiffTable({ rows, maxDiff }) {
                     )}
                     <span
                       className={
-                        isCritical
-                          ? 'font-semibold text-risk-high-soft'
-                          : 'text-text-primary'
+                        isCritical ? 'font-semibold text-risk-high-soft' : 'text-text-primary'
                       }
                     >
                       {row.feature}
