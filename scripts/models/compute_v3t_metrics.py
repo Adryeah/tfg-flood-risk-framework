@@ -43,6 +43,10 @@ from sklearn.metrics import (accuracy_score, average_precision_score,
                              precision_score, recall_score, roc_auc_score)
 from sklearn.model_selection import GroupKFold
 
+from river_feature import add_distance_to_river
+
+RIVER = "distance_to_river"
+
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S")
 log = logging.getLogger(__name__)
@@ -138,21 +142,30 @@ def main() -> int:
     model = joblib.load(REPO / "models/random_forest_v3t.joblib")
     cal = joblib.load(REPO / "models/v3t_calibrator.joblib")
     iso, FEATS, THR = cal["isotonic"], cal["features"], cal["threshold"]
+    PARQUET_FEATS = [f for f in FEATS if f != RIVER]
     log.info("v3-T: %d feats, thr=%.3f", len(FEATS), THR)
 
     out = {}
 
     # ---------- VALENCIA (in-domain, CV espacial) ----------
     log.info("== VALENCIA ==")
-    val = pd.read_parquet(VAL_PARQUET, columns=["row", "col", "flood_label", *FEATS])
-    val = val.loc[np.isfinite(val[FEATS].to_numpy()).all(1)].reset_index(drop=True)
+    val = pd.read_parquet(VAL_PARQUET, columns=["row", "col", "flood_label", *PARQUET_FEATS])
+    val = val.loc[np.isfinite(val[PARQUET_FEATS].to_numpy()).all(1)].reset_index(drop=True)
+    if RIVER in FEATS:
+        val = add_distance_to_river(val, "valencia", REPO)
+        val = val.loc[np.isfinite(val[RIVER].to_numpy())].reset_index(drop=True)
     n_pix_v, n_pos_v = len(val), int(val["flood_label"].sum())
     ncols_v = int(val["col"].max() + 1)
-    # muestra CV estratificada
+    # Muestra CV a PREVALENCIA NATURAL (~8%), no rebalanceada: asi precision,
+    # F1, ECE y Brier son representativos del despliegue (AUC y recall son
+    # robustos a la prevalencia, pero los demas NO). El rebalanceo solo se usa
+    # para entrenar el clasificador, nunca para reportar metricas.
     pos = val.index[val.flood_label == 1].to_numpy(); neg = val.index[val.flood_label == 0].to_numpy()
-    npos = min(len(pos), int(N_CV * 0.2))
+    nat_prev = float(val.flood_label.mean())
+    npos = min(len(pos), int(N_CV * nat_prev))
     idx = np.concatenate([rng.choice(pos, npos, False), rng.choice(neg, min(len(neg), N_CV - npos), False)])
     sub = val.loc[idx].reset_index(drop=True)
+    log.info("  muestra CV: prevalencia natural=%.4f, n=%d (pos %d)", nat_prev, len(idx), npos)
     Xs = sub[FEATS].to_numpy("float32"); ys = sub["flood_label"].to_numpy("int8")
     grp = _assign_blocks(sub["row"].to_numpy(), sub["col"].to_numpy(), BLOCK_PX, ncols_v)
     oof = np.full(len(ys), np.nan, "float32")
@@ -183,8 +196,11 @@ def main() -> int:
 
     # ---------- ALGEMESI (extrapolacion, aplicacion directa) ----------
     log.info("== ALGEMESI ==")
-    alg = pd.read_parquet(ALG_PARQUET, columns=["flood_label", *FEATS])
-    alg = alg.loc[np.isfinite(alg[FEATS].to_numpy()).all(1)].reset_index(drop=True)
+    alg = pd.read_parquet(ALG_PARQUET, columns=["row", "col", "flood_label", *PARQUET_FEATS])
+    alg = alg.loc[np.isfinite(alg[PARQUET_FEATS].to_numpy()).all(1)].reset_index(drop=True)
+    if RIVER in FEATS:
+        alg = add_distance_to_river(alg, "algemesi", REPO)
+        alg = alg.loc[np.isfinite(alg[RIVER].to_numpy())].reset_index(drop=True)
     Xa = alg[FEATS].to_numpy("float32"); ya = alg["flood_label"].to_numpy("int8")
     proba = np.empty(len(Xa), "float32")
     for s in range(0, len(Xa), CHUNK):

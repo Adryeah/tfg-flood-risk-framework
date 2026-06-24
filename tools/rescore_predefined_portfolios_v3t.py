@@ -52,8 +52,10 @@ def main() -> int:
     log.info("v3-T cargado: %d feats, umbral %.3f", len(feats), model.get_threshold())
 
     path = settings.DATA_PROCESSED_DIR / "predefined_portfolios.json"
-    shutil.copy(path, path.with_suffix(".json.v2backup"))
-    log.info("Backup: %s", path.name + ".v2backup")
+    # Backup timestampeado para no pisar el .v2backup original.
+    bak = path.with_suffix(".json.bak_" + time.strftime("%Y%m%d_%H%M%S"))
+    shutil.copy(path, bak)
+    log.info("Backup: %s", bak.name)
     d = json.loads(path.read_text(encoding="utf-8"))
 
     rescored = skipped = outside = 0
@@ -69,23 +71,20 @@ def main() -> int:
                 skipped += 1
                 continue
             rp_new = float(model.predict(x))
-            rp_old = float(c.get("risk_probability") or 0.0)
-            ratio = rp_new / rp_old if rp_old > 1e-4 else None
+            # Solo se actualiza la PROBABILIDAD de riesgo (recalibrada) y su
+            # categoría. Las pérdidas NO se reescalan por la probabilidad: la
+            # recalibración corrige la base rate, no cambia el riesgo físico.
+            # estimated_loss_dana es la pérdida CONDICIONAL (insured*damage_ratio)
+            # dado el evento DANA; es independiente de la base rate climatológica
+            # y debe permanecer estable (reescalarla por P sería un error
+            # actuarial). expected_annual_loss se deja anclada a esa pérdida.
             c["risk_probability"] = round(rp_new, 6)
             c["risk_category"] = categorize_probability(rp_new)
-            if ratio is not None:
-                c["estimated_loss_dana"] = round(float(c.get("estimated_loss_dana", 0)) * ratio)
-                c["expected_annual_loss"] = round(float(c.get("expected_annual_loss", 0)) * ratio, 2)
-            else:
-                # riesgo viejo ~0: reescala desde insured con damage ratio 0.3
-                loss = round(float(c.get("insured_value", 0)) * rp_new * 0.3)
-                c["estimated_loss_dana"] = loss
-                c["expected_annual_loss"] = round(loss * 0.012, 2)
             rescored += 1
         log.info("  %s: %d clientes re-puntuados", p["id"], len(p["clients"]))
 
     meta = d.setdefault("_meta", {})
-    meta["model"] = "Random Forest v3-T (calibrado, umbral 0.310)"
+    meta["model"] = "Random Forest v3-T (calibrado a prevalencia natural, umbral 0.160)"
     meta["rescored_at"] = time.strftime("%Y-%m-%d")
     path.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
     log.info("Re-puntuados=%d  skipped=%d  fuera-bbox=%d", rescored, skipped, outside)

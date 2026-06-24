@@ -28401,8 +28401,8 @@
       "autos_furgoneta_True": 0.5
     },
     "prob_event_year": 0.05,
-    "threshold_operational": 0.614,
-    "model": "Random Forest v3-T (calibrado a prevalencia natural, umbral 0.140)",
+    "threshold_operational": 0.160,
+    "model": "Random Forest v3-T (calibrado a prevalencia natural, umbral 0.160)",
     "annual_premium_formula": "insured_value * (0.04 if product=='autos' else 0.0015) * U(0.8, 1.2)",
     "expected_annual_loss_formula": "estimated_loss_dana * prob_event_year",
     "estimated_loss_dana_formula": "insured_value * risk_probability * damage_ratio",

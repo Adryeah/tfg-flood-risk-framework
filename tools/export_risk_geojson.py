@@ -42,22 +42,24 @@ log = logging.getLogger(__name__)
 REPO = Path(__file__).resolve().parents[1]
 OUT_DIR = REPO / "framework_web/backend/data_processed"
 
-# (bin_id, risk_level, label, probability_bin, min, max, color) — IDENTICO a v2.
+# (bin_id, risk_level, label, probability_bin, min, max, color)
+# v3-T (10 feat): bins reanclados a la escala CALIBRADA (umbral 0.16; +river).
+# TAIL = grises por debajo del umbral; MAIN = rampa YlOrRd sobre los flagged.
 TAIL = [
-    (0, "tail_1", "background",   "0.00-0.06", 0.00, 0.06, "#E5E7EB"),
-    (1, "tail_2", "very_low",     "0.06-0.13", 0.06, 0.13, "#D1D5DB"),
-    (2, "tail_3", "low_minus",    "0.13-0.19", 0.13, 0.19, "#B3BAC4"),
-    (3, "tail_4", "low_shoulder", "0.19-0.25", 0.19, 0.25, "#9CA3AF"),
+    (0, "tail_1", "background",   "0.00-0.04", 0.00, 0.04, "#E5E7EB"),
+    (1, "tail_2", "very_low",     "0.04-0.08", 0.04, 0.08, "#D1D5DB"),
+    (2, "tail_3", "low_minus",    "0.08-0.12", 0.08, 0.12, "#B3BAC4"),
+    (3, "tail_4", "low_shoulder", "0.12-0.16", 0.12, 0.16, "#9CA3AF"),
 ]
 MAIN = [
-    (0, "bin_1", "low",         "0.25-0.34", 0.25, 0.34, "#FEF3C7"),
-    (1, "bin_2", "low_medium",  "0.34-0.43", 0.34, 0.43, "#FDE68A"),
-    (2, "bin_3", "medium_low",  "0.43-0.52", 0.43, 0.52, "#FCD34D"),
-    (3, "bin_4", "medium",      "0.52-0.61", 0.52, 0.61, "#FBBF24"),
-    (4, "bin_5", "medium_high", "0.61-0.70", 0.61, 0.70, "#F87171"),
-    (5, "bin_6", "high",        "0.70-0.79", 0.70, 0.79, "#EF4444"),
-    (6, "bin_7", "very_high",   "0.79-0.88", 0.79, 0.88, "#DC2626"),
-    (7, "bin_8", "extreme",     "0.88-1.01", 0.88, 1.00, "#991B1B"),
+    (0, "bin_1", "low",         "0.16-0.20", 0.16, 0.20, "#FEF3C7"),
+    (1, "bin_2", "low_medium",  "0.20-0.26", 0.20, 0.26, "#FDE68A"),
+    (2, "bin_3", "medium_low",  "0.26-0.33", 0.26, 0.33, "#FCD34D"),
+    (3, "bin_4", "medium",      "0.33-0.42", 0.33, 0.42, "#FBBF24"),
+    (4, "bin_5", "medium_high", "0.42-0.52", 0.42, 0.52, "#F87171"),
+    (5, "bin_6", "high",        "0.52-0.66", 0.52, 0.66, "#EF4444"),
+    (6, "bin_7", "very_high",   "0.66-0.80", 0.66, 0.80, "#DC2626"),
+    (7, "bin_8", "extreme",     "0.80-1.01", 0.80, 1.00, "#991B1B"),
 ]
 
 ZONES = {

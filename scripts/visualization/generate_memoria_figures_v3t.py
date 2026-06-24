@@ -87,7 +87,7 @@ def _feature_importance():
     fig, ax = plt.subplots(figsize=(9, 6))
     ax.barh(names, vals, color="#e63946")
     ax.set_xlabel("Importancia Gini")
-    ax.set_title("RF v3-T · importancia de las 9 features transferibles")
+    ax.set_title(f"RF v3-T · importancia de las {len(imp)} features transferibles")
     ax.grid(True, alpha=0.3, axis="x")
     plt.tight_layout()
     f = OUT / "feature_importance_v3t.png"
@@ -105,10 +105,11 @@ def _v2_vs_v3t():
     x = np.arange(len(groups)); w = 0.38
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.bar(x - w/2, v2_vals, w, label="RF v2 (14 feat)", color="#94a3b8")
-    ax.bar(x + w/2, v3_vals, w, label="RF v3-T (9 feat)", color="#e63946")
+    ax.bar(x + w/2, v3_vals, w, label="RF v3-T (10 feat)", color="#e63946")
     ax.set_xticks(x); ax.set_xticklabels(groups)
     ax.set_ylim(0, 1); ax.set_ylabel("Valor")
-    ax.set_title("RF v2 vs RF v3-T — el v3-T recupera la transferencia (recall Algemesí 0 → 0,63)")
+    ax.set_title("RF v2 vs RF v3-T — el v3-T recupera la transferencia "
+                 f"(recall Algemesí 0,18 → {alg_v3['recall']:.2f})".replace(".", ","))
     ax.legend(); ax.grid(True, alpha=0.3, axis="y")
     for i, (a, b) in enumerate(zip(v2_vals, v3_vals)):
         ax.text(i - w/2, a + 0.01, f"{a:.2f}", ha="center", fontsize=8)
