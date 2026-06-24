@@ -69,7 +69,15 @@ def test_predict_risk_valid_coord(client):
     assert 0.0 <= body["probability"] <= 1.0
     assert body["category"] in ("low", "moderate", "high", "very_high")
     assert "features" in body
-    assert len(body["features"]) == 14
+    # El endpoint expone la union v2 (14) + v3-T -> >= 14 columnas, e incluye
+    # las 10 features que el modelo v3-T realmente consume. Blinda el bug que
+    # solo exponia v2 y hacia KeyError en distance_to_river (saltaba el scoring).
+    feats = body["features"]
+    assert len(feats) >= 14
+    for f in ("mean_sigma0_vv", "min_sigma0_vv", "cv_sigma0_vv", "water_count",
+              "distance_to_stream", "flow_accumulation", "ndvi_mean", "twi",
+              "hand", "distance_to_river"):
+        assert f in feats, f"falta {f} en features del endpoint"
 
 
 def test_predict_risk_invalid_coord(client):
@@ -157,7 +165,8 @@ def test_get_metrics_valencia(client):
     assert "buffer_metrics" in body
     assert "feature_importance" in body
     auc = body["model_metrics"]["auc_mean"]
-    assert 0.90 <= auc <= 0.94
+    # v3-T in-domain (CV espacial a prevalencia natural): ~0,848.
+    assert 0.83 <= auc <= 0.87
 
 
 def test_get_metrics_algemesi(client):
@@ -166,7 +175,9 @@ def test_get_metrics_algemesi(client):
     body = r.json()
     assert "model_metrics" in body
     auc = body["model_metrics"]["auc_mean"]
-    assert 0.78 <= auc <= 0.85
+    # v3-T transferido a Algemesi (aplicacion directa): ~0,861 — el recall
+    # incluso SUBE al cruzar de cuenca. Rango que captura esa mejora.
+    assert 0.83 <= auc <= 0.89
 
 
 def test_get_metrics_transferability(client):

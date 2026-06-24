@@ -1,10 +1,11 @@
 """Servicio singleton para cargar y servir el modelo Random Forest v3-T
-(transferible, 9 features, con calibracion isotonica).
+(transferible, 10 features, con calibracion isotonica).
 
 v3-T (jun 2026): sustituye al RF v2 de 14 features. Se eligio por seleccion
 de features guiada por transferencia (ablacion LOZO bidireccional) — quita
 las features no transferibles (elevation, slope, std_vv, vv_vh_ratio,
-distance_to_coast) — y se sirve calibrado (isotonica) con umbral 0,310.
+distance_to_coast) y anade distance_to_river (A/B ganador) — y se sirve
+calibrado (isotonica) a prevalencia natural con umbral operacional 0,160.
 Las predicciones se devuelven YA calibradas, coherentes con los mapas.
 """
 from __future__ import annotations
@@ -104,7 +105,7 @@ class ModelService:
         return self._iso.predict(proba) if self._iso is not None else proba
 
     def predict(self, features: np.ndarray) -> float:
-        """Probabilidad CALIBRADA de clase 1 (inundado). features: (9,) o (1,9)."""
+        """Probabilidad CALIBRADA de clase 1 (inundado). features: (10,) o (1,10)."""
         if self._model is None:
             raise RuntimeError("Modelo no cargado. Llama a load_model() primero.")
         x = np.asarray(features, dtype="float32")

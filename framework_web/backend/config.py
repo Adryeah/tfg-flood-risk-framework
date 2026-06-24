@@ -28,7 +28,8 @@ class Settings(BaseSettings):
         "Backend del framework predictivo de riesgo de inundacion "
         "(TFG DANA Valencia 2024). Sirve mapas de riesgo, features "
         "por coordenada, carteras sinteticas y metricas del modelo "
-        "Random Forest v2 (AUC 0.922 Valencia, AUC 0.817 Algemesi)."
+        "Random Forest v3-T transferible, 10 features, calibrado "
+        "(AUC 0.848 Valencia in-domain, AUC 0.861 transferido a Algemesi)."
     )
 
     # Default seguro: produccion no abre CORS. Activar DEBUG=true solo en local
