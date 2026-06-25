@@ -16,27 +16,27 @@ import { api } from '../lib/api.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Area under the Receiver Operating Characteristic curve. Measures pure ranking: does the model assign higher probability to flooded pixels than to dry ones? Robust under prevalence shift — that's why it transfers so well (0.848 in-domain → 0.861 in Algemesí, it does not drop) with the v3-T transferable feature set.`,
+    body: `Área bajo la curva ROC (Receiver Operating Characteristic). Mide ranking puro: ¿asigna el modelo mayor probabilidad a los píxeles inundados que a los secos? Robusta ante el cambio de prevalencia — por eso transfiere tan bien (0,848 in-domain → 0,861 en Algemesí, no baja) con el conjunto de features transferible v3-T.`,
   },
-  'F1 score': {
+  F1: {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision and recall at the decision threshold. Tied to a specific operating point, so it stays low at pixel level (0.348 in-domain → 0.023 in Algemesí), driven by precision under extreme prevalence — Algemesí has 27× lower prevalence. The product aggregates to zone/policy level, where buffered recall is the figure that matters.`,
+    body: `Media armónica de precisión y recall en el umbral de decisión. Ligada a un punto de operación concreto, así que se mantiene baja a nivel de píxel (0,348 in-domain → 0,023 en Algemesí), arrastrada por la precisión bajo prevalencia extrema — Algemesí tiene 27× menos prevalencia. El producto agrega a nivel de zona/póliza, donde el recall con buffer es la cifra que importa.`,
   },
-  Precision: {
+  Precisión: {
     cite: 'sklearn.metrics.precision_score',
-    body: `TP / (TP + FP). Fraction of "this pixel is flooded" calls that are correct. Heavily prevalence-dependent: if 99.7% of pixels are truly dry, even a small false-positive rate dominates the positive class.`,
+    body: `TP / (TP + FP). Fracción de avisos «este píxel está inundado» que son correctos. Muy dependiente de la prevalencia: si el 99,7 % de los píxeles están realmente secos, hasta una tasa baja de falsos positivos domina la clase positiva.`,
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). Fraction of actually-flooded pixels the model catches. With v3-T the recall transfers at the SAME threshold (0.639 → 0.676, it does not even drop) — unlike the v2 model whose extrapolated recall collapsed to 0.18. With a 100 m operational buffer it reaches 0.94.`,
+    body: `TP / (TP + FN). Fracción de píxeles realmente inundados que el modelo captura. Con v3-T el recall transfiere al MISMO umbral (0,639 → 0,676, ni siquiera baja) — a diferencia del modelo v2, cuyo recall extrapolado se desplomó a 0,18. Con un buffer operacional de 100 m alcanza 0,94.`,
   },
-  Threshold: {
-    cite: 'Operational decision point',
-    body: `Probability above which a pixel is classified as flood. v3-T uses a SINGLE calibrated threshold (0.160, recall ≥ 0.75 criterion on the Valencia calibration hold-out at natural prevalence) applied to every zone without recalibration — the isotonic calibration makes the probability scale comparable across zones.`,
+  Umbral: {
+    cite: 'Punto de decisión operacional',
+    body: `Probabilidad por encima de la cual un píxel se clasifica como inundado. v3-T usa un ÚNICO umbral calibrado (0,160, criterio recall ≥ 0,75 sobre el hold-out de calibración de Valencia a prevalencia natural) aplicado a toda zona sin recalibrar — la calibración isotónica hace que la escala de probabilidad sea comparable entre zonas.`,
   },
-  'Positive prevalence': {
-    cite: 'EMSR773 ground truth',
-    body: `Fraction of pixels that are truly flooded according to Copernicus EMS. Valencia: 7.98 % (the DANA hit hard). Algemesí: 0.29 % — 27× lower. This single number explains 80% of the difference in every other metric.`,
+  'Prevalencia positiva': {
+    cite: 'Ground truth EMSR773',
+    body: `Fracción de píxeles realmente inundados según Copernicus EMS. Valencia: 7,98 % (la DANA golpeó fuerte). Algemesí: 0,29 % — 27× menos. Este único número explica el 80 % de la diferencia en todas las demás métricas.`,
   },
 };
 
@@ -155,7 +155,7 @@ export function Comparison() {
         (params?.dataIndex || 0) * 160 + (params?.seriesIndex || 0) * 100,
       grid: { left: 56, right: 24, top: 28, bottom: 56, containLabel: false },
       legend: {
-        data: ['Valencia (training)', 'Algemesí (extrapolation)'],
+        data: ['Valencia (entrenamiento)', 'Algemesí (extrapolación)'],
         bottom: 0,
         itemWidth: 10,
         itemHeight: 10,
@@ -199,7 +199,7 @@ export function Comparison() {
       },
       xAxis: {
         type: 'category',
-        data: ['AUC ROC', 'F1', 'Recall', 'Precision'],
+        data: ['AUC ROC', 'F1', 'Recall', 'Precisión'],
         axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } },
         axisTick: { show: false },
         axisLabel: {
@@ -225,7 +225,7 @@ export function Comparison() {
       },
       series: [
         {
-          name: 'Valencia (training)',
+          name: 'Valencia (entrenamiento)',
           type: 'bar',
           data: valData,
           itemStyle: {
@@ -241,7 +241,7 @@ export function Comparison() {
           },
         },
         {
-          name: 'Algemesí (extrapolation)',
+          name: 'Algemesí (extrapolación)',
           type: 'bar',
           // Each bar coloured individually by drop severity so the
           // catastrophic F1 + Precision drops jump out as red while the
@@ -291,18 +291,18 @@ export function Comparison() {
       a: am.auc_mean,
       deltaKind: 'metric',
     },
-    { label: 'F1 score', v: vm.f1, a: am.f1, deltaKind: 'metric' },
-    { label: 'Precision', v: vm.precision, a: am.precision, deltaKind: 'metric' },
+    { label: 'F1', v: vm.f1, a: am.f1, deltaKind: 'metric' },
+    { label: 'Precisión', v: vm.precision, a: am.precision, deltaKind: 'metric' },
     { label: 'Recall', v: vm.recall, a: am.recall, deltaKind: 'metric' },
     {
-      label: 'Threshold',
+      label: 'Umbral',
       v: 0.16,
       a: 0.16,
       raw: true,
       deltaKind: 'numeric',
     },
     {
-      label: 'Positive prevalence',
+      label: 'Prevalencia positiva',
       v: 7.98,
       a: 0.29,
       raw: true,
@@ -322,7 +322,7 @@ export function Comparison() {
        *  (Valencia / Algemesí), no como card de dashboard. */}
       <header>
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
-          Methodology · Transferability test
+          Metodología · Test de transferibilidad
         </div>
         <div className="flex items-baseline gap-3 flex-wrap">
           <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
@@ -331,15 +331,15 @@ export function Comparison() {
             <span className="italic">Algemesí</span>
           </h1>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-brand-50 text-brand-700 text-10 font-mono font-semibold uppercase tracking-wider">
-            Same model
+            Mismo modelo
           </span>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm bg-risk-medium-bg text-risk-medium-soft text-10 font-mono font-semibold uppercase tracking-wider">
-            Different zone
+            Distinta zona
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Geographic generalisation test: the same Random Forest v3-T trained in l'Horta Sud,
-          applied to Algemesí without retraining or recalibration.
+          Prueba de generalización geográfica: el mismo Random Forest v3-T entrenado en l'Horta Sud,
+          aplicado a Algemesí sin reentrenar ni recalibrar.
         </p>
       </header>
 
@@ -351,11 +351,11 @@ export function Comparison() {
                 Valencia
               </h3>
               <span className="hidden sm:inline text-11 text-text-tertiary truncate">
-                training zone
+                zona de entrenamiento
               </span>
             </div>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-brand-50 text-brand-700 shrink-0">
-              Training
+              Entrenamiento
             </span>
           </div>
           <RiskZoneMap
@@ -378,11 +378,11 @@ export function Comparison() {
                 Algemesí
               </h3>
               <span className="hidden sm:inline text-11 text-text-tertiary truncate">
-                extrapolation zone
+                zona de extrapolación
               </span>
             </div>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium-soft shrink-0">
-              Extrapolation
+              Extrapolación
             </span>
           </div>
           <RiskZoneMap
@@ -406,10 +406,10 @@ export function Comparison() {
       <div className="bg-bg-surface border border-border-default rounded">
         <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-border-default flex items-center justify-between gap-3">
           <h3 className="font-serif text-15 text-text-primary tracking-tight">
-            Metrics comparison
+            Comparación de métricas
           </h3>
           <span className="hidden md:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">
-            Hover any metric for definition + transfer reasoning
+            Pasa el ratón por cada métrica para ver definición y razonamiento de transferencia
           </span>
         </div>
         <div className="overflow-x-auto">
@@ -419,17 +419,17 @@ export function Comparison() {
           <table className="w-full text-13 min-w-[380px]">
             <thead>
               <tr className="text-11 text-text-tertiary uppercase tracking-wider border-b border-border-default font-mono">
-                <th className="text-left py-2 px-2 sm:px-4 font-semibold">Metric</th>
+                <th className="text-left py-2 px-2 sm:px-4 font-semibold">Métrica</th>
                 <th className="text-right py-2 px-2 sm:px-4 font-semibold">
                   Valencia{' '}
                   <span className="hidden md:inline text-text-tertiary normal-case font-normal">
-                    (training)
+                    (entrenamiento)
                   </span>
                 </th>
                 <th className="text-right py-2 px-2 sm:px-4 font-semibold">
                   Algemesí{' '}
                   <span className="hidden md:inline text-text-tertiary normal-case font-normal">
-                    (extrapolation)
+                    (extrapolación)
                   </span>
                 </th>
                 <th className="text-right py-2 px-2 sm:px-4 font-semibold w-[80px] sm:w-[120px]">
@@ -494,31 +494,32 @@ export function Comparison() {
       <div className="bg-bg-surface border border-border-default rounded p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h3 className="font-serif text-15 text-text-primary tracking-tight">
-            Performance comparison
+            Comparación de rendimiento
           </h3>
           <span className="hidden sm:inline text-10 font-mono uppercase tracking-wider text-text-tertiary">
-            Algemesí bars coloured by drop severity
+            Barras de Algemesí coloreadas por severidad de la caída
           </span>
         </div>
         <p className="text-11 text-text-tertiary mb-3">
-          Per-metric model behaviour under transferability
+          Comportamiento del modelo por métrica bajo transferibilidad
         </p>
         <div ref={chartRef} className="h-[260px] sm:h-[320px]" />
       </div>
 
       <div className="bg-brand-50 border-l-2 border-brand-700 rounded p-3 sm:p-4">
         <div className="text-10 font-mono font-semibold text-brand-700 uppercase tracking-wider mb-1.5">
-          Transferability insight
+          Conclusión de transferibilidad
         </div>
         <p className="text-13 text-text-primary leading-relaxed">
-          The v3-T model trained exclusively on Valencia identifies{' '}
-          <span className="font-semibold">94 %</span> of flooded areas in Algemesí (100 m buffer)
-          without retraining. AUC transfers from <span className="font-mono">0.848</span> to{' '}
-          <span className="font-mono">0.861</span> and — unlike the prior v2 model — recall also
-          transfers ( <span className="font-mono">0.64 → 0.68</span>, it does not even drop) at the
-          same calibrated threshold. Precision stays low (<span className="font-mono">1.2 %</span>)
-          because positive prevalence is <span className="font-mono">27×</span> lower; the product
-          therefore aggregates risk to zone/policy level rather than per pixel.
+          El modelo v3-T entrenado exclusivamente en Valencia identifica el{' '}
+          <span className="font-semibold">94 %</span> de las áreas inundadas en Algemesí (buffer 100
+          m) sin reentrenar. El AUC transfiere de <span className="font-mono">0,848</span> a{' '}
+          <span className="font-mono">0,861</span> y —a diferencia del modelo v2 previo— el recall
+          también transfiere ( <span className="font-mono">0,64 → 0,68</span>, ni siquiera baja) al
+          mismo umbral calibrado. La precisión se mantiene baja (
+          <span className="font-mono">1,2 %</span>) porque la prevalencia positiva es{' '}
+          <span className="font-mono">27×</span> menor; el producto agrega por tanto el riesgo a
+          nivel de zona/póliza en lugar de por píxel.
         </p>
       </div>
     </div>

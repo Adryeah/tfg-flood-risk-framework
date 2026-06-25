@@ -114,7 +114,7 @@ const PHASES = [
       <>
         La delineación de Copernicus EMS identifica <strong>199 km² inundados</strong>. Comparado
         con la predicción del modelo de antes del evento:{' '}
-        <strong>AUC 0.848 · Recall 63.9 % · Buffered recall a 100 m 97.0 %</strong>. El modelo,
+        <strong>AUC 0,848 · Recall 63,9 % · Recall con tolerancia 100 m 97,0 %</strong>. El modelo,
         entrenado solo con datos anteriores, había marcado correctamente la geometría del riesgo.
       </>
     ),

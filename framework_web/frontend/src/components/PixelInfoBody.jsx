@@ -11,9 +11,9 @@ export function PixelInfoBody({ info }) {
   if (!info) {
     return (
       <p className="text-12 text-text-secondary leading-relaxed">
-        Click any point on the map to query{' '}
-        <span className="font-mono text-text-primary">/api/risk/predict</span>. The model returns
-        the calibrated probability, risk category, and the 10 feature values used.
+        Pulsa cualquier punto del mapa para consultar{' '}
+        <span className="font-mono text-text-primary">/api/risk/predict</span>. El modelo devuelve
+        la probabilidad calibrada, la categoría de riesgo y los valores de las 10 features usadas.
       </p>
     );
   }
@@ -29,7 +29,7 @@ export function PixelInfoBody({ info }) {
             className="inline-block w-2 h-2 rounded-full"
             style={{ background: '#3B82F6', animation: 'pulse 1.4s ease-in-out infinite' }}
           />
-          Inspecting model…
+          Inspeccionando modelo…
         </div>
       </div>
     );
@@ -39,7 +39,9 @@ export function PixelInfoBody({ info }) {
     return (
       <div>
         <Coords lat={lat} lon={lon} />
-        <div className="mt-2 text-12 text-risk-high-soft">{error || 'Point outside coverage.'}</div>
+        <div className="mt-2 text-12 text-risk-high-soft">
+          {error || 'Punto fuera de cobertura.'}
+        </div>
       </div>
     );
   }
@@ -68,7 +70,7 @@ export function PixelInfoBody({ info }) {
 
       <div className="flex items-baseline justify-between gap-3 pt-1">
         <span className="text-10 font-mono font-semibold uppercase tracking-wider text-text-tertiary">
-          Probability
+          Probabilidad
         </span>
         <span className="text-20 font-mono font-semibold text-text-primary tabular-nums">
           {prob.toFixed(3)}
@@ -76,7 +78,7 @@ export function PixelInfoBody({ info }) {
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <span className="text-text-secondary">Risk class</span>
+        <span className="text-text-secondary">Clase de riesgo</span>
         <span
           className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider"
           style={{ background: sevBg, color: sevFg }}
@@ -87,9 +89,9 @@ export function PixelInfoBody({ info }) {
 
       {data.threshold_operational != null && (
         <div className="flex items-center justify-between gap-3 text-text-secondary">
-          <span>vs threshold</span>
+          <span>vs umbral</span>
           <span className="font-mono text-text-primary">
-            {data.is_above_threshold ? 'ABOVE' : 'below'} ·{' '}
+            {data.is_above_threshold ? 'POR ENCIMA' : 'por debajo'} ·{' '}
             {Number(data.threshold_operational).toFixed(3)}
           </span>
         </div>

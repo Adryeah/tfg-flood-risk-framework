@@ -14,35 +14,35 @@ import { ZONES } from '../lib/constants.js';
 const METRIC_DOCS = {
   'AUC ROC': {
     cite: 'sklearn.metrics.roc_auc_score',
-    body: `Ranking-based AUC. Stays high (0.861) under transfer — even higher than in-domain (0.848) — because ranking is robust to prevalence shift and distance_to_river transfers cleanly across basins. This is the metric to trust in extrapolation; threshold-dependent ones (F1, Precisión) are not.`,
+    body: `AUC basada en ranking. Se mantiene alta (0,861) bajo transferencia — incluso más que in-domain (0,848) — porque el ranking es robusto al cambio de prevalencia y distance_to_river transfiere limpiamente entre cuencas. Esta es la métrica fiable en extrapolación; las dependientes del umbral (F1, Precisión) no lo son.`,
   },
   'AUC PR': {
     cite: 'sklearn.metrics.average_precision_score',
-    body: `Area under the Precision-Recall curve. Naturally tiny when positive prevalence is < 1 %: the baseline for a random classifier ≈ prevalence (here 0.0030), so any non-trivial AUC PR above ~0.01 is informative. The 0.011 value isn't broken — it's a faithful reflection of how hard the extrapolation problem is.`,
+    body: `Área bajo la curva Precisión-Recall. Naturalmente diminuta cuando la prevalencia positiva es < 1 %: la línea base de un clasificador aleatorio ≈ prevalencia (aquí 0,0030), así que cualquier AUC PR no trivial por encima de ~0,01 es informativa. El valor 0,011 no está roto — es un reflejo fiel de lo difícil que es el problema de extrapolación.`,
   },
-  'F1 score': {
+  F1: {
     cite: 'sklearn.metrics.f1_score',
-    body: `Harmonic mean of precision + recall at the single calibrated threshold 0.160 (same as Valencia, no recalibration). Low in both zones (0.348 → 0.023) because precision is structurally limited at pixel level under extreme imbalance — see Precisión. The product aggregates to zone/policy level, where buffered recall (0.94 at 100 m) is the figure that matters.`,
+    body: `Media armónica de precisión + recall en el único umbral calibrado 0,160 (igual que Valencia, sin recalibrar). Baja en ambas zonas (0,348 → 0,023) porque la precisión está estructuralmente limitada a nivel de píxel bajo desbalance extremo — ver Precisión. El producto agrega a nivel de zona/póliza, donde el recall con buffer (0,94 a 100 m) es la cifra que importa.`,
   },
   Precisión: {
     cite: 'sklearn.metrics.precision_score',
-    body: `TP / (TP + FP). Low in-domain (0.239) and collapses to 0.012 in Algemesí because positives are ~27× rarer there. With prevalence < 1 %, even a 5 % false-positive rate produces far more FP than TP — hence the floor. This is why the product reads risk at zone level, not pixel level.`,
+    body: `TP / (TP + FP). Baja in-domain (0,239) y se desploma a 0,012 en Algemesí porque los positivos son ~27× más raros allí. Con prevalencia < 1 %, hasta una tasa de falsos positivos del 5 % produce muchos más FP que TP — de ahí el suelo. Por eso el producto lee el riesgo a nivel de zona, no de píxel.`,
   },
   Recall: {
     cite: 'sklearn.metrics.recall_score',
-    body: `TP / (TP + FN). With v3-T the recall transfers at the SAME calibrated threshold (0.639 → 0.676, it does not even drop) — unlike the prior v2 model whose extrapolated recall collapsed to 0.18. With a 100 m operational buffer it reaches 0.94.`,
+    body: `TP / (TP + FN). Con v3-T el recall transfiere al MISMO umbral calibrado (0,639 → 0,676, ni siquiera baja) — a diferencia del modelo v2 previo, cuyo recall extrapolado se desplomó a 0,18. Con un buffer operacional de 100 m alcanza 0,94.`,
   },
   'Recall (100 m)': {
     cite: 'Tellman et al. 2021 · Nature 596',
-    body: `Recall when a prediction within 100 m of a true positive counts as a hit. Operational tolerance — accounts for SAR pixel size + geocoding error. The standard in flood remote sensing for benchmarking detection quality.`,
+    body: `Recall cuando una predicción a menos de 100 m de un positivo real cuenta como acierto. Tolerancia operacional — tiene en cuenta el tamaño de píxel SAR + el error de geocodificación. El estándar en teledetección de inundaciones para evaluar la calidad de detección.`,
   },
   Exactitud: {
     cite: 'sklearn.metrics.accuracy_score',
-    body: `(TP + TN) / total. Misleading when classes are imbalanced — for Algemesí, predicting "no flood" everywhere would yield 99.7 % accuracy. Look at AUC and Recall instead.`,
+    body: `(TP + TN) / total. Engañosa cuando las clases están desbalanceadas — para Algemesí, predecir «sin inundación» en todas partes daría un 99,7 % de exactitud. Mira el AUC y el Recall en su lugar.`,
   },
-  'Brier score': {
+  Brier: {
     cite: 'Brier 1950',
-    body: `MSE between predicted probabilities and the true outcome. Measures calibration. Lower = better. v3-T's 0.021 here reflects the isotonic recalibration to natural prevalence — the probabilities are honestly scaled, not inflated.`,
+    body: `MSE entre las probabilidades predichas y el resultado real. Mide la calibración. Menor = mejor. El 0,021 de v3-T aquí refleja la recalibración isotónica a prevalencia natural — las probabilidades están escaladas honestamente, no infladas.`,
   },
 };
 
@@ -70,7 +70,7 @@ function DeltaVsValencia({ delta }) {
       className={
         'inline-flex items-center gap-0.5 text-10 font-mono tabular-nums ml-1.5 ' + palette[tone]
       }
-      title={`vs Valencia (training)`}
+      title={`vs Valencia (entrenamiento)`}
     >
       <Icon className="w-2.5 h-2.5" strokeWidth={2.5} />
       {delta > 0 ? '+' : ''}
@@ -138,7 +138,7 @@ export function AlgemesiMap() {
       baseline: vm.auc_mean,
     },
     { label: 'AUC PR', value: m.auc_pr, baseline: vm.auc_pr },
-    { label: 'F1 score', value: m.f1, baseline: vm.f1 },
+    { label: 'F1', value: m.f1, baseline: vm.f1 },
     { label: 'Precisión', value: m.precision, baseline: vm.precision },
     { label: 'Recall', value: m.recall, baseline: vm.recall },
     {
@@ -147,7 +147,7 @@ export function AlgemesiMap() {
       baseline: buf100Val?.recall,
     },
     { label: 'Exactitud', value: m.accuracy, baseline: vm.accuracy },
-    { label: 'Brier score', value: m.brier, baseline: vm.brier },
+    { label: 'Brier', value: m.brier, baseline: vm.brier },
   ];
 
   return (
@@ -158,21 +158,21 @@ export function AlgemesiMap() {
        *  la zona NO entrenada. */}
       <header className="animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
-          Operations · Zone 02 · Extrapolation
+          Operaciones · Zona 02 · Extrapolación
         </div>
         <div className="flex items-baseline gap-3 flex-wrap">
           <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
-            Risk map
+            Mapa de riesgo
             <span className="text-text-tertiary font-normal mx-2 not-italic">·</span>
             <span className="italic">Algemesí</span>
           </h1>
           <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-risk-medium-bg text-risk-medium-soft">
-            Extrapolation zone
+            Zona de extrapolación
           </span>
         </div>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Ribera Alta del Júcar · Algemesí + Alzira · Same model, transferred without retraining as
-          a geographic generalisation test.
+          Ribera Alta del Júcar · Algemesí + Alzira · Mismo modelo, transferido sin reentrenar como
+          test de generalización geográfica.
         </p>
       </header>
 
@@ -196,7 +196,7 @@ export function AlgemesiMap() {
           className="space-y-3"
           style={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
         >
-          <Card title="Statistics" subtitle="Extrapolation · full surface">
+          <Card title="Estadísticas" subtitle="Extrapolación · superficie completa">
             <dl className="divide-y divide-border-default text-13">
               {rows.map((row) => {
                 const docs = METRIC_DOCS[row.label];
@@ -220,10 +220,10 @@ export function AlgemesiMap() {
           </Card>
 
           <Card
-            title="Threshold"
+            title="Umbral"
             actions={
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-10 font-mono font-semibold uppercase tracking-wider bg-bg-subtle text-text-tertiary">
-                {isCustom ? 'custom' : 'recalibrated'}
+                {isCustom ? 'personalizado' : 'recalibrado'}
               </span>
             }
           >
@@ -276,7 +276,8 @@ export function AlgemesiMap() {
                 </>
               ) : (
                 <>
-                  Continuous view: 8-bin colour palette from the geojson. El modelo v3-T aplica el{' '}
+                  Vista continua: paleta de 8 tramos de color desde el geojson. El modelo v3-T
+                  aplica el{' '}
                   <span className="font-mono text-text-secondary">
                     mismo umbral calibrado {ZONES.algemesi.threshold.toFixed(3)}
                   </span>{' '}

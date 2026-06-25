@@ -50,8 +50,7 @@ const EN_ES = {
   Help: 'Ayuda',
   Settings: 'Ajustes',
   Activity: 'Actividad',
-  'Search portfolios, municipalities, features…':
-    'Buscar carteras, municipios, features…',
+  'Search portfolios, municipalities, features…': 'Buscar carteras, municipios, features…',
   // Daily Briefing — header
   'Real-time exposure summary for the Valencia metropolitan portfolio. Model output validated against Copernicus EMS activation EMSR773 (DANA, 29 Oct 2024).':
     'Resumen en tiempo real de la exposición de la cartera metropolitana de Valencia. Salida del modelo validada contra la activación de Copernicus EMS EMSR773 (DANA, 29 oct 2024).',
@@ -82,8 +81,7 @@ const EN_ES = {
   'Block-level on EMSR773': 'A nivel de bloque sobre EMSR773',
   '10m × 10m · 750 km²': '10 m × 10 m · 750 km²',
   'SAR · DEM · NDVI / NDWI': 'SAR · DEM · NDVI / NDWI',
-  'Probable Maximum Loss · event basis':
-    'Pérdida Máxima Probable · base por evento',
+  'Probable Maximum Loss · event basis': 'Pérdida Máxima Probable · base por evento',
   // KPI value notes
   'active policies': 'pólizas activas',
   'above threshold 0.5': 'por encima del umbral 0.5',
@@ -146,8 +144,7 @@ const EN_ES = {
   'Distance to cell': 'Distancia a la celda',
   'Feature values at this point': 'Valores de features en este punto',
   'Point outside coverage': 'Punto fuera de cobertura',
-  'This location is not covered by the model.':
-    'Esta localización no está cubierta por el modelo.',
+  'This location is not covered by the model.': 'Esta localización no está cubierta por el modelo.',
   'Center on Paiporta': 'Centrar en Paiporta',
   'Center on Algemesí': 'Centrar en Algemesí',
   'Reset view': 'Restablecer vista',
@@ -162,8 +159,8 @@ const EN_ES = {
   'Same model': 'Mismo modelo',
   'Different zone': 'Distinta zona',
   'Methodology · Transferability test': 'Metodología · Test de transferibilidad',
-  'Geographic generalisation test: the same Random Forest v3-T trained in l\'Horta Sud, applied to Algemesí without retraining or recalibration.':
-    'Test de generalización geográfica: el mismo Random Forest v3-T entrenado en l\'Horta Sud, aplicado a Algemesí sin re-entrenamiento ni recalibración.',
+  "Geographic generalisation test: the same Random Forest v3-T trained in l'Horta Sud, applied to Algemesí without retraining or recalibration.":
+    "Test de generalización geográfica: el mismo Random Forest v3-T entrenado en l'Horta Sud, aplicado a Algemesí sin re-entrenamiento ni recalibración.",
   'Geographic transferability test — Random Forest v3-T applied without retraining':
     'Test de transferibilidad geográfica — Random Forest v3-T aplicado sin re-entrenamiento',
   'Metrics comparison': 'Comparativa de métricas',
@@ -264,7 +261,7 @@ const EN_ES = {
     'Superficie de probabilidad de inundación pre-calculada para Valencia y Algemesí, sobre los contornos de los municipios afectados por la DANA. Los rectángulos discontinuos delimitan los bbox de entrenamiento y extrapolación definidos en config/params.yaml.',
   'GET /api/risk/{zone}.geojson · GET /api/risk/{zone}/tail.geojson · GET /api/geo/municipalities.geojson':
     'GET /api/risk/{zone}.geojson · GET /api/risk/{zone}/tail.geojson · GET /api/geo/municipalities.geojson',
-  'Toggle layers on/off. The low-probability tail (p<0.25) is heavy and only fetched the first time you enable it. Click anywhere on the map to inspect that pixel\'s prediction.':
+  "Toggle layers on/off. The low-probability tail (p<0.25) is heavy and only fetched the first time you enable it. Click anywhere on the map to inspect that pixel's prediction.":
     'Activa/desactiva capas. La cola de baja probabilidad (p<0.25) es pesada y solo se descarga la primera vez que la activas. Haz click en cualquier punto del mapa para inspeccionar la predicción de ese píxel.',
   'GET /api/risk/{zone}.geojson · GET /api/risk/{zone}/tail.geojson · GET /api/geo/municipalities.geojson · GET /api/risk/predict?lat=&lon=':
     'GET /api/risk/{zone}.geojson · GET /api/risk/{zone}/tail.geojson · GET /api/geo/municipalities.geojson · GET /api/risk/predict?lat=&lon=',
@@ -319,8 +316,7 @@ const EN_ES = {
   High: 'Alto',
   'Very high': 'Muy alto',
   Clients: 'Clientes',
-  'Sortable · paginated · CSV-exportable':
-    'Ordenable · paginado · exportable a CSV',
+  'Sortable · paginated · CSV-exportable': 'Ordenable · paginado · exportable a CSV',
   'Policy ID': 'ID póliza',
   Type: 'Tipo',
   Subtype: 'Subtipo',
@@ -351,7 +347,7 @@ const EN_ES = {
   'Top 10 highest risk': 'Top 10 mayor riesgo',
   'sorted by est. loss': 'ordenado por pérdida est.',
   'DANA loss': 'Pérdida DANA',
-  'Policy': 'Póliza',
+  Policy: 'Póliza',
   'Est. loss': 'Pérdida est.',
   '1-event basis': 'base 1 evento',
 
@@ -471,8 +467,7 @@ const EN_ES = {
   'More info': 'Más información',
 
   // ── Methodology Sources footer ──
-  'Sources & methodology references':
-    'Fuentes y referencias metodológicas',
+  'Sources & methodology references': 'Fuentes y referencias metodológicas',
   'Brier score — mean squared error of probabilistic forecasts.':
     'Brier score — error cuadrático medio de pronósticos probabilísticos.',
   'Model architecture (RandomForestClassifier) and permutation importance.':
@@ -487,8 +482,7 @@ const EN_ES = {
     'Expected Calibration Error (ECE) reportado en model_metrics.',
 
   // ── Feature Glossary (chrome + headers) ──
-  'Feature glossary · 14 model inputs':
-    'Glosario de features · 14 entradas del modelo',
+  'Feature glossary · 14 model inputs': 'Glosario de features · 14 entradas del modelo',
   Feature: 'Feature',
   Description: 'Descripción',
   Unit: 'Unidad',
@@ -508,28 +502,22 @@ const EN_ES = {
     'Desviación típica temporal de la retrodispersión VV',
   'Minimum VV backscatter observed in baseline':
     'Retrodispersión VV mínima observada en el baseline',
-  'Coefficient of variation (std / mean) of VV':
-    'Coeficiente de variación (desv/media) de VV',
-  'Mean of σ⁰_VV / σ⁰_VH ratio':
-    'Ratio medio σ⁰_VV / σ⁰_VH',
+  'Coefficient of variation (std / mean) of VV': 'Coeficiente de variación (desv/media) de VV',
+  'Mean of σ⁰_VV / σ⁰_VH ratio': 'Ratio medio σ⁰_VV / σ⁰_VH',
   'Number of baseline dates the pixel was Otsu-classified as water':
     'Número de fechas del baseline en que el píxel se clasificó como agua por Otsu',
-  'Pixel elevation above sea level':
-    'Elevación del píxel sobre el nivel del mar',
+  'Pixel elevation above sea level': 'Elevación del píxel sobre el nivel del mar',
   'Terrain slope (gradient magnitude of DEM)':
     'Pendiente del terreno (magnitud del gradiente del DEM)',
   'Euclidean distance to nearest river / drainage line':
     'Distancia euclidiana al cauce / línea de drenaje más cercano',
   'Number of upstream cells draining into the pixel':
     'Número de celdas aguas arriba que drenan al píxel',
-  'Mean NDVI from Sentinel-2 over the baseline':
-    'NDVI medio de Sentinel-2 en el baseline',
+  'Mean NDVI from Sentinel-2 over the baseline': 'NDVI medio de Sentinel-2 en el baseline',
   'Euclidean distance to the Mediterranean coastline':
     'Distancia euclidiana a la costa mediterránea',
-  'Topographic Wetness Index = ln(α / tan β)':
-    'Índice topográfico de humedad = ln(α / tan β)',
-  'Height Above Nearest Drainage':
-    'Altura sobre el drenaje más cercano (HAND)',
+  'Topographic Wetness Index = ln(α / tan β)': 'Índice topográfico de humedad = ln(α / tan β)',
+  'Height Above Nearest Drainage': 'Altura sobre el drenaje más cercano (HAND)',
 
   // ── 14 features — full descriptions (ECharts tooltip body) ──
   'Average Sentinel-1 σ⁰ VV across the pre-DANA baseline (≈ 50 dates). Captures the pixel\'s "default" radar response — permanent water has very low dB, urban/built environments very high.':
@@ -572,19 +560,16 @@ const EN_ES = {
   'AUC Valencia': 'AUC Valencia',
   'AUC Algemesí': 'AUC Algemesí',
   'AUC drop': 'Caída de AUC',
-  'Feature Drift Valencia → Algemesí':
-    'Drift de features Valencia → Algemesí',
+  'Feature Drift Valencia → Algemesí': 'Drift de features Valencia → Algemesí',
   'Normalised z-score difference per feature. Positive = larger values in Algemesí.':
     'Diferencia z-score normalizada por feature. Positivo = valores mayores en Algemesí.',
-  'Permutation Importance Comparison':
-    'Comparativa de importancia por permutación',
+  'Permutation Importance Comparison': 'Comparativa de importancia por permutación',
   'ΔAUC contribution per feature in each zone. The dramatic shift in distance_to_coast is the smoking gun.':
     'Contribución ΔAUC por feature en cada zona. El cambio drástico en distance_to_coast es la prueba decisiva.',
   'Methodological conclusion': 'Conclusión metodológica',
   'The transferability experiment demonstrates that model generalisation has identifiable, quantifiable and addressable limits. AUC 0.861 confirms ranking transfers; and with the v3-T model — after Leave-One-Zone-Out feature ablation removed the non-transferable spatial proxies (distance_to_coast, elevation) — the decision transfers too: extrapolated recall rises from 0.18 in v2 to 0.68 (0.94 with a 100 m buffer). Pixel-level precision stays low due to the rare event (0.3% prevalence), so the product aggregates risk to zone/policy level. Honestly delimiting the model validity domain (via Area of Applicability) is exactly the type of rigorous validation a thesis should include.':
     'El experimento de transferibilidad demuestra que la generalización del modelo tiene límites identificables, cuantificables y abordables. AUC 0.861 confirma que el ranking transfiere; y con el modelo v3-T — tras la ablación Leave-One-Zone-Out que elimina los spatial proxies no transferibles (distance_to_coast, elevation) — la decisión también transfiere: el recall extrapolado pasa de 0.18 en v2 a 0.68 (0.94 con buffer 100 m). La precisión a nivel píxel sigue baja por la rareza del evento (prevalencia 0.3%), por lo que el producto agrega el riesgo a nivel zona/póliza. Delimitar honestamente el dominio de validez del modelo (vía Area of Applicability) es exactamente el tipo de validación rigurosa que un TFG debe incluir.',
-  'Δ (Algemesí − Valencia) / σ_Valencia':
-    'Δ (Algemesí − Valencia) / σ_Valencia',
+  'Δ (Algemesí − Valencia) / σ_Valencia': 'Δ (Algemesí − Valencia) / σ_Valencia',
   'Valencia (trained)': 'Valencia (entrenado)',
   'Algemesí (transferred)': 'Algemesí (transferido)',
 
@@ -610,11 +595,9 @@ const EN_ES = {
   'Phase 3': 'Fase 3',
   'Phase 4': 'Fase 4',
   'The suspicious result': 'El resultado sospechoso',
-  'Audit design — 4 tests, stop-on-fail':
-    'Diseño de la auditoría — 4 tests, parada al fallar',
+  'Audit design — 4 tests, stop-on-fail': 'Diseño de la auditoría — 4 tests, parada al fallar',
   'Test 1 PASS · Test 2 FAIL': 'Test 1 PASS · Test 2 FAIL',
-  'Decision — XGBoost v3 rejected':
-    'Decisión — XGBoost v3 rechazado',
+  'Decision — XGBoost v3 rejected': 'Decisión — XGBoost v3 rechazado',
   'XGBoost v3 with 24 features reported AUC 0.966 ± 0.011, a jump of +0.044 over Random Forest v2. In a remote sensing problem with correctly validated spatial cross-validation, such improvements are rare unless explained by (a) fundamentally different architecture, (b) qualitatively new features, or (c) leakage.':
     'XGBoost v3 con 24 features reportó AUC 0.966 ± 0.011, un salto de +0.044 sobre Random Forest v2. En un problema de teledetección con validación cruzada espacial correctamente aplicada, mejoras así son raras a menos que se expliquen por (a) arquitectura fundamentalmente distinta, (b) features cualitativamente nuevas, o (c) fuga (leakage).',
   'Four sequential tests with a stopping rule: if any test fails, halt and reject the model. Test 1: urban_mask as leakage proxy. Test 2: temporal leakage in seasonal features. Test 3: validation of spatial CV identical to RF v2. Test 4: transferability to Algemesí.':
@@ -676,8 +659,7 @@ const EN_ES = {
   'Solvency II': 'Solvencia II',
   'EU AI Act': 'Ley de IA de la UE',
   'Directive 2009/138/EC': 'Directiva 2009/138/CE',
-  'Regulation 2024/1689 · Annex III §5':
-    'Reglamento 2024/1689 · Anexo III §5',
+  'Regulation 2024/1689 · Annex III §5': 'Reglamento 2024/1689 · Anexo III §5',
   'Insurers using internal models for capital adequacy must demonstrate that those models pass rigorous validation and backtesting. A model that reports a +0.044 AUC jump without methodological explanation would fail validation. This audit is the documented backtesting that justifies the Random Forest v2 choice.':
     'Las aseguradoras que usen modelos internos para adecuación de capital deben demostrar que dichos modelos pasan validación y backtesting rigurosos. Un modelo que reporta un salto de +0.044 AUC sin explicación metodológica no superaría la validación. Esta auditoría es el backtesting documentado que justifica la elección de Random Forest v2.',
   'AI systems used for insurance risk scoring are classified high-risk. Providers must keep technical documentation, an audit trail of model decisions, and evidence of human oversight. This page is the audit log: hypothesis, tests run, outcome, and why the suspect model was rejected.':
@@ -700,14 +682,13 @@ const EN_ES = {
   Copiar: 'Copiar',
   Copiado: 'Copiado',
   'Código fuente': 'Código fuente',
-  'External': 'Externo',
-  'Download': 'Descarga',
+  External: 'Externo',
+  Download: 'Descarga',
 
   // ── DANA narrative view ──────────────────────────────────────
   'Case study · The day that triggered this project':
     'Caso de estudio · El día que originó este proyecto',
-  'La comparación que hace el caso':
-    'La comparación que sostiene el caso',
+  'La comparación que hace el caso': 'La comparación que sostiene el caso',
   'Predicción del modelo': 'Predicción del modelo',
   'pre-DANA': 'pre-DANA',
   'Lo que pasó realmente': 'Lo que pasó realmente',
@@ -722,8 +703,7 @@ const EN_ES = {
   'Affected policies': 'Pólizas afectadas',
   'Expected annual loss': 'Pérdida anual esperada',
   'If a DANA hits today': 'Si una DANA ocurriera hoy',
-  'Single-event loss if a DANA hits today':
-    'Pérdida single-event si una DANA ocurriera hoy',
+  'Single-event loss if a DANA hits today': 'Pérdida single-event si una DANA ocurriera hoy',
   'Loss exceedance curve': 'Curva de excedencia de pérdida',
   'TIV share': 'Cuota TIV',
   'PML share': 'Cuota PML',
@@ -738,7 +718,7 @@ const EN_ES = {
   'Nearest HR': 'Alto Riesgo más cercano',
 
   // ── Methodology eyebrow (compartido entre páginas) ────────────
-  'Methodology': 'Metodología',
+  Methodology: 'Metodología',
   'Audit verdict': 'Veredicto de auditoría',
 
   // ── Leakage Audit · forensic redesign (case-file UI) ──────
@@ -761,8 +741,7 @@ const EN_ES = {
 
   'Evidence A': 'Prueba A',
   'Reported vs verifiable AUC': 'AUC reportado vs verificable',
-  'The +0.044 jump that prompted the audit':
-    'El salto de +0.044 que disparó la auditoría',
+  'The +0.044 jump that prompted the audit': 'El salto de +0.044 que disparó la auditoría',
   Suspected: 'Sospechoso',
   'XGBoost v3 · 24 features': 'XGBoost v3 · 24 features',
   'Inflated by event-date scenes leaking into winter aggregates':
@@ -776,8 +755,7 @@ const EN_ES = {
     'Un salto de +0.044 en AUC entre dos modelos correctamente validados de forma cruzada, sin añadir ninguna familia de features cualitativamente nueva, es la señal canónica de fuga en clasificación con teledetección. La auditoría se disparó sólo por ese indicio.',
 
   Methodology: 'Metodología',
-  'Four-phase audit · stop-on-fail rule':
-    'Auditoría en 4 fases · regla de parada al fallar',
+  'Four-phase audit · stop-on-fail rule': 'Auditoría en 4 fases · regla de parada al fallar',
 
   'Exhibit A': 'Prueba A',
   'The bug · path-based filter': 'El bug · filtro por ruta',
@@ -797,8 +775,7 @@ const EN_ES = {
     'Filtra siempre las series temporales por fecha, no por ruta. Los filtros por ruta dependen de la organización de directorios, lo cual es frágil; los filtros por fecha son explícitos sobre la intención temporal.',
   'Significant metric improvements without an underlying methodological change deserve scrutiny. The final TFG model (Random Forest v2) is robust by construction: features are static DEM, baseline-period SAR aggregates, and baseline NDVI. No temporal leakage is possible.':
     'Las mejoras significativas en métricas sin un cambio metodológico subyacente merecen escrutinio. El modelo final del TFG (Random Forest v2) es robusto por construcción: features de DEM estático, agregados SAR del periodo baseline y NDVI baseline. No es posible fuga temporal.',
-  'Methodological appendix · TFG memoria, Ch. 7':
-    'Apéndice metodológico · Memoria TFG, Cap. 7',
+  'Methodological appendix · TFG memoria, Ch. 7': 'Apéndice metodológico · Memoria TFG, Cap. 7',
 
   // Winter diff table chrome
   Feature: 'Feature',
@@ -806,8 +783,7 @@ const EN_ES = {
   'No diff data available.': 'Sin datos de diff disponibles.',
 
   // Timeline phase titles — versión nueva con · en vez de em-dash
-  'Audit design · 4 tests, stop-on-fail':
-    'Diseño de la auditoría · 4 tests, parada al fallar',
+  'Audit design · 4 tests, stop-on-fail': 'Diseño de la auditoría · 4 tests, parada al fallar',
   'Decision · XGBoost v3 rejected': 'Decisión · XGBoost v3 rechazado',
 
   // ── Continuous / Binary view toggle on the risk maps ──
@@ -841,12 +817,9 @@ const EN_ES = {
     'Genera una cartera sintética nueva con tus parámetros. Las pólizas se sortean sobre la superficie de riesgo modelada (Valencia, Algemesí o ambas).',
 
   // ── Predefined portfolio blurbs (sidebar cards) ──
-  'High-value residential · Valencia city':
-    'Residencial premium · Valencia ciudad',
-  'Mix 50/30/20 particulares · autos · pymes':
-    'Mix 50/30/20 particulares · autos · pymes',
-  'Industrial parks · Sedaví, Manises, Quart':
-    'Polígonos industriales · Sedaví, Manises, Quart',
+  'High-value residential · Valencia city': 'Residencial premium · Valencia ciudad',
+  'Mix 50/30/20 particulares · autos · pymes': 'Mix 50/30/20 particulares · autos · pymes',
+  'Industrial parks · Sedaví, Manises, Quart': 'Polígonos industriales · Sedaví, Manises, Quart',
 
   // ── Predefined portfolio names (rendered in selector) ──
   'Premium Residential Valencia': 'Residencial Premium Valencia',
@@ -865,27 +838,43 @@ const EN_ES = {
   // No los pongas como text nodes completos — el walker NO los pillará
   // porque van mezclados con valores numéricos dinámicos.
   'policies in scope': 'pólizas en alcance',
-  'active': 'activas',
-  'shown': 'mostradas',
+  active: 'activas',
+  shown: 'mostradas',
   'of TIV': 'del TIV',
   'Value at risk': 'Valor en riesgo',
   'Probability-weighted': 'Ponderado por probabilidad',
-  'VaR': 'VaR',
+  VaR: 'VaR',
   'high-risk exposure': 'exposición de alto riesgo',
   Cartera: 'Cartera',
+
+  // ── Chrome compartido (labels en varios componentes) ──
+  Clear: 'Limpiar',
+  Close: 'Cerrar',
+  'Close search': 'Cerrar búsqueda',
+  'Global search': 'Búsqueda global',
+  'Copy code': 'Copiar código',
+  Copied: 'Copiado',
+  'Inspecting model…': 'Inspeccionando modelo…',
+  'Risk class': 'Clase de riesgo',
+  'vs threshold': 'vs umbral',
+  'Return period': 'Periodo de retorno',
+  'Methodology · Section 01': 'Metodología · Sección 01',
+  'Methodology · Section 02': 'Metodología · Sección 02',
+  'EMSR773 (Floods in Valencia, Spain)': 'EMSR773 (Inundaciones en Valencia, España)',
 };
 
-const ES_EN = Object.fromEntries(
-  Object.entries(EN_ES).map(([k, v]) => [v, k])
-);
+const ES_EN = Object.fromEntries(Object.entries(EN_ES).map(([k, v]) => [v, k]));
 
 const listeners = new Set();
 
 export function getLang() {
   try {
-    return localStorage.getItem(STORAGE_KEY) || 'en';
+    // Default 'es': el TFG se entrega y defiende en castellano, así que un
+    // visitante nuevo (tribunal) debe ver la plataforma en español sin tocar
+    // el toggle. El usuario puede cambiar a 'en' y se persiste en localStorage.
+    return localStorage.getItem(STORAGE_KEY) || 'es';
   } catch {
-    return 'en';
+    return 'es';
   }
 }
 
@@ -1014,4 +1003,3 @@ export function startI18nObserver(root) {
   });
   observer.observe(target, { childList: true, subtree: true });
 }
-

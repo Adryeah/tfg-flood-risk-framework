@@ -138,8 +138,8 @@ export function ModelValidation() {
           </Badge>
         </div>
         <p className="font-serif italic text-15 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Cross-validated performance metrics with spatial GroupKFold methodology — honest numbers,
-          no random k-fold inflation.
+          Métricas de rendimiento validadas con metodología GroupKFold espacial — cifras honestas,
+          sin inflación del k-fold aleatorio.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export function ModelValidation() {
         <div className="relative">
           <div className="flex items-center gap-1.5 mb-3">
             <span className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
-              AUC ROC · 5-fold spatial CV
+              AUC ROC · CV espacial 5 folds
             </span>
             <InfoHint cite="Pedregosa et al. 2011 · sklearn.metrics.roc_auc_score">
               {`Área bajo la curva ROC (Receiver Operating Characteristic). Mide cómo de bien el modelo ordena un positivo aleatorio (píxel inundado) por encima de un negativo aleatorio. 1.0 = ranking perfecto, 0.5 = azar. El «± valor» es la desviación estándar entre los 5 folds espaciales.`}
@@ -160,8 +160,9 @@ export function ModelValidation() {
           </div>
           <AucHero auc={m.auc_mean} std={m.auc_std} />
           <p className="font-serif italic text-14 text-text-secondary mt-3 max-w-md leading-snug">
-            Random Forest v3-T trained on 9 transferable features over Sentinel-1 SAR backscatter
-            pre/post DANA Valencia 2024, validated against Copernicus EMS EMSR773.
+            Random Forest v3-T entrenado sobre 10 features transferibles a partir de la
+            retrodispersión SAR de Sentinel-1 pre/post DANA Valencia 2024, validado contra
+            Copernicus EMS EMSR773.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <div className="h-px w-7 bg-brand-500/60" />
@@ -1260,7 +1261,7 @@ function FeatureGlossary({ features }) {
                       style={{ opacity: 1 }}
                       title="Ver esta variable en Transferibilidad"
                     >
-                      drift →
+                      deriva →
                     </a>
                   </td>
                 </tr>

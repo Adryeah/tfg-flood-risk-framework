@@ -51,12 +51,8 @@ function ConsoleMarkers({ policies, activeIndex, onSelect }) {
             width: i === activeIndex ? 15 : 10,
             height: i === activeIndex ? 15 : 10,
             background: p._color,
-            border:
-              i === activeIndex
-                ? '2px solid #f7f8f8'
-                : '1px solid rgba(8,9,10,0.6)',
-            boxShadow:
-              i === activeIndex ? '0 0 0 3px rgba(247,248,248,0.18)' : 'none',
+            border: i === activeIndex ? '2px solid #f7f8f8' : '1px solid rgba(8,9,10,0.6)',
+            boxShadow: i === activeIndex ? '0 0 0 3px rgba(247,248,248,0.18)' : 'none',
           }}
         />
       </MarkerContent>
@@ -119,9 +115,7 @@ export function UnderwriterConsole() {
       .getPredefined()
       .then((res) => mounted && setPortfolios(res?.portfolios || []))
       .catch(
-        (err) =>
-          mounted &&
-          setLoadError(err?.message || 'No se pudo cargar el índice de carteras')
+        (err) => mounted && setLoadError(err?.message || 'No se pudo cargar el índice de carteras')
       );
     return () => {
       mounted = false;
@@ -141,8 +135,7 @@ export function UnderwriterConsole() {
       })
       .catch(
         (err) =>
-          mounted &&
-          setLoadError(err?.message || 'No se pudo cargar la cartera seleccionada')
+          mounted && setLoadError(err?.message || 'No se pudo cargar la cartera seleccionada')
       );
     return () => {
       mounted = false;
@@ -162,10 +155,7 @@ export function UnderwriterConsole() {
   // 4) Auto-play: avanza al siguiente cada 5/speed s.
   useEffect(() => {
     if (!isPlaying || tourPolicies.length === 0) return undefined;
-    const id = setTimeout(
-      () => setActiveIndex((i) => (i + 1) % tourPolicies.length),
-      5000 / speed
-    );
+    const id = setTimeout(() => setActiveIndex((i) => (i + 1) % tourPolicies.length), 5000 / speed);
     return () => clearTimeout(id);
   }, [isPlaying, activeIndex, tourPolicies.length, speed]);
 
@@ -237,15 +227,15 @@ export function UnderwriterConsole() {
           Consola pensada para desktop
         </div>
         <p className="font-serif italic text-12 leading-snug">
-          La Underwriter Console usa una densidad informativa pensada para
-          1280 px+. Funciona en móvil pero se lee mucho mejor en portátil.
+          La consola de suscripción usa una densidad informativa pensada para 1280 px+. Funciona en
+          móvil pero se lee mucho mejor en portátil.
         </p>
       </div>
 
       {/* Top strip · controles globales */}
       <div className="shrink-0 px-3 sm:px-4 py-2 border-b border-border-default bg-bg-surface flex items-center gap-2 sm:gap-3 flex-wrap">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary">
-          UW · Underwriter Console
+          UW · Consola de suscripción
         </div>
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger className="w-[200px] sm:w-[240px] h-8 text-12">

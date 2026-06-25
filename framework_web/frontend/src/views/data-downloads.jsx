@@ -19,8 +19,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 const apiUrl = (p) => `${API_BASE}${p}`;
 
 const GITHUB_BASE = 'https://github.com/Adryeah/tfg-flood-risk-framework';
-const GITHUB_RAW =
-  'https://raw.githubusercontent.com/Adryeah/tfg-flood-risk-framework/main';
+const GITHUB_RAW = 'https://raw.githubusercontent.com/Adryeah/tfg-flood-risk-framework/main';
 
 // Each card declares the artifact metadata + the URL. We keep them in
 // data shape so future additions (e.g. Zenodo DOI release) drop in
@@ -31,7 +30,7 @@ const ARTIFACTS = [
     items: [
       {
         title: 'Risk surface · Valencia (GeoJSON)',
-        desc: 'Pre-baked flood probability surface for the L\'Horta Sud bbox. 9617 polygons binned by P(flood) ∈ {0.25–0.34, … , 0.88–1.0}. EPSG:4326.',
+        desc: "Pre-baked flood probability surface for the L'Horta Sud bbox. 9617 polygons binned by P(flood) ∈ {0.25–0.34, … , 0.88–1.0}. EPSG:4326.",
         format: 'application/geo+json · 1.2 MB (gzipped)',
         href: apiUrl('/api/risk/valencia.geojson'),
         icon: MapIcon,
@@ -60,7 +59,7 @@ const ARTIFACTS = [
     items: [
       {
         title: 'EMSR773 flood mask · Valencia (GeoJSON)',
-        desc: 'Polígonos oficiales de Copernicus EMS activación EMSR773 (delineación 31 oct 2024) recortados al bbox de l\'Horta Sud.',
+        desc: "Polígonos oficiales de Copernicus EMS activación EMSR773 (delineación 31 oct 2024) recortados al bbox de l'Horta Sud.",
         format: 'application/geo+json · 5 KB',
         href: apiUrl('/api/geo/ground_truth/valencia.geojson'),
         icon: FileJson,
@@ -76,7 +75,7 @@ const ARTIFACTS = [
       },
       {
         title: 'Municipios DANA (GeoJSON)',
-        desc: '14 municipios L\'Horta Sud + Algemesí + Alzira (16 polígonos). Fuente: OpenStreetMap / municipios oficiales.',
+        desc: "14 municipios L'Horta Sud + Algemesí + Alzira (16 polígonos). Fuente: OpenStreetMap / municipios oficiales.",
         format: 'application/geo+json · 50 KB',
         href: apiUrl('/api/geo/municipalities.geojson'),
         icon: FileJson,
@@ -136,15 +135,14 @@ export function DataDownloads() {
       {/* ─── HEADER · editorial register ────────────────────────── */}
       <header className="border-b border-border-default pb-5 animate-in fade-in slide-in-from-bottom-2 duration-700">
         <div className="text-10 font-mono uppercase tracking-[0.18em] text-text-tertiary mb-1.5">
-          Reproducibility · Open data
+          Reproducibilidad · Datos abiertos
         </div>
         <h1 className="font-serif text-28 leading-none text-text-primary tracking-tight">
-          Data &amp; <span className="italic">downloads</span>
+          Datos y <span className="italic">descargas</span>
         </h1>
         <p className="font-serif italic text-14 text-text-secondary mt-2 max-w-2xl leading-snug">
-          Todos los artefactos del framework, descargables directamente
-          desde el navegador. Sin login, sin licencia comercial, sin
-          fricción.
+          Todos los artefactos del framework, descargables directamente desde el navegador. Sin
+          login, sin licencia comercial, sin fricción.
         </p>
       </header>
 
@@ -197,7 +195,7 @@ export function DataDownloads() {
               </button>
             </div>
             <pre className="px-4 py-3 text-11 leading-relaxed font-mono text-text-primary overflow-x-auto bg-bg-subtle/30 whitespace-pre">
-{bibtex}
+              {bibtex}
             </pre>
           </div>
 
@@ -205,26 +203,25 @@ export function DataDownloads() {
           <div className="bg-bg-surface border border-border-default rounded-md shadow-sm overflow-hidden transition-all duration-200 ease-out hover:shadow-md hover:-translate-y-0.5">
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-default">
               <GitBranch className="w-4 h-4 text-text-secondary" strokeWidth={1.75} />
-              <h3 className="font-serif text-15 text-text-primary tracking-tight">
-                Código fuente
-              </h3>
+              <h3 className="font-serif text-15 text-text-primary tracking-tight">Código fuente</h3>
             </div>
             <div className="px-4 py-3 text-12 text-text-secondary space-y-2 leading-relaxed">
-              <p>
-                Pipeline SAR, modelo, backend y frontend en un único
-                repositorio Git público.
-              </p>
+              <p>Pipeline SAR, modelo, backend y frontend en un único repositorio Git público.</p>
               <a
                 href={GITHUB_BASE}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-12 font-mono text-corporate-navy hover:underline"
               >
-                github.com/Adryeah/<wbr />tfg-flood-risk-framework
+                github.com/Adryeah/
+                <wbr />
+                tfg-flood-risk-framework
                 <ExternalLink className="w-3 h-3" strokeWidth={1.75} />
               </a>
               <div className="pt-2 mt-2 border-t border-border-default text-11 text-text-tertiary leading-relaxed">
-                Para reproducir el experimento completo: <code className="text-text-secondary">git clone</code> + seguir las instrucciones del Apéndice B de la memoria.
+                Para reproducir el experimento completo:{' '}
+                <code className="text-text-secondary">git clone</code> + seguir las instrucciones
+                del Apéndice B de la memoria.
               </div>
             </div>
           </div>
@@ -254,11 +251,11 @@ function ArtifactCard({ item }) {
         <span className="inline-flex items-center gap-1 text-10 font-mono uppercase tracking-wider text-text-tertiary shrink-0">
           {isExternal ? (
             <>
-              <ExternalLink className="w-3 h-3" strokeWidth={1.75} /> External
+              <ExternalLink className="w-3 h-3" strokeWidth={1.75} /> Externo
             </>
           ) : (
             <>
-              <Download className="w-3 h-3" strokeWidth={1.75} /> Download
+              <Download className="w-3 h-3" strokeWidth={1.75} /> Descargar
             </>
           )}
         </span>
@@ -266,9 +263,7 @@ function ArtifactCard({ item }) {
       <h3 className="font-serif text-15 text-text-primary tracking-tight mb-1.5 group-hover:text-corporate-navy transition-colors">
         {item.title}
       </h3>
-      <p className="text-12 text-text-secondary leading-relaxed mb-3">
-        {item.desc}
-      </p>
+      <p className="text-12 text-text-secondary leading-relaxed mb-3">{item.desc}</p>
       <div className="text-10 font-mono uppercase tracking-wider text-text-tertiary">
         {item.format}
       </div>

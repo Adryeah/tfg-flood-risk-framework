@@ -38,9 +38,7 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
     const onMove = (e) => {
       if (!draggingRef.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const clientX = e.touches
-        ? e.touches[0]?.clientX
-        : e.clientX;
+      const clientX = e.touches ? e.touches[0]?.clientX : e.clientX;
       if (typeof clientX !== 'number') return;
       const x = clientX - rect.left;
       const p = Math.max(2, Math.min(98, (x / rect.width) * 100));
@@ -185,7 +183,7 @@ export function DanaSwipeCompare({ zone = 'valencia', height = 460 }) {
             className="text-10 uppercase tracking-[0.06em]"
             style={{ color: 'var(--accent-valid-text)', fontWeight: 600 }}
           >
-            Ground Truth · EMSR773
+            Verdad de campo · EMSR773
           </span>
         </div>
       </div>
