@@ -1193,7 +1193,7 @@ function FeatureGlossary({ features }) {
     <div className="mt-4 pt-3 border-t border-border-default">
       <div className="flex items-center justify-between mb-2">
         <div className="text-10 font-mono font-semibold text-text-tertiary uppercase tracking-wider">
-          Feature glossary · 14 model inputs
+          Feature glossary · 10 model inputs
         </div>
         <div className="flex items-center gap-2 text-10 font-mono">
           {Object.entries(CATEGORY_META).map(([key, meta]) => (

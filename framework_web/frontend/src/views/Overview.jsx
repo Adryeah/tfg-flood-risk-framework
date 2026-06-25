@@ -262,16 +262,16 @@ export function Overview() {
         />
         <KpiCard
           label="Variables"
-          value="14"
-          numeric={14}
+          value="10"
+          numeric={10}
           format={(v) => Math.round(v).toString()}
-          subInfo="SAR · DEM · NDVI / NDWI"
+          subInfo="SAR · hidro-topo · NDVI"
           accent="warn"
-          objective="Contexto — entradas al modelo Random Forest."
+          objective="Contexto — entradas al modelo Random Forest v3-T."
           animationDelay={210}
           info={{
-            what: '6 SAR temporales (σ⁰ VV media/std/min/cv, ratio VV/VH, conteo de agua) + 4 DEM (elevación, pendiente, distancia a cauce, acumulación de flujo) + 1 NDVI + 3 hidro-geomorfológicas (distancia a costa, TWI, HAND).',
-            source: 'config/params.yaml + scripts/features/build_dataset_v2.py',
+            what: 'Núcleo transferible v3-T: 4 SAR temporales (σ⁰ VV media/mín/cv, conteo de agua) + 5 hidro-topográficas (distancia a cauce, acumulación de flujo, TWI, HAND, distancia al río) + 1 NDVI. Por ablación dirigida por datos se descartaron elevación, pendiente, distancia a costa, σ⁰ std y ratio VV/VH (proxies espaciales que no transferían entre cuencas).',
+            source: 'scripts/models/finalize_v3t.py → backend model_service.FEATURE_NAMES_V3T',
           }}
         />
       </div>

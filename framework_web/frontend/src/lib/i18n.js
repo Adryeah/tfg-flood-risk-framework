@@ -482,7 +482,7 @@ const EN_ES = {
     'Expected Calibration Error (ECE) reportado en model_metrics.',
 
   // ── Feature Glossary (chrome + headers) ──
-  'Feature glossary · 14 model inputs': 'Glosario de features · 14 entradas del modelo',
+  'Feature glossary · 10 model inputs': 'Glosario de features · 10 entradas del modelo',
   Feature: 'Feature',
   Description: 'Descripción',
   Unit: 'Unidad',
