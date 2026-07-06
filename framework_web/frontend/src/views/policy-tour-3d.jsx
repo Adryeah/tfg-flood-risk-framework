@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Waves, Car } from 'lucide-react';
 
 import {
   Select,
@@ -11,6 +11,7 @@ import {
 import { api } from '@/lib/api';
 import { Map, MapMarker, MarkerContent } from '@/components/Map';
 import { PolicyTour3D } from '@/components/PolicyTour3D';
+import { TourSceneLayers } from '@/components/tour-scene-layers.jsx';
 import { adaptClientToPolicy } from '@/types/policyTour.types.js';
 import { TourDock } from '@/components/tour-dock.jsx';
 import { LoadErrorState } from '@/components/load-error-state.jsx';
@@ -37,31 +38,58 @@ const TOUR_RISK_COLORS = {
 
 const VALENCIA_CENTER = [-0.38, 39.47];
 
-/** Marcadores de todas las pólizas del tour; click → selecciona. */
+/** Marcadores de todas las pólizas del tour; click → selecciona. Los coches
+ *  (producto autos) no son edificios → marcador de calle con icono de coche;
+ *  el resto, punto. Al hacer zoom, los inmuebles se tintan como edificio. */
 function ConsoleMarkers({ policies, activeIndex, onSelect }) {
-  return policies.map((p, i) => (
-    <MapMarker key={p.id} longitude={p.lon} latitude={p.lat}>
-      <MarkerContent>
-        <button
-          type="button"
-          onClick={() => onSelect(i)}
-          aria-label={`Póliza ${p.id}`}
-          className="block rounded-full transition-transform hover:scale-125"
-          style={{
-            width: i === activeIndex ? 15 : 10,
-            height: i === activeIndex ? 15 : 10,
-            background: p._color,
-            border: i === activeIndex ? '2px solid #f7f8f8' : '1px solid rgba(8,9,10,0.6)',
-            boxShadow: i === activeIndex ? '0 0 0 3px rgba(247,248,248,0.18)' : 'none',
-          }}
-        />
-      </MarkerContent>
-    </MapMarker>
-  ));
+  return policies.map((p, i) => {
+    const active = i === activeIndex;
+    const border = active ? '2px solid #f7f8f8' : '1px solid rgba(8,9,10,0.6)';
+    const ring = active ? '0 0 0 3px rgba(247,248,248,0.18)' : 'none';
+    if (p.product === 'autos') {
+      const s = active ? 22 : 16;
+      return (
+        <MapMarker key={p.id} longitude={p.lon} latitude={p.lat}>
+          <MarkerContent>
+            <button
+              type="button"
+              onClick={() => onSelect(i)}
+              aria-label={`Coche ${p.id}`}
+              className="flex items-center justify-center rounded-[3px] transition-transform hover:scale-125"
+              style={{ width: s, height: s, background: p._color, border, boxShadow: ring }}
+            >
+              <Car size={active ? 13 : 10} color="#0b0d12" strokeWidth={2.4} />
+            </button>
+          </MarkerContent>
+        </MapMarker>
+      );
+    }
+    return (
+      <MapMarker key={p.id} longitude={p.lon} latitude={p.lat}>
+        <MarkerContent>
+          <button
+            type="button"
+            onClick={() => onSelect(i)}
+            aria-label={`Póliza ${p.id}`}
+            className="block rounded-full transition-transform hover:scale-125"
+            style={{
+              width: active ? 15 : 10,
+              height: active ? 15 : 10,
+              background: p._color,
+              border,
+              boxShadow: ring,
+            }}
+          />
+        </MarkerContent>
+      </MapMarker>
+    );
+  });
 }
 
-/** Leyenda del mapa: escala de riesgo por planta + lámina T500. */
-function TourLegend() {
+/** Leyenda del mapa: cada edificio tintado es una póliza, coloreado por su
+ *  categoría de riesgo. Coches como marcador de calle. Superficie de riesgo
+ *  de suelo opcional (botón). */
+function TourLegend({ floodOn }) {
   const items = [
     ['Bajo', TOUR_RISK_COLORS.low],
     ['Moderado', TOUR_RISK_COLORS.moderate],
@@ -71,7 +99,7 @@ function TourLegend() {
   return (
     <div className="absolute bottom-3 left-3 z-[2] rounded-md border border-border-default bg-bg-surface/85 backdrop-blur px-3 py-2.5 shadow-lg">
       <div className="text-10 font-mono uppercase tracking-[0.16em] text-text-tertiary mb-1.5">
-        Riesgo por planta
+        Riesgo por edificio
       </div>
       <div className="flex flex-col gap-1">
         {items.map(([label, color]) => (
@@ -80,12 +108,32 @@ function TourLegend() {
             <span className="text-11 text-text-secondary">{label}</span>
           </div>
         ))}
-        <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-border-default">
-          <span
-            className="w-2.5 h-2.5 rounded-[2px]"
-            style={{ background: 'rgba(29,111,168,0.55)' }}
-          />
-          <span className="text-11 text-text-secondary">Lámina T500</span>
+        <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-border-default">
+          <div className="flex items-center gap-2">
+            <span
+              className="w-3 h-3 rounded-[3px] flex items-center justify-center"
+              style={{ background: TOUR_RISK_COLORS.moderate }}
+            >
+              <Car size={8} color="#0b0d12" strokeWidth={2.6} />
+            </span>
+            <span className="text-11 text-text-secondary">Coche asegurado</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className="w-2.5 h-2.5 rounded-[2px]"
+              style={{
+                background: 'linear-gradient(90deg,#FEF3C7,#DC2626)',
+                outline: floodOn ? '1px solid #DC2626' : 'none',
+              }}
+            />
+            <span
+              className={
+                'text-11 ' + (floodOn ? 'text-text-primary font-medium' : 'text-text-secondary')
+              }
+            >
+              Superficie de riesgo (suelo)
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -106,6 +154,9 @@ export function UnderwriterConsole() {
     autos: true,
   });
   const [speed, setSpeed] = useState(1);
+  // Superficie de riesgo ON por defecto → las pólizas se ven dentro del mapa
+  // de riesgo desde el arranque (el botón la puede ocultar).
+  const [floodOn, setFloodOn] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
   // 1) Index de carteras
@@ -209,6 +260,12 @@ export function UnderwriterConsole() {
     setPanelOpen(true);
   };
 
+  // Selección desde el mapa (click en un edificio asegurado) → por id.
+  const selectById = (id) => {
+    const i = tourPolicies.findIndex((p) => String(p.id) === String(id));
+    if (i >= 0) selectPolicy(i);
+  };
+
   if (loadError) return <LoadErrorState message={loadError} />;
 
   if (!portfolio) {
@@ -290,6 +347,22 @@ export function UnderwriterConsole() {
               {p}
             </button>
           ))}
+          <span className="w-px h-5 bg-border-default mx-0.5" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => setFloodOn((v) => !v)}
+            aria-pressed={floodOn}
+            title="Muestra la superficie de riesgo del modelo (P de inundación) sobre el suelo, bajo los edificios"
+            className={
+              'inline-flex items-center gap-1.5 text-10 font-mono uppercase tracking-wider px-2 py-1 rounded border transition-colors ' +
+              (floodOn
+                ? 'border-[#DC2626] bg-[#DC2626] text-white'
+                : 'border-border-default text-text-tertiary hover:bg-bg-hover')
+            }
+          >
+            <Waves className="w-3 h-3" />
+            {floodOn ? 'Riesgo de suelo · ON' : 'Superficie de riesgo'}
+          </button>
         </div>
       </div>
 
@@ -299,12 +372,23 @@ export function UnderwriterConsole() {
           <Map
             styles={OFM_STYLES}
             center={mapCenter}
-            zoom={11}
+            // Arranque como ciudad 3D oblicua (no plano cenital): a z12.5 los
+            // edificios OSM ya renderizan y los asegurados se tintan de
+            // entrada, igual que la referencia visual.
+            zoom={12.5}
             minZoom={9}
             maxZoom={19}
+            pitch={55}
+            bearing={-17}
             maxPitch={70}
             className="h-full w-full"
           >
+            <TourSceneLayers
+              policies={tourPolicies}
+              activeId={selectedClient?.id ?? null}
+              floodOn={floodOn}
+              onSelectPolicy={selectById}
+            />
             <ConsoleMarkers
               policies={tourPolicies}
               activeIndex={activeIndex}
@@ -319,7 +403,7 @@ export function UnderwriterConsole() {
             Sin pólizas que mostrar con los filtros actuales.
           </div>
         )}
-        {tourPolicies.length > 0 && <TourLegend />}
+        {tourPolicies.length > 0 && <TourLegend floodOn={floodOn} />}
       </div>
 
       {/* Dock · lista de pólizas + play/pause/speed (drive activeIndex). */}
