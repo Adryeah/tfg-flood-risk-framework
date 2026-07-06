@@ -36,6 +36,12 @@ const TOUR_RISK_COLORS = {
   very_high: '#7F1D1D',
 };
 
+// Azul SAR del sistema (accent-sar-text) para los marcadores de póliza: los
+// puntos van en azul para diferenciarse de la superficie de riesgo cálida
+// (YlOrRd). El riesgo de cada póliza se lee en el tintado del edificio, no
+// en el punto.
+const POLICY_BLUE = '#5aa9dc';
+
 const VALENCIA_CENTER = [-0.38, 39.47];
 
 /** Marcadores de todas las pólizas del tour; click → selecciona. Los coches
@@ -56,7 +62,7 @@ function ConsoleMarkers({ policies, activeIndex, onSelect }) {
               onClick={() => onSelect(i)}
               aria-label={`Coche ${p.id}`}
               className="flex items-center justify-center rounded-[3px] transition-transform hover:scale-125"
-              style={{ width: s, height: s, background: p._color, border, boxShadow: ring }}
+              style={{ width: s, height: s, background: POLICY_BLUE, border, boxShadow: ring }}
             >
               <Car size={active ? 13 : 10} color="#0b0d12" strokeWidth={2.4} />
             </button>
@@ -75,7 +81,7 @@ function ConsoleMarkers({ policies, activeIndex, onSelect }) {
             style={{
               width: active ? 15 : 10,
               height: active ? 15 : 10,
-              background: p._color,
+              background: POLICY_BLUE,
               border,
               boxShadow: ring,
             }}
@@ -111,8 +117,15 @@ function TourLegend({ floodOn }) {
         <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-border-default">
           <div className="flex items-center gap-2">
             <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: POLICY_BLUE, border: '1px solid rgba(8,9,10,0.6)' }}
+            />
+            <span className="text-11 text-text-secondary">Póliza (punto)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
               className="w-3 h-3 rounded-[3px] flex items-center justify-center"
-              style={{ background: TOUR_RISK_COLORS.moderate }}
+              style={{ background: POLICY_BLUE }}
             >
               <Car size={8} color="#0b0d12" strokeWidth={2.6} />
             </span>
